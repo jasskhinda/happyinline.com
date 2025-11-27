@@ -128,22 +128,18 @@
             max-width: 900px;
         }
 
-        .hero-logo {
-            width: 180px;
-            height: 180px;
-            margin: 0 auto 40px;
-            border-radius: 40px;
-            box-shadow: 0 25px 80px rgba(0, 113, 227, 0.4),
-                        0 10px 40px rgba(0, 0, 0, 0.5);
+        .hero-phone {
+            width: 320px;
+            height: auto;
+            margin: 0 auto 50px;
+            filter: drop-shadow(0 30px 60px rgba(0, 113, 227, 0.4))
+                    drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
             animation: float 6s ease-in-out infinite;
-            background: white;
-            padding: 15px;
         }
 
-        .hero-logo img {
+        .hero-phone img {
             width: 100%;
-            height: 100%;
-            object-fit: contain;
+            height: auto;
         }
 
         @keyframes float {
@@ -443,10 +439,8 @@
                 padding: 100px 20px 60px;
             }
 
-            .hero-logo {
-                width: 140px;
-                height: 140px;
-                border-radius: 30px;
+            .hero-phone {
+                width: 260px;
             }
 
             .download-buttons {
@@ -514,10 +508,10 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <div class="hero-logo">
-                <img src="logo.png" alt="Happy InLine">
-            </div>
             <p class="hero-eyebrow">Introducing</p>
+            <div class="hero-phone">
+                <img src="phone-mockup.png" alt="Happy InLine App">
+            </div>
             <h1>Happy InLine</h1>
             <p class="tagline">"The Only Place You'll Be HAPPY In Line"</p>
             <p>Book appointments instantly with local service providers. No more waiting. No more lines. Just show up at your time.</p>
