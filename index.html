@@ -364,6 +364,157 @@
             transform: scale(1.05);
         }
 
+        /* Story Section */
+        .story-section {
+            padding: 120px 20px;
+            background: linear-gradient(180deg, #0D0D0D 0%, var(--background) 100%);
+        }
+
+        .story-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .story-header h2 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #A1A1A6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .story-header p {
+            font-size: 1.3rem;
+            color: #86868B;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .story-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .story-card {
+            background: linear-gradient(180deg, #1D1D1F 0%, #161617 100%);
+            border-radius: 30px;
+            padding: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), #00D4FF);
+        }
+
+        .story-card.business::before {
+            background: linear-gradient(90deg, #34C759, #30D158);
+        }
+
+        .story-label {
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .story-card.business .story-label {
+            color: #34C759;
+        }
+
+        .story-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #F5F5F7;
+            letter-spacing: -0.02em;
+        }
+
+        .story-card > p {
+            font-size: 1.1rem;
+            color: #86868B;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .story-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .story-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+            color: #D1D1D6;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .story-features li svg {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        .story-card.business .story-features li svg {
+            color: #34C759;
+        }
+
+        .story-quote {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(0, 113, 227, 0.1);
+            border-radius: 16px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .story-card.business .story-quote {
+            background: rgba(52, 199, 89, 0.1);
+            border-left-color: #34C759;
+        }
+
+        .story-quote p {
+            font-style: italic;
+            color: #A1A1A6;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Responsive Story */
+        @media (max-width: 900px) {
+            .story-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .story-card {
+                padding: 35px;
+            }
+        }
+
         /* CTA Section */
         .cta {
             padding: 150px 20px;
@@ -639,6 +790,102 @@
             <span class="industry-item">Healthcare</span>
             <span class="industry-item">Tutoring</span>
             <span class="industry-item">And More</span>
+        </div>
+    </section>
+
+    <!-- Story Section - Built from Real Feedback -->
+    <section class="story-section">
+        <div class="story-container">
+            <div class="story-header">
+                <h2>Built from real feedback.</h2>
+                <p>We listened to hundreds of local barbershops, salons, and service businesses. They told us exactly what was missing from other booking apps. We built it.</p>
+            </div>
+
+            <div class="story-grid">
+                <!-- For Business -->
+                <div class="story-card business">
+                    <span class="story-label">For Business Owners</span>
+                    <h3>Your business. Your app. Zero distractions.</h3>
+                    <p>Other platforms bury your business among competitors. Happy InLine gives you a dedicated space where your customers see only you.</p>
+
+                    <ul class="story-features">
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>Register in seconds</strong> - Get your business up and running instantly with a simple setup process</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>Your own QR code</strong> - Share it with customers, and they're instantly connected to your business</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>No competitor distractions</strong> - When customers open the app, they see YOUR shop, not a marketplace</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>Auto-confirmed bookings</strong> - Save hours every week. No more back-and-forth confirmations</span>
+                        </li>
+                    </ul>
+
+                    <div class="story-quote">
+                        <p>"Other apps felt like I was competing for my own customers. Happy InLine gives me my own space where my clients come directly to me."</p>
+                    </div>
+                </div>
+
+                <!-- For Customers -->
+                <div class="story-card">
+                    <span class="story-label">For Customers</span>
+                    <h3>Your favorite shop. Always one tap away.</h3>
+                    <p>We asked customers what they really wanted: a simple way to book with their favorite barber or stylist. No searching. No scrolling through competitors.</p>
+
+                    <ul class="story-features">
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>Scan once, book forever</strong> - Scan your shop's QR code and it becomes your home screen</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>Book your favorite provider</strong> - Choose your preferred barber, stylist, or technician every time</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>Instant confirmation</strong> - Book in a few taps and you're done. No waiting for approval</span>
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                            <span><strong>No distractions</strong> - Your shop is your home. No ads or suggestions for other businesses</span>
+                        </li>
+                    </ul>
+
+                    <div class="story-quote">
+                        <p>"I just want to book with my barber without seeing 50 other shops. Happy InLine gets it."</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
