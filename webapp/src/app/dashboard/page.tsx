@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getSubscriptionStatus, signOut, SubscriptionStatus } from '@/lib/auth';
 import { STRIPE_PLANS, getPlanColor } from '@/lib/stripe';
 import {
@@ -21,13 +21,22 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
   const [error, setError] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
     loadSubscriptionData();
-  }, []);
+
+    // Check if user just subscribed
+    if (searchParams.get('subscribed') === 'true') {
+      setShowSuccessMessage(true);
+      // Auto-hide after 5 seconds
+      setTimeout(() => setShowSuccessMessage(false), 5000);
+    }
+  }, [searchParams]);
 
   const loadSubscriptionData = async () => {
     try {
@@ -103,6 +112,17 @@ export default function DashboardPage() {
             Manage your subscription and business settings
           </p>
         </div>
+
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6 text-green-200 flex items-center gap-3">
+            <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">Welcome to Happy Inline!</p>
+              <p className="text-sm text-green-300">Your subscription is now active. You can start adding providers and managing your business.</p>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6 text-red-200">
