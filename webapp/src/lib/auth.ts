@@ -222,6 +222,45 @@ export const createSubscription = async ({
     return { success: false, error: data.error };
   }
 
+  // If subscription requires additional action (3D Secure), don't update profile yet
+  if (data?.requiresAction) {
+    return { success: true, requiresAction: true, data };
+  }
+
+  // Subscription succeeded - update profile with subscription details
+  const now = new Date();
+  const refundEligibleUntil = new Date(now.getTime() + REFUND_DAYS * 24 * 60 * 60 * 1000);
+  const nextBillingDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // ~30 days
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      subscription_plan: planName,
+      subscription_status: 'active',
+      subscription_start_date: now.toISOString(),
+      next_billing_date: nextBillingDate.toISOString(),
+      refund_eligible_until: refundEligibleUntil.toISOString(),
+      stripe_customer_id: data.customerId,
+      stripe_subscription_id: data.subscriptionId,
+      monthly_amount: planDetails.amount,
+      max_licenses: planDetails.maxLicenses,
+      license_count: 0,
+      payment_method_last4: data.paymentMethodLast4 || null,
+      payment_method_brand: data.paymentMethodBrand || null,
+    })
+    .eq('id', userId);
+
+  if (updateError) {
+    console.error('Failed to update profile after subscription:', updateError);
+    // Subscription was created in Stripe but profile update failed
+    // This is a partial failure state - log for debugging
+    return {
+      success: true,
+      warning: 'Subscription created but profile update failed. Please refresh.',
+      data
+    };
+  }
+
   return { success: true, data };
 };
 

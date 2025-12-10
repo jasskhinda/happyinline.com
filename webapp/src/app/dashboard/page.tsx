@@ -60,16 +60,11 @@ function DashboardContent() {
       }
 
       const subStatus = await getSubscriptionStatus(user.id);
-      console.log('Subscription status:', subStatus);
-      console.log('isActive:', subStatus?.isActive);
-      console.log('subscription_status:', subStatus?.subscription_status);
-      console.log('subscription_plan:', subStatus?.subscription_plan);
       setSubscription(subStatus);
 
       // Load shop if subscription is active
       if (subStatus?.isActive) {
         const { shop: userShop } = await getMyShop(user.id);
-        console.log('Shop:', userShop);
         setShop(userShop || null);
       }
     } catch (err) {
@@ -163,14 +158,6 @@ function DashboardContent() {
             {error}
           </div>
         )}
-
-        {/* Debug: Show subscription status - TEMPORARY */}
-        <div className="bg-purple-500/20 border border-purple-500/50 rounded-lg p-4 mb-6 text-purple-200 text-xs font-mono">
-          <p>Debug: subscription_status = {subscription?.subscription_status || 'null'}</p>
-          <p>Debug: subscription_plan = {subscription?.subscription_plan || 'null'}</p>
-          <p>Debug: isActive = {String(subscription?.isActive)}</p>
-          <p>Debug: max_licenses = {subscription?.max_licenses || 'null'}</p>
-        </div>
 
         {/* Business Management Navigation - Only show if subscribed */}
         {subscription?.isActive && (
