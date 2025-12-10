@@ -18,9 +18,10 @@ import {
   Briefcase,
   Crown,
   Star,
-  Zap,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react';
+import { STRIPE_PLANS, PlanKey, getPlanColor } from '@/lib/stripe';
 
 interface Category {
   id: string;
@@ -57,39 +58,8 @@ export default function RegisterPage() {
   const [selectedBusinessType, setSelectedBusinessType] = useState<BusinessType | null>(null);
   const [loadingCategories, setLoadingCategories] = useState(false);
 
-  // Subscription Plan
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
-
-  const plans = {
-    monthly: {
-      name: 'Monthly',
-      price: 29.99,
-      period: 'month',
-      features: [
-        'Unlimited bookings',
-        'Customer management',
-        'Online payments',
-        'Business analytics',
-        'Email notifications',
-        'Priority support'
-      ]
-    },
-    yearly: {
-      name: 'Yearly',
-      price: 299.99,
-      period: 'year',
-      savings: '2 months free!',
-      features: [
-        'Unlimited bookings',
-        'Customer management',
-        'Online payments',
-        'Business analytics',
-        'Email notifications',
-        'Priority support',
-        '2 months FREE'
-      ]
-    }
-  };
+  // Subscription Plan - using real STRIPE_PLANS
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey | null>(null);
 
   // Load categories when step 2 is reached
   useEffect(() => {
@@ -525,7 +495,7 @@ export default function RegisterPage() {
                 Choose Your Plan
               </h2>
               <p className="text-[#0393d5]">
-                Start your 7-day free trial today
+                Select the perfect plan for your business
               </p>
             </div>
 
@@ -535,68 +505,63 @@ export default function RegisterPage() {
               <span className="text-green-300 text-sm font-medium">7-Day Money Back Guarantee</span>
             </div>
 
-            {/* Plan Cards */}
-            <div className="space-y-4 mb-6">
-              {/* Monthly Plan */}
-              <button
-                onClick={() => setSelectedPlan('monthly')}
-                className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
-                  selectedPlan === 'monthly'
-                    ? 'bg-[#0393d5]/20 border-[#0393d5]'
-                    : 'bg-white/5 border-transparent hover:border-[#0393d5]/50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Zap className="w-6 h-6 text-[#0393d5]" />
-                    <span className="text-white font-semibold text-lg">Monthly</span>
-                  </div>
-                  {selectedPlan === 'monthly' && (
-                    <Check className="w-6 h-6 text-[#0393d5]" />
-                  )}
-                </div>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-bold text-white">${plans.monthly.price}</span>
-                  <span className="text-white/60">/month</span>
-                </div>
-                <p className="text-white/60 text-sm">Billed monthly, cancel anytime</p>
-              </button>
+            {/* Plan Cards - Real 5-Plan System */}
+            <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto">
+              {(Object.entries(STRIPE_PLANS) as [PlanKey, typeof STRIPE_PLANS[PlanKey]][]).map(([planKey, plan]) => {
+                const planColor = getPlanColor(planKey);
+                const isSelected = selectedPlan === planKey;
+                const isPopular = planKey === 'professional';
 
-              {/* Yearly Plan */}
-              <button
-                onClick={() => setSelectedPlan('yearly')}
-                className={`w-full p-5 rounded-xl text-left transition-all border-2 relative ${
-                  selectedPlan === 'yearly'
-                    ? 'bg-[#0393d5]/20 border-[#0393d5]'
-                    : 'bg-white/5 border-transparent hover:border-[#0393d5]/50'
-                }`}
-              >
-                {/* Popular Badge */}
-                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  BEST VALUE
-                </div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Star className="w-6 h-6 text-yellow-400" />
-                    <span className="text-white font-semibold text-lg">Yearly</span>
-                  </div>
-                  {selectedPlan === 'yearly' && (
-                    <Check className="w-6 h-6 text-[#0393d5]" />
-                  )}
-                </div>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl font-bold text-white">${plans.yearly.price}</span>
-                  <span className="text-white/60">/year</span>
-                </div>
-                <p className="text-green-400 text-sm font-medium">Save $59.89 - 2 months FREE!</p>
-              </button>
+                return (
+                  <button
+                    key={planKey}
+                    onClick={() => setSelectedPlan(planKey)}
+                    className={`w-full p-4 rounded-xl text-left transition-all border-2 relative ${
+                      isSelected
+                        ? 'bg-[#0393d5]/20 border-[#0393d5]'
+                        : 'bg-white/5 border-transparent hover:border-[#0393d5]/50'
+                    }`}
+                  >
+                    {isPopular && (
+                      <div className="absolute -top-2.5 right-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                        <Star className="w-3 h-3" />
+                        Popular
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: `${planColor}30` }}
+                        >
+                          <Users className="w-5 h-5" style={{ color: planColor }} />
+                        </div>
+                        <div>
+                          <p className="text-white font-semibold">{plan.name}</p>
+                          <p className="text-white/60 text-sm">{plan.providers} Provider{plan.providers !== '1-2' ? 's' : ''}</p>
+                        </div>
+                      </div>
+                      <div className="text-right flex items-center gap-3">
+                        <div>
+                          <p className="text-white font-bold text-xl">${plan.amount}</p>
+                          <p className="text-white/60 text-xs">/month</p>
+                        </div>
+                        {isSelected && (
+                          <Check className="w-6 h-6 text-[#0393d5]" />
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-white/50 text-sm mt-2">{plan.description}</p>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Features List */}
             <div className="bg-white/5 rounded-xl p-4 mb-6">
               <h3 className="text-white font-semibold mb-3">All plans include:</h3>
               <div className="grid grid-cols-2 gap-2">
-                {plans.monthly.features.map((feature, i) => (
+                {['Full feature access', 'Online booking', 'Payment processing', '7-day money back'].map((feature, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-[#0393d5]" />
                     <span className="text-white/80 text-sm">{feature}</span>
@@ -607,7 +572,8 @@ export default function RegisterPage() {
 
             <button
               onClick={() => setStep(4)}
-              className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all flex items-center justify-center gap-2"
+              disabled={!selectedPlan}
+              className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               Continue to Review
               <ArrowRight className="w-5 h-5" />
@@ -624,7 +590,7 @@ export default function RegisterPage() {
         )}
 
         {/* Step 4: Review & Confirm */}
-        {step === 4 && (
+        {step === 4 && selectedPlan && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
             <div className="text-center mb-6">
               <div className="w-20 h-20 bg-[#0393d5] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -667,12 +633,20 @@ export default function RegisterPage() {
               </div>
               <div className="border-t border-white/10 pt-4">
                 <p className="text-white/50 text-sm">Subscription Plan</p>
-                <p className="text-white font-medium">
-                  {selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'} - ${plans[selectedPlan].price}/{plans[selectedPlan].period}
-                </p>
-                {selectedPlan === 'yearly' && (
-                  <p className="text-green-400 text-sm">Saving $59.89 per year!</p>
-                )}
+                <div className="flex items-center gap-3 mt-1">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: `${getPlanColor(selectedPlan)}30` }}
+                  >
+                    <Users className="w-4 h-4" style={{ color: getPlanColor(selectedPlan) }} />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">{STRIPE_PLANS[selectedPlan].name}</p>
+                    <p className="text-[#0393d5] text-sm">
+                      ${STRIPE_PLANS[selectedPlan].amount}/month - {STRIPE_PLANS[selectedPlan].providers} Provider{STRIPE_PLANS[selectedPlan].providers !== '1-2' ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
