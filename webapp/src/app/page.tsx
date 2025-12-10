@@ -31,10 +31,10 @@ export default function Home() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
-          <p className="text-purple-300">Loading Happy Inline...</p>
+          <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+          <p className="text-[#0393d5]">Loading Happy Inline...</p>
         </div>
       </div>
     );

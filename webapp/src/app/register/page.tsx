@@ -174,18 +174,13 @@ export default function RegisterPage() {
   const isStep1Valid = email && name && businessName && password && password === confirmPassword && password.length >= 6;
   const isStep2Valid = selectedCategory && selectedBusinessType;
 
-  // Icon mapping for categories
-  const getCategoryIcon = (iconName: string) => {
-    return <Briefcase className="w-8 h-8 text-white" />;
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Happy Inline</h1>
-          <p className="text-purple-300">Business Registration</p>
+          <p className="text-[#0393d5]">Business Registration</p>
         </div>
 
         {/* Progress Indicator */}
@@ -195,7 +190,7 @@ export default function RegisterPage() {
               <div
                 key={s}
                 className={`w-3 h-3 rounded-full transition-all ${
-                  s <= step ? 'bg-purple-500' : 'bg-white/20'
+                  s <= step ? 'bg-[#0393d5]' : 'bg-white/20'
                 }`}
               />
             ))}
@@ -206,13 +201,13 @@ export default function RegisterPage() {
         {step === 0 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
             <div className="text-center mb-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-[#0393d5] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Building2 className="w-12 h-12 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
                 Join Thousands of Professionals
               </h2>
-              <p className="text-purple-300">
+              <p className="text-[#0393d5]">
                 Grow your business with Happy Inline
               </p>
             </div>
@@ -225,25 +220,25 @@ export default function RegisterPage() {
                 '7-day money-back guarantee'
               ].map((benefit, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-purple-400" />
-                  <span className="text-purple-200">{benefit}</span>
+                  <CheckCircle className="w-6 h-6 text-[#0393d5]" />
+                  <span className="text-white/80">{benefit}</span>
                 </div>
               ))}
             </div>
 
             <button
               onClick={() => setStep(1)}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 rounded-lg transition-all flex items-center justify-center gap-2"
+              className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all flex items-center justify-center gap-2"
             >
               Get Started
               <ArrowRight className="w-5 h-5" />
             </button>
 
-            <p className="mt-6 text-center text-purple-300/70 text-sm">
+            <p className="mt-6 text-center text-white/70 text-sm">
               Already have an account?{' '}
               <button
                 onClick={() => router.push('/login')}
-                className="text-purple-400 hover:text-purple-300 font-medium"
+                className="text-[#0393d5] hover:text-white font-medium"
               >
                 Sign In
               </button>
@@ -257,7 +252,7 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-bold text-white mb-2 text-center">
               Let&apos;s Get Started
             </h2>
-            <p className="text-purple-300 text-center mb-6">
+            <p className="text-[#0393d5] text-center mb-6">
               Enter your business information
             </p>
 
@@ -270,100 +265,100 @@ export default function RegisterPage() {
             <div className="space-y-5">
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
                   Business Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="owner@yourbusiness.com"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
                   />
                 </div>
               </div>
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
                   Your Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Mike Johnson"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
                   />
                 </div>
               </div>
 
               {/* Business Name */}
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
                   Business Name
                 </label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
                   <input
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
                     placeholder="Your Business Name"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Choose a strong password"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-11 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-11 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0393d5]"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {password.length > 0 && password.length < 6 && (
-                  <p className="text-purple-400 text-sm mt-1">Password must be at least 6 characters</p>
+                  <p className="text-[#0393d5] text-sm mt-1">Password must be at least 6 characters</p>
                 )}
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium text-purple-200 mb-2">
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your password"
-                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-11 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-11 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#0393d5]"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -377,7 +372,7 @@ export default function RegisterPage() {
             <button
               onClick={() => setStep(2)}
               disabled={!isStep1Valid}
-              className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               Continue to Business Type
               <ArrowRight className="w-5 h-5" />
@@ -385,7 +380,7 @@ export default function RegisterPage() {
 
             <button
               onClick={() => setStep(0)}
-              className="w-full mt-3 flex items-center justify-center gap-2 text-purple-300 hover:text-white transition-colors py-2"
+              className="w-full mt-3 flex items-center justify-center gap-2 text-white/70 hover:text-white transition-colors py-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -399,14 +394,14 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-bold text-white mb-2 text-center">
               What type of business do you run?
             </h2>
-            <p className="text-purple-300 text-center mb-6">
+            <p className="text-[#0393d5] text-center mb-6">
               Select your industry to get started
             </p>
 
             {loadingCategories ? (
               <div className="text-center py-12">
-                <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto mb-3" />
-                <p className="text-purple-300">Loading categories...</p>
+                <Loader2 className="w-8 h-8 text-[#0393d5] animate-spin mx-auto mb-3" />
+                <p className="text-white/70">Loading categories...</p>
               </div>
             ) : (
               <>
@@ -419,15 +414,15 @@ export default function RegisterPage() {
                       onClick={() => setSelectedCategory(category)}
                       className={`p-4 rounded-xl text-center transition-all ${
                         selectedCategory?.id === category.id
-                          ? 'bg-purple-600 border-2 border-purple-400'
-                          : 'bg-white/10 border-2 border-transparent hover:border-purple-500/50'
+                          ? 'bg-[#0393d5] border-2 border-[#0393d5]'
+                          : 'bg-white/10 border-2 border-transparent hover:border-[#0393d5]/50'
                       }`}
                     >
-                      <div className="w-12 h-12 bg-purple-500/30 rounded-full flex items-center justify-center mx-auto mb-2">
-                        {getCategoryIcon(category.icon)}
+                      <div className="w-12 h-12 bg-[#09264b] rounded-full flex items-center justify-center mx-auto mb-2">
+                        <Briefcase className="w-6 h-6 text-[#0393d5]" />
                       </div>
                       <p className="text-white font-medium text-sm">{category.name}</p>
-                      <p className="text-purple-300/70 text-xs">{category.type_count} types</p>
+                      <p className="text-white/50 text-xs">{category.type_count} types</p>
                     </button>
                   ))}
                 </div>
@@ -443,16 +438,16 @@ export default function RegisterPage() {
                           onClick={() => setSelectedBusinessType(type)}
                           className={`w-full p-4 rounded-lg text-left transition-all flex items-center justify-between ${
                             selectedBusinessType?.id === type.id
-                              ? 'bg-purple-600/50 border-2 border-purple-400'
-                              : 'bg-white/5 border-2 border-transparent hover:border-purple-500/30'
+                              ? 'bg-[#0393d5]/30 border-2 border-[#0393d5]'
+                              : 'bg-white/5 border-2 border-transparent hover:border-[#0393d5]/30'
                           }`}
                         >
                           <div>
                             <p className="text-white font-medium">{type.name}</p>
-                            <p className="text-purple-300/70 text-sm">{type.description}</p>
+                            <p className="text-white/50 text-sm">{type.description}</p>
                           </div>
                           {selectedBusinessType?.id === type.id && (
-                            <Check className="w-5 h-5 text-purple-300" />
+                            <Check className="w-5 h-5 text-[#0393d5]" />
                           )}
                         </button>
                       ))}
@@ -465,7 +460,7 @@ export default function RegisterPage() {
             <button
               onClick={() => setStep(3)}
               disabled={!isStep2Valid}
-              className="w-full mt-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               Continue to Review
               <ArrowRight className="w-5 h-5" />
@@ -473,7 +468,7 @@ export default function RegisterPage() {
 
             <button
               onClick={() => setStep(1)}
-              className="w-full mt-3 flex items-center justify-center gap-2 text-purple-300 hover:text-white transition-colors py-2"
+              className="w-full mt-3 flex items-center justify-center gap-2 text-white/70 hover:text-white transition-colors py-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -485,13 +480,13 @@ export default function RegisterPage() {
         {step === 3 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
             <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-[#0393d5] rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
                 Review Your Information
               </h2>
-              <p className="text-purple-300">
+              <p className="text-[#0393d5]">
                 Make sure everything looks good
               </p>
             </div>
@@ -504,29 +499,29 @@ export default function RegisterPage() {
 
             <div className="bg-white/5 rounded-xl p-5 space-y-4 mb-6">
               <div>
-                <p className="text-purple-300/70 text-sm">Business Name</p>
+                <p className="text-white/50 text-sm">Business Name</p>
                 <p className="text-white font-medium">{businessName}</p>
               </div>
               <div>
-                <p className="text-purple-300/70 text-sm">Industry</p>
+                <p className="text-white/50 text-sm">Industry</p>
                 <p className="text-white font-medium">{selectedCategory?.name}</p>
               </div>
               <div>
-                <p className="text-purple-300/70 text-sm">Business Type</p>
+                <p className="text-white/50 text-sm">Business Type</p>
                 <p className="text-white font-medium">{selectedBusinessType?.name}</p>
               </div>
               <div>
-                <p className="text-purple-300/70 text-sm">Owner Name</p>
+                <p className="text-white/50 text-sm">Owner Name</p>
                 <p className="text-white font-medium">{name}</p>
               </div>
               <div>
-                <p className="text-purple-300/70 text-sm">Business Email</p>
+                <p className="text-white/50 text-sm">Business Email</p>
                 <p className="text-white font-medium">{email}</p>
               </div>
             </div>
 
-            <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 mb-6">
-              <p className="text-purple-200 text-sm">
+            <div className="bg-[#0393d5]/10 border border-[#0393d5]/30 rounded-lg p-4 mb-6">
+              <p className="text-white/80 text-sm">
                 Your account will be created with free access. Activate your subscription to unlock all business features.
               </p>
             </div>
@@ -534,7 +529,7 @@ export default function RegisterPage() {
             <button
               onClick={handleRegister}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -552,7 +547,7 @@ export default function RegisterPage() {
             <button
               onClick={() => setStep(2)}
               disabled={loading}
-              className="w-full mt-3 flex items-center justify-center gap-2 text-purple-300 hover:text-white transition-colors py-2"
+              className="w-full mt-3 flex items-center justify-center gap-2 text-white/70 hover:text-white transition-colors py-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Edit
@@ -561,7 +556,7 @@ export default function RegisterPage() {
         )}
 
         {/* Footer */}
-        <p className="mt-8 text-center text-purple-400/50 text-xs">
+        <p className="mt-8 text-center text-white/50 text-xs">
           &copy; {new Date().getFullYear()} Happy Inline. All rights reserved.
         </p>
       </div>

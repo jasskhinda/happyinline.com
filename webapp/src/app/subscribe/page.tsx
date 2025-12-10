@@ -97,13 +97,13 @@ function CheckoutForm({
       <div className="mb-6">
         <button
           onClick={onCancel}
-          className="flex items-center gap-2 text-purple-300 hover:text-white transition-colors mb-4"
+          className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors mb-4"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to plans
         </button>
         <h2 className="text-2xl font-bold text-white">Complete Your Subscription</h2>
-        <p className="text-purple-300 mt-1">
+        <p className="text-[#0393d5] mt-1">
           You&apos;re subscribing to {planDetails.name} at ${planDetails.amount}/month
         </p>
       </div>
@@ -123,12 +123,12 @@ function CheckoutForm({
           </div>
         )}
 
-        <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-purple-300 mb-2">
+        <div className="bg-[#0393d5]/10 border border-[#0393d5]/30 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-[#0393d5] mb-2">
             <Shield className="w-4 h-4" />
             <span className="font-medium">7-Day Money Back Guarantee</span>
           </div>
-          <p className="text-purple-200 text-sm">
+          <p className="text-white/80 text-sm">
             Not satisfied? Get a full refund within 7 days of your subscription.
           </p>
         </div>
@@ -136,7 +136,7 @@ function CheckoutForm({
         <button
           type="submit"
           disabled={!stripe || loading}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-[#0393d5] to-[#027bb5] hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
@@ -200,10 +200,10 @@ export default function SubscribePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
-          <p className="text-purple-300">Loading...</p>
+          <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+          <p className="text-[#0393d5]">Loading...</p>
         </div>
       </div>
     );
@@ -215,14 +215,14 @@ export default function SubscribePage() {
     : -1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
       {/* Header */}
       <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Happy Inline</h1>
           <button
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-purple-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             Back to Dashboard
@@ -267,7 +267,7 @@ export default function SubscribePage() {
               <h2 className="text-4xl font-bold text-white mb-4">
                 Choose Your Plan
               </h2>
-              <p className="text-purple-300 text-lg max-w-2xl mx-auto">
+              <p className="text-[#0393d5] text-lg max-w-2xl mx-auto">
                 Select the perfect plan for your business. All plans include our full feature set.
               </p>
             </div>
@@ -286,7 +286,7 @@ export default function SubscribePage() {
                     className={`relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border transition-all ${
                       isCurrentPlan
                         ? 'border-green-500/50 ring-2 ring-green-500/30'
-                        : 'border-white/20 hover:border-purple-500/50'
+                        : 'border-white/20 hover:border-[#0393d5]/50'
                     }`}
                   >
                     {/* Current Plan Badge */}
@@ -313,32 +313,32 @@ export default function SubscribePage() {
                         <Users className="w-6 h-6" style={{ color: planColor }} />
                       </div>
                       <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
-                      <p className="text-purple-300 text-sm">{plan.description}</p>
+                      <p className="text-[#0393d5] text-sm">{plan.description}</p>
                     </div>
 
                     {/* Price */}
                     <div className="mb-6">
                       <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-bold text-white">${plan.amount}</span>
-                        <span className="text-purple-300">/month</span>
+                        <span className="text-[#0393d5]">/month</span>
                       </div>
                     </div>
 
                     {/* Features */}
                     <ul className="space-y-3 mb-6">
-                      <li className="flex items-center gap-2 text-purple-200">
+                      <li className="flex items-center gap-2 text-white/80">
                         <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span>{plan.providers} Provider{plan.providers !== '1-2' ? 's' : ''}</span>
                       </li>
-                      <li className="flex items-center gap-2 text-purple-200">
+                      <li className="flex items-center gap-2 text-white/80">
                         <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span>Up to {plan.maxLicenses} licenses</span>
                       </li>
-                      <li className="flex items-center gap-2 text-purple-200">
+                      <li className="flex items-center gap-2 text-white/80">
                         <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span>Full feature access</span>
                       </li>
-                      <li className="flex items-center gap-2 text-purple-200">
+                      <li className="flex items-center gap-2 text-white/80">
                         <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
                         <span>7-day money back</span>
                       </li>
@@ -355,7 +355,7 @@ export default function SubscribePage() {
                     ) : isDowngrade ? (
                       <button
                         disabled
-                        className="w-full bg-white/5 text-purple-300/50 font-semibold py-3 rounded-lg border border-white/10 cursor-not-allowed"
+                        className="w-full bg-white/5 text-[#0393d5]/50 font-semibold py-3 rounded-lg border border-white/10 cursor-not-allowed"
                       >
                         Downgrade Not Available
                       </button>
@@ -364,7 +364,7 @@ export default function SubscribePage() {
                         onClick={() => handleSelectPlan(planKey)}
                         className={`w-full font-semibold py-3 rounded-lg transition-all ${
                           isUpgrade
-                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                            ? 'bg-gradient-to-r from-[#0393d5] to-[#027bb5] hover:from-purple-700 hover:to-pink-700 text-white'
                             : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
                         }`}
                       >

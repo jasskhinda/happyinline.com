@@ -68,24 +68,24 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
-          <p className="text-purple-300">Loading your dashboard...</p>
+          <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+          <p className="text-[#0393d5]">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
       {/* Header */}
       <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-white">Happy Inline</h1>
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-2 text-purple-300 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
           >
             <LogOut className="w-5 h-5" />
             Sign Out
@@ -99,7 +99,7 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-bold text-white mb-2">
             Welcome back, {subscription?.name || 'Business Owner'}!
           </h2>
-          <p className="text-purple-300">
+          <p className="text-[#0393d5]">
             Manage your subscription and business settings
           </p>
         </div>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
           <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                <CreditCard className="w-6 h-6 text-purple-400" />
+                <CreditCard className="w-6 h-6 text-[#0393d5]" />
                 Subscription
               </h3>
               {subscription?.isActive ? (
@@ -144,19 +144,19 @@ export default function DashboardPage() {
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <p className="text-purple-300 text-sm mb-1">Current Plan</p>
+                      <p className="text-[#0393d5] text-sm mb-1">Current Plan</p>
                       <h4 className="text-2xl font-bold text-white">
                         {subscription.planDetails?.name || subscription.subscription_plan}
                       </h4>
                     </div>
                     <div className="text-right">
-                      <p className="text-purple-300 text-sm mb-1">Monthly</p>
+                      <p className="text-[#0393d5] text-sm mb-1">Monthly</p>
                       <p className="text-2xl font-bold text-white">
                         {formatCurrency(subscription.monthly_amount)}
                       </p>
                     </div>
                   </div>
-                  <p className="text-purple-200 text-sm">
+                  <p className="text-white/80 text-sm">
                     {subscription.planDetails?.description}
                   </p>
                 </div>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                 {/* Subscription Details */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-purple-400 mb-2">
+                    <div className="flex items-center gap-2 text-[#0393d5] mb-2">
                       <Users className="w-4 h-4" />
                       <span className="text-sm">Licenses</span>
                     </div>
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-purple-400 mb-2">
+                    <div className="flex items-center gap-2 text-[#0393d5] mb-2">
                       <Calendar className="w-4 h-4" />
                       <span className="text-sm">Next Billing</span>
                     </div>
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                 {/* Payment Method */}
                 {subscription.payment_method_last4 && (
                   <div className="bg-white/5 rounded-lg p-4 mb-6">
-                    <p className="text-purple-300 text-sm mb-1">Payment Method</p>
+                    <p className="text-[#0393d5] text-sm mb-1">Payment Method</p>
                     <p className="text-white flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
                       {subscription.payment_method_brand?.toUpperCase()} ending in {subscription.payment_method_last4}
@@ -212,7 +212,7 @@ export default function DashboardPage() {
                   {subscription.canUpgrade && (
                     <button
                       onClick={() => router.push('/subscribe')}
-                      className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-5 py-2.5 rounded-lg transition-all"
+                      className="flex items-center gap-2 bg-gradient-to-r from-[#0393d5] to-[#027bb5] hover:from-purple-700 hover:to-pink-700 text-white px-5 py-2.5 rounded-lg transition-all"
                     >
                       <ArrowUpCircle className="w-5 h-5" />
                       Upgrade Plan
@@ -229,18 +229,18 @@ export default function DashboardPage() {
             ) : (
               /* No Subscription */
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-purple-400" />
+                <div className="w-16 h-16 bg-[#0393d5]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="w-8 h-8 text-[#0393d5]" />
                 </div>
                 <h4 className="text-xl font-semibold text-white mb-2">
                   No Active Subscription
                 </h4>
-                <p className="text-purple-300 mb-6">
+                <p className="text-[#0393d5] mb-6">
                   Subscribe to start using Happy Inline for your business
                 </p>
                 <button
                   onClick={() => router.push('/subscribe')}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-3 rounded-lg transition-all"
+                  className="bg-gradient-to-r from-[#0393d5] to-[#027bb5] hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-3 rounded-lg transition-all"
                 >
                   View Plans & Subscribe
                 </button>
@@ -251,37 +251,37 @@ export default function DashboardPage() {
           {/* Profile Card */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-6">
-              <User className="w-6 h-6 text-purple-400" />
+              <User className="w-6 h-6 text-[#0393d5]" />
               Profile
             </h3>
 
             <div className="space-y-4">
               <div>
-                <p className="text-purple-300 text-sm mb-1">Name</p>
+                <p className="text-[#0393d5] text-sm mb-1">Name</p>
                 <p className="text-white">{subscription?.name || 'N/A'}</p>
               </div>
               <div>
-                <p className="text-purple-300 text-sm mb-1">Email</p>
+                <p className="text-[#0393d5] text-sm mb-1">Email</p>
                 <p className="text-white">{subscription?.email || 'N/A'}</p>
               </div>
               {subscription?.business_name && (
                 <div>
-                  <p className="text-purple-300 text-sm mb-1">Business</p>
+                  <p className="text-[#0393d5] text-sm mb-1">Business</p>
                   <p className="text-white flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-purple-400" />
+                    <Building2 className="w-4 h-4 text-[#0393d5]" />
                     {subscription.business_name}
                   </p>
                 </div>
               )}
               <div>
-                <p className="text-purple-300 text-sm mb-1">Account Type</p>
+                <p className="text-[#0393d5] text-sm mb-1">Account Type</p>
                 <p className="text-white capitalize">{subscription?.role || 'Customer'}</p>
               </div>
             </div>
 
             <button
               onClick={loadSubscriptionData}
-              className="mt-6 w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-purple-300 py-2.5 rounded-lg transition-all border border-white/10"
+              className="mt-6 w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-[#0393d5] py-2.5 rounded-lg transition-all border border-white/10"
             >
               <RefreshCw className="w-4 h-4" />
               Refresh
