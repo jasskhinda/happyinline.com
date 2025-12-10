@@ -118,7 +118,13 @@ export default function LoginPage() {
 
           {/* Help Text */}
           <p className="mt-6 text-center text-purple-300/70 text-sm">
-            Use your Happy Inline business account to sign in.
+            Don&apos;t have an account?{' '}
+            <button
+              onClick={() => router.push('/register')}
+              className="text-purple-400 hover:text-purple-300 font-medium"
+            >
+              Register Your Business
+            </button>
           </p>
         </div>
 
