@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithPassword } from '@/lib/auth';
+import { signInWithPassword, getProfile } from '@/lib/auth';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -21,8 +21,16 @@ export default function LoginPage() {
     try {
       const result = await signInWithPassword(email, password);
 
-      if (result.success) {
-        router.push('/dashboard');
+      if (result.success && result.user) {
+        // Check user role to redirect appropriately
+        const profile = await getProfile(result.user.id);
+
+        if (profile?.role === 'customer') {
+          router.push('/customer');
+        } else {
+          // Owner or other roles go to business dashboard
+          router.push('/dashboard');
+        }
       } else {
         setError(result.error || 'Invalid email or password');
       }
@@ -39,7 +47,7 @@ export default function LoginPage() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Happy Inline</h1>
-          <p className="text-[#0393d5]">Business Owner Portal</p>
+          <p className="text-[#0393d5]">Book appointments. Manage your business.</p>
         </div>
 
         {/* Login Card */}
