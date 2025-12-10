@@ -159,6 +159,44 @@ function DashboardContent() {
           </div>
         )}
 
+        {/* Unlock Features Banner - Show for non-subscribed users */}
+        {!subscription?.isActive && (
+          <div className="bg-gradient-to-r from-[#0393d5]/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-6 border border-[#0393d5]/30 mb-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#0393d5] to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Store className="w-10 h-10 text-white" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl font-bold text-white mb-2">Unlock All Features</h3>
+                <p className="text-[#0393d5] mb-4">
+                  Subscribe to access Business Management tools including:
+                </p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <Store className="w-4 h-4" /> Create Shop
+                  </span>
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <Users className="w-4 h-4" /> Manage Providers
+                  </span>
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <Scissors className="w-4 h-4" /> Add Services
+                  </span>
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <CalendarDays className="w-4 h-4" /> Handle Bookings
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/subscribe')}
+                className="bg-gradient-to-r from-[#0393d5] to-purple-500 hover:from-[#027bb5] hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                Subscribe Now
+                <ArrowUpCircle className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Business Management Navigation - Only show if subscribed */}
         {subscription?.isActive && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
