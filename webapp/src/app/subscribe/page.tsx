@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -155,7 +155,7 @@ function CheckoutForm({
   );
 }
 
-export default function SubscribePage() {
+function SubscribeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -247,12 +247,13 @@ export default function SubscribePage() {
                 mode: 'subscription',
                 amount: Math.round(STRIPE_PLANS[selectedPlan].amount * 100),
                 currency: 'usd',
+                paymentMethodCreation: 'manual',
                 appearance: {
                   theme: 'night',
                   variables: {
-                    colorPrimary: '#a855f7',
-                    colorBackground: '#1e1b4b',
-                    colorText: '#e9d5ff',
+                    colorPrimary: '#0393d5',
+                    colorBackground: '#0a3a6b',
+                    colorText: '#ffffff',
                     colorDanger: '#ef4444',
                     borderRadius: '8px',
                   },
@@ -387,5 +388,22 @@ export default function SubscribePage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function SubscribePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+            <p className="text-[#0393d5]">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <SubscribeContent />
+    </Suspense>
   );
 }

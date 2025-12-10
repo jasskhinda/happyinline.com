@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getSubscriptionStatus, signOut, SubscriptionStatus } from '@/lib/auth';
 import { STRIPE_PLANS, getPlanColor } from '@/lib/stripe';
+import { getMyShop, Shop } from '@/lib/shop';
 import {
   User,
   CreditCard,
@@ -16,29 +17,40 @@ import {
   Clock,
   RefreshCw,
   Loader2,
-  Building2
+  Building2,
+  Store,
+  Scissors,
+  CalendarDays,
+  Settings,
+  Plus
 } from 'lucide-react';
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionStatus | null>(null);
+  const [shop, setShop] = useState<Shop | null>(null);
   const [error, setError] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showShopCreatedMessage, setShowShopCreatedMessage] = useState(false);
 
   useEffect(() => {
-    loadSubscriptionData();
+    loadData();
 
     // Check if user just subscribed
     if (searchParams.get('subscribed') === 'true') {
       setShowSuccessMessage(true);
-      // Auto-hide after 5 seconds
       setTimeout(() => setShowSuccessMessage(false), 5000);
+    }
+    // Check if shop was just created
+    if (searchParams.get('shop_created') === 'true') {
+      setShowShopCreatedMessage(true);
+      setTimeout(() => setShowShopCreatedMessage(false), 5000);
     }
   }, [searchParams]);
 
-  const loadSubscriptionData = async () => {
+  const loadData = async () => {
     try {
       const user = await getCurrentUser();
 
@@ -49,8 +61,14 @@ export default function DashboardPage() {
 
       const subStatus = await getSubscriptionStatus(user.id);
       setSubscription(subStatus);
+
+      // Load shop if subscription is active
+      if (subStatus?.isActive) {
+        const { shop: userShop } = await getMyShop(user.id);
+        setShop(userShop || null);
+      }
     } catch (err) {
-      setError('Failed to load subscription data');
+      setError('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -113,7 +131,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Success Message */}
+        {/* Success Message - Subscription */}
         {showSuccessMessage && (
           <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6 text-green-200 flex items-center gap-3">
             <CheckCircle className="w-6 h-6 text-green-400 flex-shrink-0" />
@@ -124,9 +142,100 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* Success Message - Shop Created */}
+        {showShopCreatedMessage && (
+          <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6 text-green-200 flex items-center gap-3">
+            <Store className="w-6 h-6 text-green-400 flex-shrink-0" />
+            <div>
+              <p className="font-semibold">Business Created Successfully!</p>
+              <p className="text-sm text-green-300">Now add your services and providers to get started.</p>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6 text-red-200">
             {error}
+          </div>
+        )}
+
+        {/* Business Management Navigation - Only show if subscribed */}
+        {subscription?.isActive && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
+            <h3 className="text-xl font-semibold text-white mb-4">Business Management</h3>
+
+            {shop ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button
+                  onClick={() => router.push('/shop/settings')}
+                  className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
+                >
+                  <div className="w-12 h-12 bg-[#0393d5]/20 rounded-full flex items-center justify-center">
+                    <Settings className="w-6 h-6 text-[#0393d5]" />
+                  </div>
+                  <span className="text-white font-medium text-sm">Shop Settings</span>
+                </button>
+
+                <button
+                  onClick={() => router.push('/providers')}
+                  className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
+                >
+                  <div className="w-12 h-12 bg-[#0393d5]/20 rounded-full flex items-center justify-center">
+                    <Users className="w-6 h-6 text-[#0393d5]" />
+                  </div>
+                  <span className="text-white font-medium text-sm">Providers</span>
+                  <span className="text-[#0393d5] text-xs">
+                    {subscription?.license_count || 0} / {subscription?.max_licenses || 0}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => router.push('/services')}
+                  className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
+                >
+                  <div className="w-12 h-12 bg-[#0393d5]/20 rounded-full flex items-center justify-center">
+                    <Scissors className="w-6 h-6 text-[#0393d5]" />
+                  </div>
+                  <span className="text-white font-medium text-sm">Services</span>
+                </button>
+
+                <button
+                  onClick={() => router.push('/bookings')}
+                  className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
+                >
+                  <div className="w-12 h-12 bg-[#0393d5]/20 rounded-full flex items-center justify-center">
+                    <CalendarDays className="w-6 h-6 text-[#0393d5]" />
+                  </div>
+                  <span className="text-white font-medium text-sm">Bookings</span>
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <div className="w-16 h-16 bg-[#0393d5]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Store className="w-8 h-8 text-[#0393d5]" />
+                </div>
+                <h4 className="text-lg font-semibold text-white mb-2">Create Your Business</h4>
+                <p className="text-[#0393d5] mb-4 text-sm">
+                  Set up your business to start managing providers, services, and bookings.
+                </p>
+                <button
+                  onClick={() => router.push('/shop/create')}
+                  className="inline-flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create Business
+                </button>
+              </div>
+            )}
+
+            {/* Shop Status Banner */}
+            {shop && shop.status !== 'active' && (
+              <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
+                <p className="text-yellow-200 text-sm">
+                  <strong>Shop Status:</strong> {shop.status === 'draft' ? 'Draft - Complete your setup and submit for review' : shop.status === 'pending_review' ? 'Pending Review - We\'ll review your business soon' : shop.status}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -300,7 +409,7 @@ export default function DashboardPage() {
             </div>
 
             <button
-              onClick={loadSubscriptionData}
+              onClick={loadData}
               className="mt-6 w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-[#0393d5] py-2.5 rounded-lg transition-all border border-white/10"
             >
               <RefreshCw className="w-4 h-4" />
@@ -310,5 +419,22 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+            <p className="text-[#0393d5]">Loading your dashboard...</p>
+          </div>
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }
