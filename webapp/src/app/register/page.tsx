@@ -15,7 +15,11 @@ import {
   ArrowLeft,
   Check,
   CheckCircle,
-  Briefcase
+  Briefcase,
+  Crown,
+  Star,
+  Zap,
+  Shield
 } from 'lucide-react';
 
 interface Category {
@@ -52,6 +56,40 @@ export default function RegisterPage() {
   const [businessTypes, setBusinessTypes] = useState<BusinessType[]>([]);
   const [selectedBusinessType, setSelectedBusinessType] = useState<BusinessType | null>(null);
   const [loadingCategories, setLoadingCategories] = useState(false);
+
+  // Subscription Plan
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('monthly');
+
+  const plans = {
+    monthly: {
+      name: 'Monthly',
+      price: 29.99,
+      period: 'month',
+      features: [
+        'Unlimited bookings',
+        'Customer management',
+        'Online payments',
+        'Business analytics',
+        'Email notifications',
+        'Priority support'
+      ]
+    },
+    yearly: {
+      name: 'Yearly',
+      price: 299.99,
+      period: 'year',
+      savings: '2 months free!',
+      features: [
+        'Unlimited bookings',
+        'Customer management',
+        'Online payments',
+        'Business analytics',
+        'Email notifications',
+        'Priority support',
+        '2 months FREE'
+      ]
+    }
+  };
 
   // Load categories when step 2 is reached
   useEffect(() => {
@@ -186,7 +224,7 @@ export default function RegisterPage() {
         {/* Progress Indicator */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">
-            {[0, 1, 2, 3].map((s) => (
+            {[0, 1, 2, 3, 4].map((s) => (
               <div
                 key={s}
                 className={`w-3 h-3 rounded-full transition-all ${
@@ -462,7 +500,7 @@ export default function RegisterPage() {
               disabled={!isStep2Valid}
               className="w-full mt-6 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Continue to Review
+              Continue to Subscription
               <ArrowRight className="w-5 h-5" />
             </button>
 
@@ -476,8 +514,117 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {/* Step 3: Review & Confirm */}
+        {/* Step 3: Subscription Plan Selection */}
         {step === 3 && (
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-[#0393d5] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Choose Your Plan
+              </h2>
+              <p className="text-[#0393d5]">
+                Start your 7-day free trial today
+              </p>
+            </div>
+
+            {/* 7-Day Guarantee Badge */}
+            <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-3 mb-6 flex items-center justify-center gap-2">
+              <Shield className="w-5 h-5 text-green-400" />
+              <span className="text-green-300 text-sm font-medium">7-Day Money Back Guarantee</span>
+            </div>
+
+            {/* Plan Cards */}
+            <div className="space-y-4 mb-6">
+              {/* Monthly Plan */}
+              <button
+                onClick={() => setSelectedPlan('monthly')}
+                className={`w-full p-5 rounded-xl text-left transition-all border-2 ${
+                  selectedPlan === 'monthly'
+                    ? 'bg-[#0393d5]/20 border-[#0393d5]'
+                    : 'bg-white/5 border-transparent hover:border-[#0393d5]/50'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-6 h-6 text-[#0393d5]" />
+                    <span className="text-white font-semibold text-lg">Monthly</span>
+                  </div>
+                  {selectedPlan === 'monthly' && (
+                    <Check className="w-6 h-6 text-[#0393d5]" />
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-3xl font-bold text-white">${plans.monthly.price}</span>
+                  <span className="text-white/60">/month</span>
+                </div>
+                <p className="text-white/60 text-sm">Billed monthly, cancel anytime</p>
+              </button>
+
+              {/* Yearly Plan */}
+              <button
+                onClick={() => setSelectedPlan('yearly')}
+                className={`w-full p-5 rounded-xl text-left transition-all border-2 relative ${
+                  selectedPlan === 'yearly'
+                    ? 'bg-[#0393d5]/20 border-[#0393d5]'
+                    : 'bg-white/5 border-transparent hover:border-[#0393d5]/50'
+                }`}
+              >
+                {/* Popular Badge */}
+                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  BEST VALUE
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <Star className="w-6 h-6 text-yellow-400" />
+                    <span className="text-white font-semibold text-lg">Yearly</span>
+                  </div>
+                  {selectedPlan === 'yearly' && (
+                    <Check className="w-6 h-6 text-[#0393d5]" />
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-3xl font-bold text-white">${plans.yearly.price}</span>
+                  <span className="text-white/60">/year</span>
+                </div>
+                <p className="text-green-400 text-sm font-medium">Save $59.89 - 2 months FREE!</p>
+              </button>
+            </div>
+
+            {/* Features List */}
+            <div className="bg-white/5 rounded-xl p-4 mb-6">
+              <h3 className="text-white font-semibold mb-3">All plans include:</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {plans.monthly.features.map((feature, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-[#0393d5]" />
+                    <span className="text-white/80 text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setStep(4)}
+              className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 rounded-lg transition-all flex items-center justify-center gap-2"
+            >
+              Continue to Review
+              <ArrowRight className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => setStep(2)}
+              className="w-full mt-3 flex items-center justify-center gap-2 text-white/70 hover:text-white transition-colors py-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+          </div>
+        )}
+
+        {/* Step 4: Review & Confirm */}
+        {step === 4 && (
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
             <div className="text-center mb-6">
               <div className="w-20 h-20 bg-[#0393d5] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -518,12 +665,27 @@ export default function RegisterPage() {
                 <p className="text-white/50 text-sm">Business Email</p>
                 <p className="text-white font-medium">{email}</p>
               </div>
+              <div className="border-t border-white/10 pt-4">
+                <p className="text-white/50 text-sm">Subscription Plan</p>
+                <p className="text-white font-medium">
+                  {selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'} - ${plans[selectedPlan].price}/{plans[selectedPlan].period}
+                </p>
+                {selectedPlan === 'yearly' && (
+                  <p className="text-green-400 text-sm">Saving $59.89 per year!</p>
+                )}
+              </div>
             </div>
 
             <div className="bg-[#0393d5]/10 border border-[#0393d5]/30 rounded-lg p-4 mb-6">
-              <p className="text-white/80 text-sm">
-                Your account will be created with free access. Activate your subscription to unlock all business features.
-              </p>
+              <div className="flex items-start gap-3">
+                <Shield className="w-5 h-5 text-[#0393d5] flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-white font-medium text-sm">7-Day Money Back Guarantee</p>
+                  <p className="text-white/70 text-sm">
+                    Try Happy Inline risk-free. If you&apos;re not satisfied within 7 days, get a full refund.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <button
@@ -545,12 +707,12 @@ export default function RegisterPage() {
             </button>
 
             <button
-              onClick={() => setStep(2)}
+              onClick={() => setStep(3)}
               disabled={loading}
               className="w-full mt-3 flex items-center justify-center gap-2 text-white/70 hover:text-white transition-colors py-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Edit
+              Back to Subscription
             </button>
           </div>
         )}
