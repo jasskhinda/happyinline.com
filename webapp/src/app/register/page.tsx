@@ -158,8 +158,8 @@ export default function RegisterPage() {
         console.error('Profile update error:', profileError);
       }
 
-      // Navigate to dashboard
-      router.push('/dashboard?registered=true');
+      // Navigate to subscribe page with selected plan to complete payment
+      router.push(`/subscribe?plan=${selectedPlan}&registered=true`);
 
     } catch (err: any) {
       console.error('Registration error:', err);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -157,6 +157,7 @@ function CheckoutForm({
 
 export default function SubscribePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState<string>('');
@@ -166,7 +167,14 @@ export default function SubscribePage() {
 
   useEffect(() => {
     loadUserData();
-  }, []);
+
+    // Check for plan from URL (coming from registration)
+    const planFromUrl = searchParams.get('plan') as PlanKey | null;
+    if (planFromUrl && STRIPE_PLANS[planFromUrl]) {
+      setSelectedPlan(planFromUrl);
+      setShowCheckout(true);
+    }
+  }, [searchParams]);
 
   const loadUserData = async () => {
     try {
