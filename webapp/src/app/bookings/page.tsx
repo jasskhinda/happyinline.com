@@ -125,7 +125,7 @@ export default function BookingsPage() {
     setError('');
 
     try {
-      const statusMap: Record<string, BookingStatus> = {
+      const statusMap: Record<string, 'approved' | 'rejected' | 'completed' | 'cancelled'> = {
         approve: 'approved',
         reject: 'rejected',
         complete: 'completed',
