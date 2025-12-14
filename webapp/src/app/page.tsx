@@ -8,7 +8,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
         <div className="flex justify-between items-center px-5 md:px-12 h-16 max-w-[1400px] mx-auto">
           <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="Happy InLine" width={100} height={100} />
+            <Image src="/logo.png" alt="Happy InLine" width={50} height={50} />
           </Link>
           <div className="flex items-center gap-4 md:gap-8">
             <Link href="/login" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
