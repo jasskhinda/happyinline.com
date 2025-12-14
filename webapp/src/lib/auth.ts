@@ -24,6 +24,9 @@ export interface Profile {
 
 export interface SubscriptionStatus extends Profile {
   isActive: boolean;
+  isTrial: boolean;
+  trialDaysRemaining: number;
+  trialEndsAt: string | null;
   isRefundEligible: boolean;
   refundDaysRemaining: number;
   planDetails: typeof STRIPE_PLANS[keyof typeof STRIPE_PLANS] | Record<string, never>;
@@ -114,6 +117,7 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
       subscription_end_date,
       next_billing_date,
       refund_eligible_until,
+      trial_ends_at,
       stripe_customer_id,
       stripe_subscription_id,
       monthly_amount,
@@ -130,11 +134,14 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
     return null;
   }
 
-  // If no subscription plan, return null
+  // If no subscription plan, return inactive status
   if (!data.subscription_plan) {
     return {
       ...data,
       isActive: false,
+      isTrial: false,
+      trialDaysRemaining: 0,
+      trialEndsAt: null,
       isRefundEligible: false,
       refundDaysRemaining: 0,
       planDetails: {},
@@ -158,8 +165,29 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
     }
   }
 
+  // Check for trial status
+  let isTrial = data.subscription_status === 'trial';
+  let trialDaysRemaining = 0;
+  const trialEndsAt = (data as any).trial_ends_at || null;
+
+  if (isTrial && trialEndsAt) {
+    const trialEnd = new Date(trialEndsAt);
+    const diffMs = trialEnd.getTime() - now.getTime();
+    if (diffMs > 0) {
+      trialDaysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    } else {
+      // Trial expired
+      isTrial = false;
+    }
+  }
+
   // Determine if subscription is truly active
   let isActive = data.subscription_status === 'active';
+
+  // Trial accounts are active if trial hasn't expired
+  if (isTrial && trialDaysRemaining > 0) {
+    isActive = true;
+  }
 
   // Check if cancelled but still within paid period
   if (data.subscription_status === 'cancelled') {
@@ -174,11 +202,14 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
   return {
     ...data,
     isActive,
+    isTrial,
+    trialDaysRemaining,
+    trialEndsAt,
     isRefundEligible,
     refundDaysRemaining,
     planDetails,
-    canUpgrade: data.subscription_status === 'active' && data.subscription_plan !== 'unlimited',
-    accessUntil: data.subscription_end_date || data.next_billing_date
+    canUpgrade: (data.subscription_status === 'active' || isTrial) && data.subscription_plan !== 'unlimited',
+    accessUntil: isTrial ? trialEndsAt : (data.subscription_end_date || data.next_billing_date)
   };
 };
 

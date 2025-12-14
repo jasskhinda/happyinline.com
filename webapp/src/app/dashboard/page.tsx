@@ -22,7 +22,9 @@ import {
   Scissors,
   CalendarDays,
   Settings,
-  Plus
+  Plus,
+  Gift,
+  AlertTriangle
 } from 'lucide-react';
 
 function DashboardContent() {
@@ -109,7 +111,7 @@ function DashboardContent() {
       {/* Header */}
       <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Happy Inline</h1>
+          <img src="/logo.png" alt="Happy Inline" className="w-[100px] h-[100px]" />
           <button
             onClick={handleSignOut}
             className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
@@ -156,6 +158,65 @@ function DashboardContent() {
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6 text-red-200">
             {error}
+          </div>
+        )}
+
+        {/* Trial Banner - Show for trial users */}
+        {subscription?.isTrial && subscription.trialDaysRemaining > 0 && (
+          <div className="bg-gradient-to-r from-purple-500/20 to-[#0393d5]/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 mb-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-[#0393d5] rounded-full flex items-center justify-center flex-shrink-0">
+                <Gift className="w-8 h-8 text-white" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-xl font-bold text-white mb-1">
+                  Free Trial - {subscription.trialDaysRemaining} {subscription.trialDaysRemaining === 1 ? 'Day' : 'Days'} Remaining
+                </h3>
+                <p className="text-purple-200 text-sm mb-3">
+                  You're enjoying full access to Happy Inline during your free trial period.
+                  {subscription.trialEndsAt && (
+                    <span className="block mt-1">
+                      Trial ends on {formatDate(subscription.trialEndsAt)}
+                    </span>
+                  )}
+                </p>
+                <div className="flex items-center gap-2 text-yellow-300 text-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  Subscribe before your trial ends to keep your business running smoothly.
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/subscribe')}
+                className="bg-gradient-to-r from-purple-500 to-[#0393d5] hover:from-purple-600 hover:to-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                Subscribe Now
+                <ArrowUpCircle className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Trial Expired Banner */}
+        {subscription?.subscription_status === 'trial' && subscription.trialDaysRemaining === 0 && (
+          <div className="bg-red-500/20 backdrop-blur-lg rounded-2xl p-6 border border-red-500/30 mb-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-red-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-8 h-8 text-red-400" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-xl font-bold text-red-300 mb-1">Trial Expired</h3>
+                <p className="text-red-200 text-sm">
+                  Your free trial has ended. Subscribe now to continue using Happy Inline and access all business management features.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/subscribe')}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                Subscribe Now
+                <ArrowUpCircle className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         )}
 
