@@ -103,34 +103,20 @@ export const getProfile = async (userId: string): Promise<Profile | null> => {
 export const getSubscriptionStatus = async (userId: string): Promise<SubscriptionStatus | null> => {
   const supabase = getSupabaseClient();
 
+  // Fetch all profile fields to avoid missing column errors
   const { data, error } = await supabase
     .from('profiles')
-    .select(`
-      id,
-      email,
-      name,
-      role,
-      business_name,
-      subscription_plan,
-      subscription_status,
-      subscription_start_date,
-      subscription_end_date,
-      next_billing_date,
-      refund_eligible_until,
-      trial_ends_at,
-      stripe_customer_id,
-      stripe_subscription_id,
-      monthly_amount,
-      max_licenses,
-      license_count,
-      payment_method_last4,
-      payment_method_brand
-    `)
+    .select('*')
     .eq('id', userId)
     .single();
 
   if (error) {
     console.error('Error getting subscription status:', error);
+    return null;
+  }
+
+  if (!data) {
+    console.error('No profile data found for user:', userId);
     return null;
   }
 
@@ -168,7 +154,7 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
   // Check for trial status
   let isTrial = data.subscription_status === 'trial';
   let trialDaysRemaining = 0;
-  const trialEndsAt = (data as any).trial_ends_at || null;
+  const trialEndsAt = data.trial_ends_at || null;
 
   if (isTrial && trialEndsAt) {
     const trialEnd = new Date(trialEndsAt);

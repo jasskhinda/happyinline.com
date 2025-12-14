@@ -438,6 +438,81 @@ export const cancelCustomerBooking = async (bookingId: string, customerId: strin
 };
 
 // ============================================
+// CUSTOMER'S LINKED SHOP
+// ============================================
+
+/**
+ * Get the customer's exclusive/linked shop
+ * Customers are tied to ONE shop only (via QR code scan)
+ */
+export const getCustomerLinkedShop = async (customerId: string): Promise<{
+  success: boolean;
+  shop?: ShopPublic;
+  shopId?: string;
+  error?: string
+}> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // First get the customer's exclusive_shop_id from their profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('exclusive_shop_id')
+      .eq('id', customerId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching customer profile:', profileError);
+      return { success: false, error: profileError.message };
+    }
+
+    if (!profile?.exclusive_shop_id) {
+      // Customer hasn't scanned a QR code yet - no linked shop
+      return { success: true, shop: undefined, shopId: undefined };
+    }
+
+    // Now get the shop details
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select(`
+        id,
+        name,
+        description,
+        address,
+        city,
+        state,
+        zip_code,
+        phone,
+        email,
+        logo_url,
+        cover_image_url,
+        rating,
+        total_reviews,
+        is_verified,
+        operating_days,
+        opening_time,
+        closing_time,
+        is_manually_closed,
+        status,
+        category:categories(id, name),
+        business_type:business_types(id, name)
+      `)
+      .eq('id', profile.exclusive_shop_id)
+      .single();
+
+    if (shopError) {
+      console.error('Error fetching linked shop:', shopError);
+      return { success: false, error: shopError.message };
+    }
+
+    return { success: true, shop, shopId: profile.exclusive_shop_id };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ============================================
 // PROFILE
 // ============================================
 
