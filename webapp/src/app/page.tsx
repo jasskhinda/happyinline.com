@@ -5,7 +5,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-[#F5F5F7] font-sans overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/10 shadow-lg">
         <div className="flex justify-between items-center px-5 md:px-12 h-24 max-w-[1400px] mx-auto">
           <Link href="/" className="flex items-center">
             <Image src="/logo.png" alt="Happy InLine" width={80} height={80} />
@@ -242,14 +242,14 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black border-t border-white/10 py-12 px-5">
+      <footer className="bg-white/80 backdrop-blur-xl border-t border-black/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-12 px-5">
         <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex gap-8">
-            <Link href="/" className="text-[#86868B] hover:text-white text-sm transition-colors">Home</Link>
-            <Link href="/privacy" className="text-[#86868B] hover:text-white text-sm transition-colors">Privacy Policy</Link>
-            <a href="mailto:info@happyinline.com" className="text-[#86868B] hover:text-white text-sm transition-colors">Contact</a>
+            <Link href="/" className="text-gray-600 hover:text-[#0393d5] text-sm transition-colors">Home</Link>
+            <Link href="/privacy" className="text-gray-600 hover:text-[#0393d5] text-sm transition-colors">Privacy Policy</Link>
+            <a href="mailto:info@happyinline.com" className="text-gray-600 hover:text-[#0393d5] text-sm transition-colors">Contact</a>
           </div>
-          <p className="text-[#48484A] text-sm">
+          <p className="text-gray-500 text-sm">
             Copyright &copy; {new Date().getFullYear()} Happy InLine. All rights reserved.
           </p>
         </div>
