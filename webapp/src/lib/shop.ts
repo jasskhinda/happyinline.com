@@ -101,9 +101,12 @@ export interface CreateShopData {
   city?: string;
   state?: string;
   zip_code?: string;
+  country?: string;
   phone?: string;
   email?: string;
   website?: string;
+  logo_url?: string;
+  cover_image_url?: string;
   operating_days?: string[];
   opening_time?: string;
   closing_time?: string;
@@ -172,9 +175,12 @@ export const createShop = async (userId: string, shopData: CreateShopData): Prom
         city: shopData.city || null,
         state: shopData.state || null,
         zip_code: shopData.zip_code || null,
+        country: shopData.country || null,
         phone: shopData.phone || null,
         email: shopData.email || null,
         website: shopData.website || null,
+        logo_url: shopData.logo_url || null,
+        cover_image_url: shopData.cover_image_url || null,
         operating_days: shopData.operating_days || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
         opening_time: shopData.opening_time || '09:00',
         closing_time: shopData.closing_time || '18:00',
