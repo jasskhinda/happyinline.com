@@ -2,15 +2,16 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCurrentUser, getSubscriptionStatus, signOut, SubscriptionStatus } from '@/lib/auth';
+import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus } from '@/lib/auth';
 import { STRIPE_PLANS, getPlanColor } from '@/lib/stripe';
 import { getMyShop, Shop } from '@/lib/shop';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
   User,
   CreditCard,
   Calendar,
   Users,
-  LogOut,
   ArrowUpCircle,
   XCircle,
   CheckCircle,
@@ -76,10 +77,6 @@ function DashboardContent() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
-  };
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
@@ -107,22 +104,10 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <img src="/logo.png" alt="Happy Inline" className="w-[100px] h-[100px]" />
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-          >
-            <LogOut className="w-5 h-5" />
-            Sign Out
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8 pt-32 flex-1">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">
@@ -517,6 +502,8 @@ function DashboardContent() {
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

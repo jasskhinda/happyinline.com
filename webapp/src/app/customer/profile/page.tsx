@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getProfile, signOut, Profile } from '@/lib/auth';
+import { getCurrentUser, getProfile, Profile } from '@/lib/auth';
 import { updateCustomerProfile } from '@/lib/customer';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
-  ArrowLeft,
   Loader2,
   User,
   Mail,
   Phone,
   MapPin,
-  LogOut,
   Save,
   Check,
   AlertCircle,
@@ -86,11 +86,6 @@ export default function CustomerProfilePage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
@@ -103,21 +98,12 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.push('/customer')}
-            className="text-[#0393d5] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold text-white">My Profile</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-      <main className="max-w-2xl mx-auto px-4 py-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+        {/* Page Title */}
+        <h1 className="text-2xl font-bold text-white mb-6">My Profile</h1>
         {/* Success Message */}
         {success && (
           <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6 flex items-center gap-3">
@@ -239,15 +225,9 @@ export default function CustomerProfilePage() {
           </div>
         </div>
 
-        {/* Sign Out */}
-        <button
-          onClick={handleSignOut}
-          className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <LogOut className="w-5 h-5" />
-          Sign Out
-        </button>
       </main>
+
+      <Footer />
     </div>
   );
 }

@@ -12,6 +12,8 @@ import {
   ShopServicePublic,
   ProviderPublic
 } from '@/lib/customer';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
   ArrowLeft,
   Loader2,
@@ -230,22 +232,10 @@ export default function ShopDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.push('/customer')}
-            className="text-[#0393d5] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold text-white truncate">{shop.name}</h1>
-          {shop.is_verified && <BadgeCheck className="w-5 h-5 text-[#0393d5] flex-shrink-0" />}
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
         {/* Cover & Info */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden mb-6">
           {/* Cover */}
@@ -393,6 +383,8 @@ export default function ShopDetailsPage() {
           </button>
         )}
       </main>
+
+      <Footer />
 
       {/* Booking Modal */}
       {showBookingModal && (

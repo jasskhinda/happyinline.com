@@ -11,6 +11,8 @@ import {
 } from '@stripe/react-stripe-js';
 import { getCurrentUser, getSubscriptionStatus, createSubscription, SubscriptionStatus } from '@/lib/auth';
 import { STRIPE_PLANS, PlanKey, getPlanColor } from '@/lib/stripe';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
   Check,
   ArrowLeft,
@@ -223,22 +225,10 @@ function SubscribeContent() {
     : -1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Happy Inline</h1>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Dashboard
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-      <main className="max-w-6xl mx-auto px-4 py-12">
+      <main className="max-w-6xl mx-auto px-4 py-12 pt-32 flex-1 w-full">
         {showCheckout && selectedPlan && userId ? (
           <div className="max-w-lg mx-auto">
             <Elements
@@ -387,6 +377,8 @@ function SubscribeContent() {
           </>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }

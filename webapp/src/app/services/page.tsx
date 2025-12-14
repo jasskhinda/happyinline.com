@@ -13,8 +13,9 @@ import {
   Shop,
   ShopService
 } from '@/lib/shop';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
-  ArrowLeft,
   Loader2,
   Scissors,
   Plus,
@@ -288,22 +289,10 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Services Management</h1>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back to Dashboard
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8 pt-32 flex-1 w-full">
         {/* Success Message */}
         {success && (
           <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6 flex items-center gap-3">
@@ -462,6 +451,8 @@ export default function ServicesPage() {
           )}
         </div>
       </main>
+
+      <Footer />
 
       {/* Add Service Modal */}
       {showAddModal && (

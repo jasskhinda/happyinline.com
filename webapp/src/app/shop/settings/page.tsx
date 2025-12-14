@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getSubscriptionStatus } from '@/lib/auth';
 import { getMyShop, updateShop, toggleShopStatus, submitShopForReview, deleteShop, Shop } from '@/lib/shop';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
   Building2,
   MapPin,
@@ -11,7 +13,6 @@ import {
   Mail,
   Globe,
   Clock,
-  ArrowLeft,
   Save,
   Loader2,
   Store,
@@ -204,22 +205,10 @@ export default function ShopSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-white">Shop Settings</h1>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Back
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8 pt-32 flex-1 w-full">
         {/* Status Messages */}
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6 text-red-200 flex items-center gap-2">
@@ -512,6 +501,8 @@ export default function ShopSettingsPage() {
           </button>
         </div>
       </main>
+
+      <Footer />
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

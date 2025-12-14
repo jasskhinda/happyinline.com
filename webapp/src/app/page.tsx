@@ -1,31 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-[#F5F5F7] font-sans overflow-x-hidden">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/10 shadow-lg">
-        <div className="flex justify-between items-center px-5 md:px-12 h-24 max-w-[1400px] mx-auto">
-          <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="Happy InLine" width={80} height={80} />
-          </Link>
-          <div className="flex items-center gap-4 md:gap-6">
-            <Link
-              href="/login"
-              className="bg-[#0393d5] hover:bg-[#027bb5] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors"
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="bg-[#0393d5] hover:bg-[#027bb5] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors"
-            >
-              Register Business
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Header />
 
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col items-center justify-center text-center px-5 pt-32 pb-20 relative overflow-hidden"
@@ -241,19 +222,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white/80 backdrop-blur-xl border-t border-black/10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] py-12 px-5">
-        <div className="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex gap-8">
-            <Link href="/" className="text-gray-600 hover:text-[#0393d5] text-sm transition-colors">Home</Link>
-            <Link href="/privacy" className="text-gray-600 hover:text-[#0393d5] text-sm transition-colors">Privacy Policy</Link>
-            <a href="mailto:info@happyinline.com" className="text-gray-600 hover:text-[#0393d5] text-sm transition-colors">Contact</a>
-          </div>
-          <p className="text-gray-500 text-sm">
-            Copyright &copy; {new Date().getFullYear()} Happy InLine. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

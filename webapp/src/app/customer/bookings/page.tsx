@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getProfile } from '@/lib/auth';
 import { getCustomerBookings, cancelCustomerBooking, CustomerBooking } from '@/lib/customer';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
-  ArrowLeft,
   Loader2,
   Calendar,
   Clock,
@@ -167,40 +168,29 @@ export default function CustomerBookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4 mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
+
+      <main className="max-w-4xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+        {/* Page Title */}
+        <h1 className="text-2xl font-bold text-white mb-6">My Bookings</h1>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          {(['upcoming', 'completed', 'cancelled'] as TabType[]).map((tab) => (
             <button
-              onClick={() => router.push('/customer')}
-              className="text-[#0393d5] hover:text-white transition-colors"
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${
+                activeTab === tab
+                  ? 'bg-[#0393d5] text-white'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
             >
-              <ArrowLeft className="w-6 h-6" />
+              {tab}
             </button>
-            <h1 className="text-xl font-bold text-white">My Bookings</h1>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-2">
-            {(['upcoming', 'completed', 'cancelled'] as TabType[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${
-                  activeTab === tab
-                    ? 'bg-[#0393d5] text-white'
-                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-6">
         {/* Success Message */}
         {success && (
           <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6 flex items-center gap-3">
@@ -346,6 +336,8 @@ export default function CustomerBookingsPage() {
           </div>
         )}
       </main>
+
+      <Footer />
 
       {/* Cancel Modal */}
       {showCancelModal && selectedBooking && (

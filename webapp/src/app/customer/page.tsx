@@ -2,18 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getProfile, signOut } from '@/lib/auth';
+import { getCurrentUser, getProfile } from '@/lib/auth';
 import { getActiveShops, getCategories, ShopPublic, Category } from '@/lib/customer';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import {
   Search,
   MapPin,
   Star,
   Clock,
-  LogOut,
   Loader2,
   Store,
-  Calendar,
-  User,
   ChevronRight,
   BadgeCheck,
   Grid3X3
@@ -82,11 +81,6 @@ export default function CustomerDashboard() {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
-  };
-
   const isShopOpen = (shop: ShopPublic) => {
     if (shop.is_manually_closed) return false;
 
@@ -115,57 +109,28 @@ export default function CustomerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b]">
-      {/* Header */}
-      <header className="bg-white/5 backdrop-blur-lg border-b border-white/10 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-white">Happy Inline</h1>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/customer/bookings')}
-                className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-              >
-                <Calendar className="w-5 h-5" />
-                My Bookings
-              </button>
-              <button
-                onClick={() => router.push('/customer/profile')}
-                className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-              >
-                <User className="w-5 h-5" />
-                Profile
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 text-[#0393d5] hover:text-white transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+      <Header />
 
-          {/* Welcome & Search */}
-          <div className="mb-4">
-            <h2 className="text-xl text-white mb-1">Hello, {userName}!</h2>
-            <p className="text-[#0393d5] text-sm">Find and book services near you</p>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search businesses, services, or locations..."
-              className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
-            />
-          </div>
+      <main className="max-w-6xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+        {/* Welcome & Search */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-1">Hello, {userName}!</h2>
+          <p className="text-[#0393d5]">Find and book services near you</p>
         </div>
-      </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
+        {/* Search Bar */}
+        <div className="relative mb-8">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search businesses, services, or locations..."
+            className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-12 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+          />
+        </div>
+
         {/* Categories */}
         {categories.length > 0 && (
           <div className="mb-8">
@@ -301,6 +266,8 @@ export default function CustomerDashboard() {
           )}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
