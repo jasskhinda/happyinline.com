@@ -5,7 +5,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-[#F5F5F7] font-sans overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/10">
         <div className="flex justify-between items-center px-5 md:px-12 h-24 max-w-[1400px] mx-auto">
           <Link href="/" className="flex items-center">
             <Image src="/logo.png" alt="Happy InLine" width={80} height={80} />
