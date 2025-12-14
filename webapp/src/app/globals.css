@@ -12,8 +12,8 @@
   --brand-light: #00D4FF;
 
   /* Surface Colors */
-  --surface-header: rgba(255, 255, 255, 0.9);
-  --surface-footer: rgba(255, 255, 255, 0.9);
+  --surface-header: #0a254c;
+  --surface-footer: #0a254c;
   --surface-card: rgba(255, 255, 255, 0.1);
   --surface-modal: #0d3a6b;
 
