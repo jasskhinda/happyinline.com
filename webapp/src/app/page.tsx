@@ -6,17 +6,20 @@ export default function LandingPage() {
     <div className="min-h-screen bg-black text-[#F5F5F7] font-sans overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <div className="flex justify-between items-center px-5 md:px-12 h-16 max-w-[1400px] mx-auto">
+        <div className="flex justify-between items-center px-5 md:px-12 h-24 max-w-[1400px] mx-auto">
           <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="Happy InLine" width={50} height={50} />
+            <Image src="/logo.png" alt="Happy InLine" width={80} height={80} />
           </Link>
-          <div className="flex items-center gap-4 md:gap-8">
-            <Link href="/login" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-4 md:gap-6">
+            <Link
+              href="/login"
+              className="bg-[#0393d5] hover:bg-[#027bb5] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors"
+            >
               Login
             </Link>
             <Link
               href="/register"
-              className="bg-[#0393d5] hover:bg-[#027bb5] text-white text-sm font-medium px-4 py-2 rounded-full transition-colors"
+              className="bg-[#0393d5] hover:bg-[#027bb5] text-white text-sm font-medium px-5 py-2.5 rounded-full transition-colors"
             >
               Register Business
             </Link>
