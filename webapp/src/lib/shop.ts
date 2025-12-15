@@ -741,7 +741,7 @@ export const getShopBookings = async (
  */
 export const updateBookingStatus = async (
   bookingId: string,
-  status: 'approved' | 'rejected' | 'completed' | 'cancelled',
+  status: 'confirmed' | 'no_show' | 'completed' | 'cancelled',
   notes?: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
