@@ -802,7 +802,7 @@ export const getProviderBookings = async (
       return { success: false, error: 'Failed to fetch shop details' };
     }
 
-    // Get bookings assigned to this provider
+    // Get all bookings for this shop (providers see all shop bookings)
     let query = supabase
       .from('bookings')
       .select(`
@@ -810,8 +810,7 @@ export const getProviderBookings = async (
         customer:profiles!bookings_customer_id_fkey(id, name, email, phone, profile_image),
         barber:profiles!bookings_barber_id_fkey(id, name, profile_image)
       `)
-      .eq('shop_id', staffRecord.shop_id)
-      .eq('barber_id', providerId);
+      .eq('shop_id', staffRecord.shop_id);
 
     if (filters?.status) {
       query = query.eq('status', filters.status);
