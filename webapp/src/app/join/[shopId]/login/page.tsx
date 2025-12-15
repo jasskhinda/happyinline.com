@@ -111,13 +111,19 @@ export default function CustomerLoginPage() {
       // If user doesn't have an exclusive_shop_id, set it to this shop
       // This links the existing customer to this shop
       if (profile && !profile.exclusive_shop_id) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({
             role: 'customer',
             exclusive_shop_id: shopId,
           })
           .eq('id', authData.user.id);
+
+        if (updateError) {
+          console.error('Failed to link customer to shop:', updateError);
+        } else {
+          console.log('Successfully linked customer to shop:', shopId);
+        }
       }
 
       // Check if user is already linked to a different shop

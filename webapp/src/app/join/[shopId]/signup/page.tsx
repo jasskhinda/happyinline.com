@@ -118,20 +118,34 @@ export default function CustomerSignupPage() {
         throw new Error('Failed to create account');
       }
 
-      // Update profile with customer role and exclusive_shop_id
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          name: name.trim(),
-          phone: phone.trim() || null,
-          role: 'customer',
-          exclusive_shop_id: shopId, // Link customer to this shop
-        })
-        .eq('id', authData.user.id);
+      // Wait for Supabase trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        // Continue anyway - the trigger should have created the profile
+      // Update profile with customer role and exclusive_shop_id
+      // Retry up to 3 times in case profile isn't created yet
+      let profileUpdated = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            name: name.trim(),
+            phone: phone.trim() || null,
+            role: 'customer',
+            exclusive_shop_id: shopId, // Link customer to this shop
+          })
+          .eq('id', authData.user.id);
+
+        if (!profileError) {
+          profileUpdated = true;
+          break;
+        }
+
+        console.log(`Profile update attempt ${attempt + 1} failed, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      if (!profileUpdated) {
+        console.error('Failed to update profile after 3 attempts');
       }
 
       // Redirect to customer dashboard
