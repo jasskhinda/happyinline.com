@@ -121,31 +121,25 @@ export default function CustomerSignupPage() {
       // Wait for Supabase trigger to create the profile
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Update profile with customer role and exclusive_shop_id
-      // Retry up to 3 times in case profile isn't created yet
-      let profileUpdated = false;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            name: name.trim(),
-            phone: phone.trim() || null,
-            role: 'customer',
-            exclusive_shop_id: shopId, // Link customer to this shop
-          })
-          .eq('id', authData.user.id);
+      // Use API route to update profile (bypasses RLS)
+      const linkResponse = await fetch('/api/customer/link-shop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: authData.user.id,
+          shopId: shopId,
+          name: name.trim(),
+          phone: phone.trim() || null,
+        }),
+      });
 
-        if (!profileError) {
-          profileUpdated = true;
-          break;
-        }
+      const linkResult = await linkResponse.json();
 
-        console.log(`Profile update attempt ${attempt + 1} failed, retrying...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      if (!profileUpdated) {
-        console.error('Failed to update profile after 3 attempts');
+      if (!linkResponse.ok) {
+        console.error('Failed to link customer to shop:', linkResult.error);
+        // Continue anyway - user account was created
+      } else {
+        console.log('Customer linked to shop:', linkResult);
       }
 
       // Redirect to customer dashboard

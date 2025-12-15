@@ -111,18 +111,22 @@ export default function CustomerLoginPage() {
       // If user doesn't have an exclusive_shop_id, set it to this shop
       // This links the existing customer to this shop
       if (profile && !profile.exclusive_shop_id) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({
-            role: 'customer',
-            exclusive_shop_id: shopId,
-          })
-          .eq('id', authData.user.id);
+        // Use API route to update profile (bypasses RLS)
+        const linkResponse = await fetch('/api/customer/link-shop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: authData.user.id,
+            shopId: shopId,
+          }),
+        });
 
-        if (updateError) {
-          console.error('Failed to link customer to shop:', updateError);
+        const linkResult = await linkResponse.json();
+
+        if (!linkResponse.ok) {
+          console.error('Failed to link customer to shop:', linkResult.error);
         } else {
-          console.log('Successfully linked customer to shop:', shopId);
+          console.log('Successfully linked customer to shop:', linkResult);
         }
       }
 
