@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getProfile } from '@/lib/auth';
-import { getCustomerLinkedShop, getShopServicesPublic, getShopProvidersPublic, createBooking } from '@/lib/customer';
+import { getCustomerLinkedShop, getShopServicesPublic, getShopProvidersPublic, createBooking, getProvidersForServicesPublic } from '@/lib/customer';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import {
@@ -78,6 +78,12 @@ export default function BookingPage() {
   // Available time slots
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
 
+  // Provider filtering state
+  const [allProviders, setAllProviders] = useState<Provider[]>([]);
+  const [filteredProviders, setFilteredProviders] = useState<Provider[]>([]);
+  const [loadingProviders, setLoadingProviders] = useState(false);
+  const [noQualifiedProviders, setNoQualifiedProviders] = useState(false);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -119,6 +125,7 @@ export default function BookingPage() {
 
       if (providersResult.success && providersResult.providers) {
         setProviders(providersResult.providers);
+        setAllProviders(providersResult.providers);
       }
 
     } catch (err) {
@@ -200,8 +207,36 @@ export default function BookingPage() {
     return dates;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 'services' && selectedServices.length > 0) {
+      // Fetch providers who can perform the selected services
+      setLoadingProviders(true);
+      setNoQualifiedProviders(false);
+
+      try {
+        if (shop) {
+          const serviceIds = selectedServices.map(s => s.id);
+          const result = await getProvidersForServicesPublic(shop.id, serviceIds);
+
+          if (result.success && result.providers && result.providers.length > 0) {
+            // Found qualified providers
+            setFilteredProviders(result.providers);
+            setProviders(result.providers);
+          } else {
+            // No qualified providers - show all providers with notice
+            setNoQualifiedProviders(true);
+            setProviders(allProviders);
+            setFilteredProviders([]);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading providers:', err);
+        // Fall back to all providers
+        setProviders(allProviders);
+      } finally {
+        setLoadingProviders(false);
+      }
+
       setStep('provider');
     } else if (step === 'provider') {
       setStep('datetime');
@@ -386,64 +421,83 @@ export default function BookingPage() {
                 <h2 className="text-lg font-semibold text-white">Select Provider</h2>
               </div>
 
-              <div className="space-y-3">
-                {/* Any Provider Option */}
-                <button
-                  onClick={() => selectProvider(null)}
-                  className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                    selectedProvider === null
-                      ? 'border-[var(--brand)] bg-[var(--brand)]/20'
-                      : 'border-white/20 hover:border-white/40 bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-                      <User className="w-6 h-6 text-white" />
+              {loadingProviders ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-8 h-8 text-[var(--brand)] animate-spin" />
+                </div>
+              ) : (
+                <>
+                  {noQualifiedProviders && (
+                    <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3 mb-4 flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-yellow-200 text-sm">
+                          No providers are specifically assigned to these services. Showing all available providers.
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-white">Any Available Provider</p>
-                      <p className="text-sm text-white/60">First available</p>
-                    </div>
-                    {selectedProvider === null && (
-                      <CheckCircle className="w-5 h-5 text-[var(--brand)] ml-auto" />
-                    )}
-                  </div>
-                </button>
+                  )}
 
-                {providers.map(provider => (
-                  <button
-                    key={provider.id}
-                    onClick={() => selectProvider(provider)}
-                    className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                      selectedProvider?.id === provider.id
-                        ? 'border-[var(--brand)] bg-[var(--brand)]/20'
-                        : 'border-white/20 hover:border-white/40 bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
-                        {provider.user?.profile_image ? (
-                          <img src={provider.user.profile_image} alt={provider.user.name} className="w-full h-full object-cover" />
-                        ) : (
+                  <div className="space-y-3">
+                    {/* Any Provider Option */}
+                    <button
+                      onClick={() => selectProvider(null)}
+                      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                        selectedProvider === null
+                          ? 'border-[var(--brand)] bg-[var(--brand)]/20'
+                          : 'border-white/20 hover:border-white/40 bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                           <User className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">Any Available Provider</p>
+                          <p className="text-sm text-white/60">First available</p>
+                        </div>
+                        {selectedProvider === null && (
+                          <CheckCircle className="w-5 h-5 text-[var(--brand)] ml-auto" />
                         )}
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-white">{provider.user?.name || 'Provider'}</p>
-                        {provider.specialties && provider.specialties.length > 0 && (
-                          <p className="text-sm text-white/60">{provider.specialties.join(', ')}</p>
-                        )}
-                        {provider.rating && (
-                          <p className="text-sm text-yellow-400">★ {provider.rating.toFixed(1)}</p>
-                        )}
-                      </div>
-                      {selectedProvider?.id === provider.id && (
-                        <CheckCircle className="w-5 h-5 text-[var(--brand)]" />
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    </button>
+
+                    {providers.map(provider => (
+                      <button
+                        key={provider.id}
+                        onClick={() => selectProvider(provider)}
+                        className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                          selectedProvider?.id === provider.id
+                            ? 'border-[var(--brand)] bg-[var(--brand)]/20'
+                            : 'border-white/20 hover:border-white/40 bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
+                            {provider.user?.profile_image ? (
+                              <img src={provider.user.profile_image} alt={provider.user.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-6 h-6 text-white" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-white">{provider.user?.name || 'Provider'}</p>
+                            {provider.specialties && provider.specialties.length > 0 && (
+                              <p className="text-sm text-white/60">{provider.specialties.join(', ')}</p>
+                            )}
+                            {provider.rating && (
+                              <p className="text-sm text-yellow-400">★ {provider.rating.toFixed(1)}</p>
+                            )}
+                          </div>
+                          {selectedProvider?.id === provider.id && (
+                            <CheckCircle className="w-5 h-5 text-[var(--brand)]" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
 

@@ -536,3 +536,79 @@ export const updateCustomerProfile = async (
     return { success: false, error: error.message };
   }
 };
+
+// ============================================
+// SERVICE-PROVIDER FILTERING
+// ============================================
+
+/**
+ * Get providers who can perform specific services (for customer booking)
+ */
+export const getProvidersForServicesPublic = async (
+  shopId: string,
+  serviceIds: string[]
+): Promise<{ success: boolean; providers?: ProviderPublic[]; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // Get provider IDs who are assigned to ALL the selected services
+    const { data: assignments, error: assignError } = await supabase
+      .from('service_providers')
+      .select('provider_id, service_id')
+      .eq('shop_id', shopId)
+      .in('service_id', serviceIds);
+
+    if (assignError) {
+      console.error('Error fetching service providers:', assignError);
+      return { success: false, error: assignError.message };
+    }
+
+    if (!assignments || assignments.length === 0) {
+      // No assignments found - return empty list
+      return { success: true, providers: [] };
+    }
+
+    // Count how many of the selected services each provider can do
+    const providerServiceCount: { [key: string]: number } = {};
+    assignments.forEach((a: { provider_id: string; service_id: string }) => {
+      providerServiceCount[a.provider_id] = (providerServiceCount[a.provider_id] || 0) + 1;
+    });
+
+    // Filter to providers who can do ALL selected services
+    const qualifiedProviderIds = Object.entries(providerServiceCount)
+      .filter(([_, count]) => count === serviceIds.length)
+      .map(([providerId]) => providerId);
+
+    if (qualifiedProviderIds.length === 0) {
+      return { success: true, providers: [] };
+    }
+
+    // Get provider details
+    const { data: providers, error: providerError } = await supabase
+      .from('shop_staff')
+      .select(`
+        id,
+        user_id,
+        bio,
+        specialties,
+        rating,
+        total_reviews,
+        is_available,
+        user:profiles!shop_staff_user_id_fkey(id, name, profile_image)
+      `)
+      .eq('shop_id', shopId)
+      .eq('is_active', true)
+      .eq('is_available', true)
+      .in('user_id', qualifiedProviderIds);
+
+    if (providerError) {
+      console.error('Error fetching providers:', providerError);
+      return { success: false, error: providerError.message };
+    }
+
+    return { success: true, providers: providers || [] };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};

@@ -74,6 +74,14 @@ export default function ServicesPage() {
   // Delete state
   const [deletingService, setDeletingService] = useState(false);
 
+  // Provider assignment state
+  const [providers, setProviders] = useState<ShopStaff[]>([]);
+  const [serviceAssignments, setServiceAssignments] = useState<{ service_id: string; provider_id: string }[]>([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assigningService, setAssigningService] = useState<ShopService | null>(null);
+  const [selectedProviderIds, setSelectedProviderIds] = useState<string[]>([]);
+  const [savingAssignments, setSavingAssignments] = useState(false);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -111,6 +119,18 @@ export default function ServicesPage() {
       const catalogResult = await getServiceCatalog();
       if (catalogResult.success && catalogResult.services) {
         setCatalog(catalogResult.services);
+      }
+
+      // Load providers
+      const providersResult = await getShopProviders(shopResult.shop.id);
+      if (providersResult.success && providersResult.providers) {
+        setProviders(providersResult.providers);
+      }
+
+      // Load service-provider assignments
+      const assignmentsResult = await getShopServiceProviders(shopResult.shop.id);
+      if (assignmentsResult.success && assignmentsResult.assignments) {
+        setServiceAssignments(assignmentsResult.assignments);
       }
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -277,6 +297,56 @@ export default function ServicesPage() {
     }
   };
 
+  const handleOpenAssignModal = (service: ShopService) => {
+    setAssigningService(service);
+    // Get currently assigned provider IDs for this service
+    const currentAssignments = serviceAssignments
+      .filter(a => a.service_id === service.id)
+      .map(a => a.provider_id);
+    setSelectedProviderIds(currentAssignments);
+    setShowAssignModal(true);
+  };
+
+  const handleToggleProviderAssignment = (providerId: string) => {
+    setSelectedProviderIds(prev =>
+      prev.includes(providerId)
+        ? prev.filter(id => id !== providerId)
+        : [...prev, providerId]
+    );
+  };
+
+  const handleSaveAssignments = async () => {
+    if (!shop || !assigningService) return;
+
+    setSavingAssignments(true);
+    setError('');
+
+    try {
+      const result = await updateServiceProviders(
+        shop.id,
+        assigningService.id,
+        selectedProviderIds
+      );
+
+      if (result.success) {
+        setSuccess('Provider assignments updated!');
+        setShowAssignModal(false);
+        setAssigningService(null);
+        loadData();
+      } else {
+        setError(result.error || 'Failed to update assignments');
+      }
+    } catch (err) {
+      setError('Failed to update assignments');
+    } finally {
+      setSavingAssignments(false);
+    }
+  };
+
+  const getAssignedProviderCount = (serviceId: string): number => {
+    return serviceAssignments.filter(a => a.service_id === serviceId).length;
+  };
+
   const filteredCatalog = catalog.filter(service =>
     service.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
     (service.category && service.category.toLowerCase().includes(catalogSearch.toLowerCase()))
@@ -415,6 +485,16 @@ export default function ServicesPage() {
                           <DollarSign className="w-4 h-4" />
                           <span>{service.price.toFixed(2)}</span>
                         </div>
+
+                        {/* Assign Providers */}
+                        <button
+                          onClick={() => handleOpenAssignModal(service)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors text-sm"
+                          title="Assign Providers"
+                        >
+                          <Users className="w-4 h-4" />
+                          <span>{getAssignedProviderCount(service.id)}</span>
+                        </button>
 
                         {/* Toggle Active */}
                         <button
@@ -831,6 +911,135 @@ export default function ServicesPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Providers Modal */}
+      {showAssignModal && assigningService && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-md border border-white/20 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-white">Assign Providers</h3>
+                <p className="text-[#0393d5] text-sm mt-1">{assigningService.name}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setAssigningService(null);
+                }}
+                className="text-[#0393d5] hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {providers.length === 0 ? (
+                <div className="text-center py-8">
+                  <Users className="w-12 h-12 text-[#0393d5]/50 mx-auto mb-3" />
+                  <p className="text-white mb-2">No providers yet</p>
+                  <p className="text-[#0393d5] text-sm">
+                    Add providers in the Providers section first
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-white/70 text-sm mb-4">
+                    Select which providers can perform this service:
+                  </p>
+                  {providers.map(provider => {
+                    const isSelected = selectedProviderIds.includes(provider.user_id);
+                    const user = provider.user as { id: string; name: string; email: string; phone: string | null; profile_image: string | null } | undefined;
+                    return (
+                      <button
+                        key={provider.id}
+                        onClick={() => handleToggleProviderAssignment(provider.user_id)}
+                        className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                          isSelected
+                            ? 'bg-purple-500/20 border-purple-500/50'
+                            : 'bg-white/5 border-white/10 hover:border-white/30'
+                        }`}
+                      >
+                        {/* Provider Avatar */}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ${
+                          isSelected ? 'bg-purple-500/30' : 'bg-white/10'
+                        }`}>
+                          {user?.profile_image ? (
+                            <img
+                              src={user.profile_image}
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className={`text-lg font-semibold ${
+                              isSelected ? 'text-purple-300' : 'text-white/70'
+                            }`}>
+                              {user?.name?.charAt(0) || '?'}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Provider Info */}
+                        <div className="flex-1 text-left">
+                          <p className={`font-medium ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                            {user?.name || 'Unknown'}
+                          </p>
+                          <p className="text-[#0393d5] text-sm">
+                            {provider.role === 'admin' ? 'Admin' : 'Provider'}
+                          </p>
+                        </div>
+
+                        {/* Selection Indicator */}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          isSelected
+                            ? 'bg-purple-500 border-purple-500'
+                            : 'border-white/30'
+                        }`}>
+                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {providers.length > 0 && (
+              <div className="p-6 border-t border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-white/70 text-sm">
+                    {selectedProviderIds.length} provider{selectedProviderIds.length !== 1 ? 's' : ''} selected
+                  </span>
+                  {selectedProviderIds.length > 0 && (
+                    <button
+                      onClick={() => setSelectedProviderIds([])}
+                      className="text-red-400 text-sm hover:text-red-300"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={handleSaveAssignments}
+                  disabled={savingAssignments}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {savingAssignments ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      Save Assignments
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
