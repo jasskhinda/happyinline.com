@@ -60,7 +60,6 @@ export interface ProviderPublic {
 
 export interface CustomerBooking {
   id: string;
-  booking_id: string;
   shop_id: string;
   customer_id: string;
   barber_id: string | null;
@@ -315,7 +314,6 @@ export const getCustomerBookings = async (
       .from('bookings')
       .select(`
         id,
-        booking_id,
         shop_id,
         customer_id,
         barber_id,
@@ -372,14 +370,12 @@ export const createBooking = async (bookingData: {
   try {
     const supabase = getSupabaseClient();
 
-    // Calculate total amount and generate booking ID
+    // Calculate total amount
     const totalAmount = bookingData.services.reduce((sum, s) => sum + s.price, 0);
-    const bookingId = `BK${Date.now().toString(36).toUpperCase()}`;
 
     const { data: booking, error } = await supabase
       .from('bookings')
       .insert({
-        booking_id: bookingId,
         shop_id: bookingData.shopId,
         customer_id: bookingData.customerId,
         barber_id: bookingData.barberId || null,
