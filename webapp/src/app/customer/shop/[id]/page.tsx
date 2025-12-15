@@ -323,7 +323,6 @@ export default function ShopDetailsPage() {
                     <h4 className="text-white font-medium">{service.name}</h4>
                     <p className="text-white/50 text-sm">
                       {service.duration} min
-                      {service.category && ` • ${service.category}`}
                     </p>
                   </div>
                   <div className="text-right">
