@@ -155,7 +155,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. Return success with generated password (only for new users)
+    // 7. Update owner's license_count
+    const newProviderCount = (currentProviders || 0) + 1;
+    await adminClient
+      .from('profiles')
+      .update({ license_count: newProviderCount })
+      .eq('id', ownerId);
+
+    // 8. Return success with generated password (only for new users)
     return NextResponse.json({
       success: true,
       userId,
