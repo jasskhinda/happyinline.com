@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus } from '@/lib/auth';
+import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus, getProfile } from '@/lib/auth';
 import { STRIPE_PLANS, getPlanColor } from '@/lib/stripe';
 import { getMyShop, Shop } from '@/lib/shop';
 import Header from '@/components/Header';
@@ -59,6 +59,17 @@ function DashboardContent() {
 
       if (!user) {
         router.push('/login');
+        return;
+      }
+
+      // Check user role - redirect providers to their dashboard
+      const profile = await getProfile(user.id);
+      if (profile?.role === 'provider') {
+        router.push('/provider');
+        return;
+      }
+      if (profile?.role === 'customer') {
+        router.push('/customer');
         return;
       }
 

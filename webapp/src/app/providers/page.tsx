@@ -6,11 +6,8 @@ import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus } from '@/lib
 import {
   getMyShop,
   getShopProviders,
-  addProvider,
-  inviteProvider,
   updateProvider,
   removeProvider,
-  searchUserByEmail,
   Shop,
   ShopStaff
 } from '@/lib/shop';
@@ -20,7 +17,7 @@ import {
   Loader2,
   Users,
   Plus,
-  Search,
+  Phone,
   Mail,
   X,
   AlertCircle,
@@ -29,8 +26,10 @@ import {
   Star,
   Edit,
   Trash2,
-  Crown,
-  Shield
+  User,
+  Copy,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function ProvidersPage() {
@@ -43,17 +42,24 @@ export default function ProvidersPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<ShopStaff | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   // Add provider form state
-  const [searchEmail, setSearchEmail] = useState('');
-  const [searching, setSearching] = useState(false);
-  const [searchResult, setSearchResult] = useState<any>(null);
-  const [searchPerformed, setSearchPerformed] = useState(false);
-  const [inviteName, setInviteName] = useState('');
+  const [providerName, setProviderName] = useState('');
+  const [providerEmail, setProviderEmail] = useState('');
+  const [providerPhone, setProviderPhone] = useState('');
   const [addingProvider, setAddingProvider] = useState(false);
+
+  // New provider credentials (shown after creation)
+  const [newProviderCredentials, setNewProviderCredentials] = useState<{
+    email: string;
+    password: string;
+    name: string;
+  } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Edit provider form state
   const [editBio, setEditBio] = useState('');
@@ -107,30 +113,11 @@ export default function ProvidersPage() {
     }
   };
 
-  const handleSearchUser = async () => {
-    if (!searchEmail.trim()) return;
-
-    setSearching(true);
-    setSearchResult(null);
-    setSearchPerformed(true);
-    setError('');
-
-    try {
-      const result = await searchUserByEmail(searchEmail.trim());
-      if (result.success) {
-        setSearchResult(result.user || null);
-      } else {
-        setError(result.error || 'Search failed');
-      }
-    } catch (err) {
-      setError('Search failed');
-    } finally {
-      setSearching(false);
+  const handleAddProvider = async () => {
+    if (!shop || !userId || !providerName.trim() || !providerEmail.trim()) {
+      setError('Please fill in name and email');
+      return;
     }
-  };
-
-  const handleAddExistingUser = async () => {
-    if (!shop || !searchResult) return;
 
     // Check license limit
     const maxLicenses = subscription?.max_licenses || 0;
@@ -143,15 +130,43 @@ export default function ProvidersPage() {
     setError('');
 
     try {
-      const result = await addProvider(shop.id, searchResult.id, 'barber');
-      if (result.success) {
+      const response = await fetch('/api/providers/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          shopId: shop.id,
+          ownerId: userId,
+          name: providerName.trim(),
+          email: providerEmail.trim(),
+          phone: providerPhone.trim() || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.error || 'Failed to add provider');
+        return;
+      }
+
+      // If new user was created, show credentials
+      if (result.isNewUser && result.generatedPassword) {
+        setNewProviderCredentials({
+          email: providerEmail.trim(),
+          password: result.generatedPassword,
+          name: providerName.trim(),
+        });
+        setShowAddModal(false);
+        setShowCredentialsModal(true);
+      } else {
         setSuccess('Provider added successfully!');
         setShowAddModal(false);
-        resetAddForm();
-        loadData();
-      } else {
-        setError(result.error || 'Failed to add provider');
       }
+
+      resetAddForm();
+      loadData();
     } catch (err) {
       setError('Failed to add provider');
     } finally {
@@ -159,41 +174,10 @@ export default function ProvidersPage() {
     }
   };
 
-  const handleInviteNewUser = async () => {
-    if (!shop || !userId || !searchEmail.trim() || !inviteName.trim()) return;
-
-    // Check license limit
-    const maxLicenses = subscription?.max_licenses || 0;
-    if (providers.length >= maxLicenses) {
-      setError(`You've reached your license limit of ${maxLicenses} providers. Upgrade your plan to add more.`);
-      return;
-    }
-
-    setAddingProvider(true);
-    setError('');
-
-    try {
-      const result = await inviteProvider(shop.id, userId, searchEmail.trim(), inviteName.trim());
-      if (result.success) {
-        setSuccess('Invitation sent successfully!');
-        setShowAddModal(false);
-        resetAddForm();
-        loadData();
-      } else {
-        setError(result.error || 'Failed to send invitation');
-      }
-    } catch (err) {
-      setError('Failed to send invitation');
-    } finally {
-      setAddingProvider(false);
-    }
-  };
-
   const resetAddForm = () => {
-    setSearchEmail('');
-    setSearchResult(null);
-    setSearchPerformed(false);
-    setInviteName('');
+    setProviderName('');
+    setProviderEmail('');
+    setProviderPhone('');
   };
 
   const handleEditProvider = (provider: ShopStaff) => {
@@ -265,6 +249,12 @@ export default function ProvidersPage() {
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setSuccess('Copied to clipboard!');
+    setTimeout(() => setSuccess(''), 2000);
+  };
+
   const maxLicenses = subscription?.max_licenses || 0;
   const licensesUsed = providers.length;
   const canAddProvider = licensesUsed < maxLicenses;
@@ -309,7 +299,7 @@ export default function ProvidersPage() {
 
         {/* License Usage Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-[#0393d5]/20 flex items-center justify-center">
                 <Users className="w-6 h-6 text-[#0393d5]" />
@@ -323,7 +313,7 @@ export default function ProvidersPage() {
             </div>
             <div className="flex items-center gap-4">
               {/* Progress bar */}
-              <div className="w-48 h-3 bg-white/10 rounded-full overflow-hidden">
+              <div className="w-48 h-3 bg-white/10 rounded-full overflow-hidden hidden sm:block">
                 <div
                   className={`h-full rounded-full transition-all ${
                     licensesUsed >= maxLicenses ? 'bg-red-500' : 'bg-[#0393d5]'
@@ -366,7 +356,7 @@ export default function ProvidersPage() {
           <div className="p-6 border-b border-white/10">
             <h3 className="text-lg font-semibold text-white">Your Team</h3>
             <p className="text-[#0393d5] text-sm mt-1">
-              Manage your providers and their availability
+              Manage your service providers
             </p>
           </div>
 
@@ -390,9 +380,9 @@ export default function ProvidersPage() {
           ) : (
             <div className="divide-y divide-white/10">
               {providers.map((provider) => (
-                <div key={provider.id} className="p-6 flex items-center gap-4">
+                <div key={provider.id} className="p-6 flex items-center gap-4 flex-wrap">
                   {/* Avatar */}
-                  <div className="w-14 h-14 rounded-full bg-[#0393d5]/20 flex items-center justify-center overflow-hidden">
+                  <div className="w-14 h-14 rounded-full bg-[#0393d5]/20 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {provider.user?.profile_image ? (
                       <img
                         src={provider.user.profile_image}
@@ -406,27 +396,19 @@ export default function ProvidersPage() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-lg font-medium text-white truncate">
                         {provider.user?.name || 'Unknown User'}
                       </h4>
-                      {provider.role === 'admin' ? (
-                        <span className="flex items-center gap-1 text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
-                          <Crown className="w-3 h-3" />
-                          Admin
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-xs bg-[#0393d5]/20 text-[#0393d5] px-2 py-0.5 rounded-full">
-                          <Shield className="w-3 h-3" />
-                          Provider
-                        </span>
-                      )}
+                      <span className="text-xs bg-[#0393d5]/20 text-[#0393d5] px-2 py-0.5 rounded-full">
+                        Provider
+                      </span>
                     </div>
                     <p className="text-[#0393d5] text-sm truncate">
                       {provider.user?.email}
                     </p>
-                    {provider.bio && (
-                      <p className="text-white/60 text-sm mt-1 line-clamp-1">{provider.bio}</p>
+                    {provider.user?.phone && (
+                      <p className="text-white/60 text-sm">{provider.user.phone}</p>
                     )}
                     {provider.specialties && provider.specialties.length > 0 && (
                       <div className="flex gap-1 mt-2 flex-wrap">
@@ -444,7 +426,7 @@ export default function ProvidersPage() {
 
                   {/* Rating */}
                   {provider.rating && (
-                    <div className="text-center">
+                    <div className="text-center hidden sm:block">
                       <div className="flex items-center gap-1 text-yellow-400">
                         <Star className="w-4 h-4 fill-current" />
                         <span className="text-white font-medium">{provider.rating.toFixed(1)}</span>
@@ -471,15 +453,13 @@ export default function ProvidersPage() {
                     >
                       <Edit className="w-5 h-5" />
                     </button>
-                    {provider.role !== 'admin' && (
-                      <button
-                        onClick={() => handleRemoveClick(provider)}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Remove"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleRemoveClick(provider)}
+                      className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
+                      title="Remove"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -500,6 +480,7 @@ export default function ProvidersPage() {
                 onClick={() => {
                   setShowAddModal(false);
                   resetAddForm();
+                  setError('');
                 }}
                 className="text-[#0393d5] hover:text-white transition-colors"
               >
@@ -507,118 +488,170 @@ export default function ProvidersPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {/* Search by email */}
+            <div className="p-6 space-y-4">
+              {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
-                  Search by Email
+                  Full Name <span className="text-red-400">*</span>
                 </label>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
-                    <input
-                      type="email"
-                      value={searchEmail}
-                      onChange={(e) => {
-                        setSearchEmail(e.target.value);
-                        setSearchPerformed(false);
-                        setSearchResult(null);
-                      }}
-                      placeholder="provider@email.com"
-                      className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#0393d5]"
-                    />
-                  </div>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                  <input
+                    type="text"
+                    value={providerName}
+                    onChange={(e) => setProviderName(e.target.value)}
+                    placeholder="John Smith"
+                    className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#0393d5]"
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Email <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                  <input
+                    type="email"
+                    value={providerEmail}
+                    onChange={(e) => setProviderEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#0393d5]"
+                  />
+                </div>
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                  <input
+                    type="tel"
+                    value={providerPhone}
+                    onChange={(e) => setProviderPhone(e.target.value)}
+                    placeholder="(555) 123-4567"
+                    className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#0393d5]"
+                  />
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-[#0393d5]/10 border border-[#0393d5]/30 rounded-lg p-4">
+                <p className="text-[#0393d5] text-sm">
+                  A temporary password will be generated for the provider. Share these credentials so they can log in and view their bookings.
+                </p>
+              </div>
+
+              {/* Error in modal */}
+              {error && (
+                <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                  <p className="text-red-200 text-sm">{error}</p>
+                </div>
+              )}
+
+              {/* Add Button */}
+              <button
+                onClick={handleAddProvider}
+                disabled={!providerName.trim() || !providerEmail.trim() || addingProvider}
+                className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {addingProvider ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-5 h-5" />
+                    Add Provider
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Provider Credentials Modal */}
+      {showCredentialsModal && newProviderCredentials && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-md border border-white/20">
+            <div className="p-6 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <Check className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-white">Provider Created!</h3>
+                  <p className="text-[#0393d5] text-sm">Share these login credentials</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Provider Name</p>
+                <p className="text-white font-medium">{newProviderCredentials.name}</p>
+              </div>
+
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Email</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-white font-medium truncate">{newProviderCredentials.email}</p>
                   <button
-                    onClick={handleSearchUser}
-                    disabled={!searchEmail.trim() || searching}
-                    className="px-4 py-3 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => copyToClipboard(newProviderCredentials.email)}
+                    className="p-2 text-[#0393d5] hover:text-white hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
                   >
-                    {searching ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Search className="w-5 h-5" />
-                    )}
+                    <Copy className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Search results */}
-              {searchPerformed && (
-                <div className="space-y-4">
-                  {searchResult ? (
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-[#0393d5]/20 flex items-center justify-center overflow-hidden">
-                          {searchResult.profile_image ? (
-                            <img
-                              src={searchResult.profile_image}
-                              alt={searchResult.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <UserCircle className="w-8 h-8 text-[#0393d5]" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{searchResult.name}</p>
-                          <p className="text-[#0393d5] text-sm">{searchResult.email}</p>
-                        </div>
-                        <button
-                          onClick={handleAddExistingUser}
-                          disabled={addingProvider}
-                          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
-                        >
-                          {addingProvider ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Plus className="w-4 h-4" />
-                          )}
-                          Add
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <p className="text-white/70 text-center mb-4">
-                        No user found with that email. Send them an invitation?
-                      </p>
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          value={inviteName}
-                          onChange={(e) => setInviteName(e.target.value)}
-                          placeholder="Provider's full name"
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#0393d5]"
-                        />
-                        <button
-                          onClick={handleInviteNewUser}
-                          disabled={!inviteName.trim() || addingProvider}
-                          className="w-full px-4 py-3 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {addingProvider ? (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="w-4 h-4" />
-                              Send Invitation
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Temporary Password</p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-white font-medium font-mono">
+                    {showPassword ? newProviderCredentials.password : '••••••••••'}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="p-2 text-[#0393d5] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(newProviderCredentials.password)}
+                      className="p-2 text-[#0393d5] hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              )}
+              </div>
 
-              {/* Info */}
-              <div className="bg-[#0393d5]/10 border border-[#0393d5]/30 rounded-lg p-4">
-                <p className="text-[#0393d5] text-sm">
-                  Search for existing Happy Inline users by their email address, or send an invitation to a new user.
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                <p className="text-yellow-200 text-sm">
+                  <strong>Important:</strong> Save these credentials now. The password cannot be retrieved later. The provider should change their password after logging in.
                 </p>
               </div>
+
+              <button
+                onClick={() => {
+                  setShowCredentialsModal(false);
+                  setNewProviderCredentials(null);
+                  setShowPassword(false);
+                }}
+                className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors"
+              >
+                Done
+              </button>
             </div>
           </div>
         </div>

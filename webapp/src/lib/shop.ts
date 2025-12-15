@@ -198,20 +198,9 @@ export const createShop = async (userId: string, shopData: CreateShopData): Prom
       return { success: false, error: error.message };
     }
 
-    // Add creator as admin
-    const { error: staffError } = await supabase
-      .from('shop_staff')
-      .insert({
-        shop_id: shop.id,
-        user_id: userId,
-        role: 'admin',
-        is_active: true,
-        is_available: true
-      });
-
-    if (staffError) {
-      console.error('Error adding shop admin:', staffError);
-    }
+    // Note: Owner is NOT added as a provider automatically
+    // Owner manages the shop but doesn't count toward license limits
+    // Owner can add themselves as a provider if they also provide services
 
     return { success: true, shop };
   } catch (error: any) {
@@ -425,12 +414,13 @@ export const addProvider = async (
 
 /**
  * Create a new user and add as provider (invite flow)
+ * @deprecated Use /api/providers/create instead for direct account creation
  */
 export const inviteProvider = async (
   shopId: string,
   invitedBy: string,
   email: string,
-  name: string
+  _name: string // Name would be used in email invitation, keeping for API compatibility
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const supabase = getSupabaseClient();
@@ -774,6 +764,110 @@ export const updateBookingStatus = async (
     }
 
     return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get bookings for a specific provider
+ */
+export const getProviderBookings = async (
+  providerId: string,
+  filters?: { status?: string; date?: string }
+): Promise<{ success: boolean; bookings?: Booking[]; shop?: Shop; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // First, get the shop this provider belongs to
+    const { data: staffRecord, error: staffError } = await supabase
+      .from('shop_staff')
+      .select('shop_id')
+      .eq('user_id', providerId)
+      .eq('is_active', true)
+      .single();
+
+    if (staffError || !staffRecord) {
+      return { success: false, error: 'Provider not assigned to any shop' };
+    }
+
+    // Get shop details
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('id', staffRecord.shop_id)
+      .single();
+
+    if (shopError) {
+      return { success: false, error: 'Failed to fetch shop details' };
+    }
+
+    // Get bookings assigned to this provider
+    let query = supabase
+      .from('bookings')
+      .select(`
+        *,
+        customer:profiles!bookings_customer_id_fkey(id, name, email, phone, profile_image),
+        barber:profiles!bookings_barber_id_fkey(id, name, profile_image)
+      `)
+      .eq('shop_id', staffRecord.shop_id)
+      .eq('barber_id', providerId);
+
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.date) {
+      query = query.eq('appointment_date', filters.date);
+    }
+
+    query = query
+      .order('appointment_date', { ascending: true })
+      .order('appointment_time', { ascending: true });
+
+    const { data: bookings, error } = await query;
+
+    if (error) {
+      console.error('Error fetching provider bookings:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, bookings: bookings || [], shop };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get shop that a provider belongs to
+ */
+export const getProviderShop = async (providerId: string): Promise<{ success: boolean; shop?: Shop; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { data: staffRecord, error: staffError } = await supabase
+      .from('shop_staff')
+      .select('shop_id')
+      .eq('user_id', providerId)
+      .eq('is_active', true)
+      .single();
+
+    if (staffError || !staffRecord) {
+      return { success: false, error: 'Not assigned to any shop' };
+    }
+
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('id', staffRecord.shop_id)
+      .single();
+
+    if (shopError || !shop) {
+      return { success: false, error: 'Shop not found' };
+    }
+
+    return { success: true, shop };
   } catch (error: any) {
     console.error('Unexpected error:', error);
     return { success: false, error: error.message };
