@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getProfile } from '@/lib/auth';
 import { getCustomerBookings, cancelCustomerBooking, CustomerBooking } from '@/lib/customer';
@@ -24,7 +24,7 @@ import {
 
 type TabType = 'upcoming' | 'completed' | 'cancelled';
 
-export default function CustomerBookingsPage() {
+function CustomerBookingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -397,5 +397,20 @@ export default function CustomerBookingsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CustomerBookingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+          <p className="text-[#0393d5]">Loading...</p>
+        </div>
+      </div>
+    }>
+      <CustomerBookingsContent />
+    </Suspense>
   );
 }

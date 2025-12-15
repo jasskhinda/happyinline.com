@@ -131,8 +131,8 @@ export default function LandingPage() {
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Built from real feedback</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Designed with input from real business owners and customers to solve real problems.</p>
+            <h3 className="text-xl font-semibold mb-3 text-white">Connect instantly</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Scan your shop's QR code and you're connected. Access services, book appointments, and manage everything in one place.</p>
           </div>
 
           {/* Feature Card 2 */}
