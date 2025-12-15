@@ -25,8 +25,10 @@ import {
   Settings,
   Plus,
   Gift,
-  AlertTriangle
+  AlertTriangle,
+  QrCode
 } from 'lucide-react';
+import ShopQRCodeModal from '@/components/ShopQRCodeModal';
 
 function DashboardContent() {
   const router = useRouter();
@@ -37,6 +39,7 @@ function DashboardContent() {
   const [error, setError] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showShopCreatedMessage, setShowShopCreatedMessage] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -335,6 +338,27 @@ function DashboardContent() {
                 </p>
               </div>
             )}
+
+            {/* Share QR Code Banner - Only for approved shops */}
+            {shop && shop.status === 'approved' && (
+              <div className="mt-4 bg-gradient-to-r from-[#0393d5]/20 to-green-500/20 border border-[#0393d5]/30 rounded-lg p-4">
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  <div className="flex-1 text-center md:text-left">
+                    <h4 className="text-white font-semibold mb-1">Your shop is approved!</h4>
+                    <p className="text-[#0393d5] text-sm">
+                      Share your QR code with customers so they can book appointments
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowQRModal(true)}
+                    className="flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all"
+                  >
+                    <QrCode className="w-5 h-5" />
+                    Share QR Code
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -519,6 +543,16 @@ function DashboardContent() {
       </main>
 
       <Footer />
+
+      {/* QR Code Modal */}
+      {shop && (
+        <ShopQRCodeModal
+          visible={showQRModal}
+          onClose={() => setShowQRModal(false)}
+          shopId={shop.id}
+          shopName={shop.name}
+        />
+      )}
     </div>
   );
 }
