@@ -932,18 +932,25 @@ export const uploadShopImage = async (
 // SERVICE-PROVIDER ASSIGNMENTS
 // ============================================
 
+/**
+ * ServiceProvider junction table record
+ * Links shop_services to providers (shop_staff)
+ * Note: shop_service_id references shop_services.id (not global services table)
+ */
 export interface ServiceProvider {
   id: string;
-  service_id: string;
-  provider_id: string;
-  shop_id: string;
+  shop_service_id: string;  // References shop_services.id
+  provider_id: string;       // References auth.users.id (also shop_staff.user_id)
+  shop_id: string;           // References shops.id
   created_at: string;
+  updated_at?: string;
 }
 
 /**
  * Get providers assigned to a specific service
+ * Note: service_providers table uses shop_service_id (not service_id) to reference shop_services
  */
-export const getServiceProviders = async (serviceId: string): Promise<{
+export const getServiceProviders = async (shopServiceId: string): Promise<{
   success: boolean;
   providers?: { id: string; provider_id: string; user: { id: string; name: string; profile_image: string | null } }[];
   error?: string
@@ -958,7 +965,7 @@ export const getServiceProviders = async (serviceId: string): Promise<{
         provider_id,
         user:profiles!service_providers_provider_id_fkey(id, name, profile_image)
       `)
-      .eq('service_id', serviceId);
+      .eq('shop_service_id', shopServiceId);
 
     if (error) {
       console.error('Error fetching service providers:', error);
@@ -974,6 +981,7 @@ export const getServiceProviders = async (serviceId: string): Promise<{
 
 /**
  * Get all service-provider assignments for a shop
+ * Note: Returns shop_service_id as service_id for backward compatibility with UI
  */
 export const getShopServiceProviders = async (shopId: string): Promise<{
   success: boolean;
@@ -985,7 +993,7 @@ export const getShopServiceProviders = async (shopId: string): Promise<{
 
     const { data, error } = await supabase
       .from('service_providers')
-      .select('service_id, provider_id')
+      .select('shop_service_id, provider_id')
       .eq('shop_id', shopId);
 
     if (error) {
@@ -993,7 +1001,13 @@ export const getShopServiceProviders = async (shopId: string): Promise<{
       return { success: false, error: error.message };
     }
 
-    return { success: true, assignments: data || [] };
+    // Map shop_service_id to service_id for backward compatibility with UI
+    const assignments = (data || []).map((a: { shop_service_id: string; provider_id: string }) => ({
+      service_id: a.shop_service_id,
+      provider_id: a.provider_id
+    }));
+
+    return { success: true, assignments };
   } catch (error: any) {
     console.error('Unexpected error:', error);
     return { success: false, error: error.message };
@@ -1002,10 +1016,11 @@ export const getShopServiceProviders = async (shopId: string): Promise<{
 
 /**
  * Assign a provider to a service
+ * Note: shopServiceId refers to shop_services.id (shop-specific services)
  */
 export const assignServiceProvider = async (
   shopId: string,
-  serviceId: string,
+  shopServiceId: string,
   providerId: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
@@ -1015,7 +1030,7 @@ export const assignServiceProvider = async (
       .from('service_providers')
       .insert({
         shop_id: shopId,
-        service_id: serviceId,
+        shop_service_id: shopServiceId,
         provider_id: providerId
       });
 
@@ -1039,7 +1054,7 @@ export const assignServiceProvider = async (
  * Remove a provider from a service
  */
 export const removeServiceProvider = async (
-  serviceId: string,
+  shopServiceId: string,
   providerId: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
@@ -1048,7 +1063,7 @@ export const removeServiceProvider = async (
     const { error } = await supabase
       .from('service_providers')
       .delete()
-      .eq('service_id', serviceId)
+      .eq('shop_service_id', shopServiceId)
       .eq('provider_id', providerId);
 
     if (error) {
@@ -1065,20 +1080,21 @@ export const removeServiceProvider = async (
 
 /**
  * Update all provider assignments for a service (bulk update)
+ * Note: shopServiceId refers to shop_services.id
  */
 export const updateServiceProviders = async (
   shopId: string,
-  serviceId: string,
+  shopServiceId: string,
   providerIds: string[]
 ): Promise<{ success: boolean; error?: string }> => {
   try {
     const supabase = getSupabaseClient();
 
-    // Delete existing assignments
+    // Delete existing assignments for this service
     const { error: deleteError } = await supabase
       .from('service_providers')
       .delete()
-      .eq('service_id', serviceId);
+      .eq('shop_service_id', shopServiceId);
 
     if (deleteError) {
       console.error('Error clearing service providers:', deleteError);
@@ -1089,7 +1105,7 @@ export const updateServiceProviders = async (
     if (providerIds.length > 0) {
       const assignments = providerIds.map(providerId => ({
         shop_id: shopId,
-        service_id: serviceId,
+        shop_service_id: shopServiceId,
         provider_id: providerId
       }));
 
@@ -1121,10 +1137,10 @@ export const getProviderServices = async (providerId: string, shopId: string): P
   try {
     const supabase = getSupabaseClient();
 
-    // Get service IDs assigned to this provider
+    // Get shop_service IDs assigned to this provider
     const { data: assignments, error: assignError } = await supabase
       .from('service_providers')
-      .select('service_id')
+      .select('shop_service_id')
       .eq('provider_id', providerId)
       .eq('shop_id', shopId);
 
@@ -1137,8 +1153,8 @@ export const getProviderServices = async (providerId: string, shopId: string): P
       return { success: true, services: [] };
     }
 
-    // Get the actual service details
-    const serviceIds = assignments.map((a: { service_id: string }) => a.service_id);
+    // Get the actual service details from shop_services
+    const serviceIds = assignments.map((a: { shop_service_id: string }) => a.shop_service_id);
     const { data: services, error: servicesError } = await supabase
       .from('shop_services')
       .select('*')
@@ -1159,6 +1175,7 @@ export const getProviderServices = async (providerId: string, shopId: string): P
 
 /**
  * Get providers who can perform specific services
+ * Note: serviceIds should be shop_services.id values
  */
 export const getProvidersForServices = async (shopId: string, serviceIds: string[]): Promise<{
   success: boolean;
@@ -1171,9 +1188,9 @@ export const getProvidersForServices = async (shopId: string, serviceIds: string
     // Get provider IDs who are assigned to ALL the selected services
     const { data: assignments, error: assignError } = await supabase
       .from('service_providers')
-      .select('provider_id, service_id')
+      .select('provider_id, shop_service_id')
       .eq('shop_id', shopId)
-      .in('service_id', serviceIds);
+      .in('shop_service_id', serviceIds);
 
     if (assignError) {
       console.error('Error fetching service providers:', assignError);
@@ -1186,7 +1203,7 @@ export const getProvidersForServices = async (shopId: string, serviceIds: string
 
     // Count how many of the selected services each provider can do
     const providerServiceCount: { [key: string]: number } = {};
-    assignments.forEach((a: { provider_id: string; service_id: string }) => {
+    assignments.forEach((a: { provider_id: string; shop_service_id: string }) => {
       providerServiceCount[a.provider_id] = (providerServiceCount[a.provider_id] || 0) + 1;
     });
 
@@ -1199,7 +1216,7 @@ export const getProvidersForServices = async (shopId: string, serviceIds: string
       return { success: true, providers: [] };
     }
 
-    // Get provider details
+    // Get provider details from shop_staff with user profile
     const { data: providers, error: providerError } = await supabase
       .from('shop_staff')
       .select(`

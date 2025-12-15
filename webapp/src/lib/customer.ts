@@ -543,6 +543,8 @@ export const updateCustomerProfile = async (
 
 /**
  * Get providers who can perform specific services (for customer booking)
+ * Note: serviceIds should be shop_services.id values
+ * Uses shop_service_id column in service_providers junction table
  */
 export const getProvidersForServicesPublic = async (
   shopId: string,
@@ -554,9 +556,9 @@ export const getProvidersForServicesPublic = async (
     // Get provider IDs who are assigned to ALL the selected services
     const { data: assignments, error: assignError } = await supabase
       .from('service_providers')
-      .select('provider_id, service_id')
+      .select('provider_id, shop_service_id')
       .eq('shop_id', shopId)
-      .in('service_id', serviceIds);
+      .in('shop_service_id', serviceIds);
 
     if (assignError) {
       console.error('Error fetching service providers:', assignError);
@@ -570,7 +572,7 @@ export const getProvidersForServicesPublic = async (
 
     // Count how many of the selected services each provider can do
     const providerServiceCount: { [key: string]: number } = {};
-    assignments.forEach((a: { provider_id: string; service_id: string }) => {
+    assignments.forEach((a: { provider_id: string; shop_service_id: string }) => {
       providerServiceCount[a.provider_id] = (providerServiceCount[a.provider_id] || 0) + 1;
     });
 
@@ -583,7 +585,7 @@ export const getProvidersForServicesPublic = async (
       return { success: true, providers: [] };
     }
 
-    // Get provider details
+    // Get provider details from shop_staff with user profile
     const { data: providers, error: providerError } = await supabase
       .from('shop_staff')
       .select(`
