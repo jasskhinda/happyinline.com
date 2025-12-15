@@ -68,7 +68,6 @@ export interface ShopService {
 
 export interface Booking {
   id: string;
-  booking_id: string;
   shop_id: string;
   customer_id: string;
   barber_id: string | null;

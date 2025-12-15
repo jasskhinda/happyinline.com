@@ -260,7 +260,7 @@ function CustomerBookingsContent() {
                     </div>
                     <div>
                       <h4 className="text-white font-medium">{booking.shop?.name || 'Unknown Shop'}</h4>
-                      <p className="text-[#0393d5] text-sm">Booking #{booking.booking_id}</p>
+                      <p className="text-[#0393d5] text-sm">Booking #{booking.id.slice(0, 8)}</p>
                     </div>
                   </div>
                   <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(booking.status)}`}>
