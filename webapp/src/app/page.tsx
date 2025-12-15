@@ -131,8 +131,8 @@ export default function LandingPage() {
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Discover nearby</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Find the best-rated service providers in your area. Read reviews from real customers.</p>
+            <h3 className="text-xl font-semibold mb-3 text-white">Built from real feedback</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Designed with input from real business owners and customers to solve real problems.</p>
           </div>
 
           {/* Feature Card 2 */}

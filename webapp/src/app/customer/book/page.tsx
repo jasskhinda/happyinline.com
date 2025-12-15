@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { getCurrentUser, getProfile } from '@/lib/auth';
 import { getCustomerLinkedShop, getShopServicesPublic, getShopProvidersPublic, createBooking } from '@/lib/customer';
-import { getSupabaseClient } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import {
@@ -58,7 +56,6 @@ type BookingStep = 'services' | 'provider' | 'datetime' | 'confirm';
 
 export default function BookingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
