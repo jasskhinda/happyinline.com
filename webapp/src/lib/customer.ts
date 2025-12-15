@@ -130,9 +130,7 @@ export const getActiveShops = async (options?: {
         opening_time,
         closing_time,
         is_manually_closed,
-        status,
-        category:categories(id, name),
-        business_type:business_types(id, name)
+        status
       `)
       .in('status', ['active', 'approved'])
       .eq('is_active', true);
@@ -197,9 +195,7 @@ export const getShopById = async (shopId: string): Promise<{ success: boolean; s
         opening_time,
         closing_time,
         is_manually_closed,
-        status,
-        category:categories(id, name),
-        business_type:business_types(id, name)
+        status
       `)
       .eq('id', shopId)
       .single();
@@ -493,9 +489,7 @@ export const getCustomerLinkedShop = async (customerId: string): Promise<{
         opening_time,
         closing_time,
         is_manually_closed,
-        status,
-        category:categories(id, name),
-        business_type:business_types(id, name)
+        status
       `)
       .eq('id', profile.exclusive_shop_id)
       .single();
