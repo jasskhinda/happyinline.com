@@ -49,23 +49,10 @@ export const getPendingShops = async (): Promise<{ success: boolean; shops?: Pen
   try {
     const supabase = getSupabaseClient();
 
+    // First get shops
     const { data: shops, error } = await supabase
       .from('shops')
-      .select(`
-        id,
-        name,
-        description,
-        address,
-        city,
-        state,
-        phone,
-        email,
-        logo_url,
-        cover_image_url,
-        status,
-        created_at,
-        owner:profiles!shops_created_by_fkey(id, name, email, phone)
-      `)
+      .select('*')
       .eq('status', 'pending_review')
       .order('created_at', { ascending: true });
 
@@ -74,7 +61,25 @@ export const getPendingShops = async (): Promise<{ success: boolean; shops?: Pen
       return { success: false, error: error.message };
     }
 
-    return { success: true, shops: shops || [] };
+    if (!shops || shops.length === 0) {
+      return { success: true, shops: [] };
+    }
+
+    // Get owner details for each shop
+    const ownerIds = [...new Set(shops.map((s: any) => s.created_by).filter(Boolean))];
+    const { data: owners } = await supabase
+      .from('profiles')
+      .select('id, name, email, phone')
+      .in('id', ownerIds);
+
+    const ownerMap = new Map(owners?.map((o: any) => [o.id, o]) || []);
+
+    const shopsWithOwners = shops.map((shop: any) => ({
+      ...shop,
+      owner: ownerMap.get(shop.created_by) || null
+    }));
+
+    return { success: true, shops: shopsWithOwners };
   } catch (error: any) {
     console.error('Unexpected error:', error);
     return { success: false, error: error.message };
@@ -90,21 +95,7 @@ export const getAllShops = async (status?: string): Promise<{ success: boolean; 
 
     let query = supabase
       .from('shops')
-      .select(`
-        id,
-        name,
-        description,
-        address,
-        city,
-        state,
-        phone,
-        email,
-        logo_url,
-        cover_image_url,
-        status,
-        created_at,
-        owner:profiles!shops_created_by_fkey(id, name, email, phone)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (status) {
@@ -118,7 +109,25 @@ export const getAllShops = async (status?: string): Promise<{ success: boolean; 
       return { success: false, error: error.message };
     }
 
-    return { success: true, shops: shops || [] };
+    if (!shops || shops.length === 0) {
+      return { success: true, shops: [] };
+    }
+
+    // Get owner details for each shop
+    const ownerIds = [...new Set(shops.map((s: any) => s.created_by).filter(Boolean))];
+    const { data: owners } = await supabase
+      .from('profiles')
+      .select('id, name, email, phone')
+      .in('id', ownerIds);
+
+    const ownerMap = new Map(owners?.map((o: any) => [o.id, o]) || []);
+
+    const shopsWithOwners = shops.map((shop: any) => ({
+      ...shop,
+      owner: ownerMap.get(shop.created_by) || null
+    }));
+
+    return { success: true, shops: shopsWithOwners };
   } catch (error: any) {
     console.error('Unexpected error:', error);
     return { success: false, error: error.message };
