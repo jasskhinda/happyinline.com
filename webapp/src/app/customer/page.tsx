@@ -88,10 +88,10 @@ export default function CustomerDashboard() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved':
+      case 'confirmed':
         return (
           <span className="flex items-center gap-1 text-green-400 bg-green-500/20 px-2 py-1 rounded-full text-xs">
-            <CheckCircle className="w-3 h-3" /> Approved
+            <CheckCircle className="w-3 h-3" /> Confirmed
           </span>
         );
       case 'pending':
@@ -104,6 +104,12 @@ export default function CustomerDashboard() {
         return (
           <span className="flex items-center gap-1 text-blue-400 bg-blue-500/20 px-2 py-1 rounded-full text-xs">
             <CheckCircle className="w-3 h-3" /> Completed
+          </span>
+        );
+      case 'no_show':
+        return (
+          <span className="flex items-center gap-1 text-red-400 bg-red-500/20 px-2 py-1 rounded-full text-xs">
+            <XCircle className="w-3 h-3" /> No Show
           </span>
         );
       default:

@@ -137,12 +137,12 @@ function CustomerBookingsContent() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'approved':
+      case 'confirmed':
         return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'completed':
         return 'bg-green-500/20 text-green-400 border-green-500/30';
       case 'cancelled':
-      case 'rejected':
+      case 'no_show':
         return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
         return 'bg-white/20 text-white border-white/30';
@@ -153,12 +153,12 @@ function CustomerBookingsContent() {
     switch (status) {
       case 'pending':
         return <Clock className="w-4 h-4" />;
-      case 'approved':
+      case 'confirmed':
         return <CheckCircle className="w-4 h-4" />;
       case 'completed':
         return <Check className="w-4 h-4" />;
       case 'cancelled':
-      case 'rejected':
+      case 'no_show':
         return <XCircle className="w-4 h-4" />;
       default:
         return null;
@@ -329,7 +329,7 @@ function CustomerBookingsContent() {
                 </div>
 
                 {/* Actions */}
-                {(booking.status === 'pending' || booking.status === 'approved') && (
+                {(booking.status === 'pending' || booking.status === 'confirmed') && (
                   <div className="p-4 border-t border-white/10">
                     <button
                       onClick={() => handleCancelClick(booking)}

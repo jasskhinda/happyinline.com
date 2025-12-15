@@ -67,7 +67,7 @@ export interface CustomerBooking {
   appointment_date: string;
   appointment_time: string;
   total_amount: number;
-  status: 'pending' | 'approved' | 'completed' | 'cancelled' | 'rejected';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   customer_notes: string | null;
   created_at: string;
   shop?: {
@@ -383,7 +383,7 @@ export const createBooking = async (bookingData: {
         appointment_date: bookingData.appointmentDate,
         appointment_time: bookingData.appointmentTime,
         total_amount: totalAmount,
-        status: 'approved',
+        status: 'confirmed',
         customer_notes: bookingData.customerNotes || null
       })
       .select()

@@ -75,7 +75,7 @@ export interface Booking {
   appointment_date: string;
   appointment_time: string;
   total_amount: number;
-  status: 'pending' | 'approved' | 'completed' | 'cancelled' | 'rejected';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
   customer_notes: string | null;
   shop_notes: string | null;
   created_at: string;
