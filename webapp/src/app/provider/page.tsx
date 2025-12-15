@@ -99,7 +99,7 @@ export default function ProviderDashboard() {
     }
   };
 
-  const handleUpdateStatus = async (bookingId: string, newStatus: 'approved' | 'completed' | 'cancelled') => {
+  const handleUpdateStatus = async (bookingId: string, newStatus: 'confirmed' | 'completed' | 'cancelled') => {
     setProcessingBookingId(bookingId);
     setError('');
 
@@ -142,12 +142,12 @@ export default function ProviderDashboard() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-500/20 text-yellow-400';
-      case 'approved':
+      case 'confirmed':
         return 'bg-blue-500/20 text-blue-400';
       case 'completed':
         return 'bg-green-500/20 text-green-400';
       case 'cancelled':
-      case 'rejected':
+      case 'no_show':
         return 'bg-red-500/20 text-red-400';
       default:
         return 'bg-white/10 text-white/70';
@@ -274,7 +274,7 @@ export default function ProviderDashboard() {
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
+              <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -405,7 +405,7 @@ export default function ProviderDashboard() {
                         {booking.status === 'pending' && (
                           <div className="flex gap-2">
                             <button
-                              onClick={() => handleUpdateStatus(booking.id, 'approved')}
+                              onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
                               disabled={processingBookingId === booking.id}
                               className="flex items-center gap-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
                             >
@@ -414,7 +414,7 @@ export default function ProviderDashboard() {
                               ) : (
                                 <CheckCircle className="w-4 h-4" />
                               )}
-                              Approve
+                              Confirm
                             </button>
                             <button
                               onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
@@ -427,7 +427,7 @@ export default function ProviderDashboard() {
                           </div>
                         )}
 
-                        {booking.status === 'approved' && (
+                        {booking.status === 'confirmed' && (
                           <button
                             onClick={() => handleUpdateStatus(booking.id, 'completed')}
                             disabled={processingBookingId === booking.id}
