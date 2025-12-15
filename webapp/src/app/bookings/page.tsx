@@ -34,12 +34,12 @@ import {
   Scissors
 } from 'lucide-react';
 
-type BookingStatus = 'pending' | 'approved' | 'completed' | 'cancelled' | 'rejected';
+type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
 const STATUS_TABS: { key: BookingStatus | 'all'; label: string; color: string }[] = [
   { key: 'all', label: 'All', color: 'white' },
   { key: 'pending', label: 'Pending', color: 'yellow' },
-  { key: 'approved', label: 'Approved', color: 'blue' },
+  { key: 'confirmed', label: 'Confirmed', color: 'blue' },
   { key: 'completed', label: 'Completed', color: 'green' },
   { key: 'cancelled', label: 'Cancelled', color: 'red' },
 ];
@@ -126,9 +126,9 @@ export default function BookingsPage() {
     setError('');
 
     try {
-      const statusMap: Record<string, 'approved' | 'rejected' | 'completed' | 'cancelled'> = {
-        approve: 'approved',
-        reject: 'rejected',
+      const statusMap: Record<string, 'confirmed' | 'no_show' | 'completed' | 'cancelled'> = {
+        approve: 'confirmed',
+        reject: 'no_show',
         complete: 'completed',
         cancel: 'cancelled'
       };
@@ -141,8 +141,8 @@ export default function BookingsPage() {
 
       if (result.success) {
         const actionLabels: Record<string, string> = {
-          approve: 'approved',
-          reject: 'rejected',
+          approve: 'confirmed',
+          reject: 'marked as no-show',
           complete: 'marked as complete',
           cancel: 'cancelled'
         };
@@ -187,10 +187,10 @@ export default function BookingsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'approved': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'confirmed': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'completed': return 'bg-green-500/20 text-green-400 border-green-500/30';
       case 'cancelled': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'rejected': return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case 'no_show': return 'bg-red-500/20 text-red-400 border-red-500/30';
       default: return 'bg-white/20 text-white border-white/30';
     }
   };
@@ -273,15 +273,15 @@ export default function BookingsPage() {
             <div className="text-yellow-200 text-sm">Pending</div>
           </div>
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-            <div className="text-3xl font-bold text-blue-400">{bookingCounts.approved || 0}</div>
-            <div className="text-blue-200 text-sm">Approved</div>
+            <div className="text-3xl font-bold text-blue-400">{bookingCounts.confirmed || 0}</div>
+            <div className="text-blue-200 text-sm">Confirmed</div>
           </div>
           <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4">
             <div className="text-3xl font-bold text-green-400">{bookingCounts.completed || 0}</div>
             <div className="text-green-200 text-sm">Completed</div>
           </div>
           <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-            <div className="text-3xl font-bold text-red-400">{(bookingCounts.cancelled || 0) + (bookingCounts.rejected || 0)}</div>
+            <div className="text-3xl font-bold text-red-400">{(bookingCounts.cancelled || 0) + (bookingCounts.no_show || 0)}</div>
             <div className="text-red-200 text-sm">Cancelled</div>
           </div>
         </div>
@@ -478,7 +478,7 @@ export default function BookingsPage() {
                               </button>
                             </>
                           )}
-                          {booking.status === 'approved' && (
+                          {booking.status === 'confirmed' && (
                             <>
                               <button
                                 onClick={() => handleAction(booking, 'complete')}
@@ -530,7 +530,7 @@ export default function BookingsPage() {
                 <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(selectedBooking.status)}`}>
                   {selectedBooking.status === 'completed' && <CheckCircle className="w-4 h-4" />}
                   {selectedBooking.status === 'pending' && <Clock className="w-4 h-4" />}
-                  {(selectedBooking.status === 'cancelled' || selectedBooking.status === 'rejected') && <XCircle className="w-4 h-4" />}
+                  {(selectedBooking.status === 'cancelled' || selectedBooking.status === 'no_show') && <XCircle className="w-4 h-4" />}
                   {selectedBooking.status.charAt(0).toUpperCase() + selectedBooking.status.slice(1)}
                 </span>
               </div>
@@ -648,7 +648,7 @@ export default function BookingsPage() {
                 </div>
               )}
 
-              {selectedBooking.status === 'approved' && (
+              {selectedBooking.status === 'confirmed' && (
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
