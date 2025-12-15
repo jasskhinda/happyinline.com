@@ -217,7 +217,7 @@ export default function CustomerLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="john@example.com"
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0393d5] focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0393d5] focus:border-transparent outline-none bg-white text-gray-900 placeholder-gray-400"
                 required
               />
             </div>
@@ -235,7 +235,7 @@ export default function CustomerLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0393d5] focus:border-transparent outline-none"
+                className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0393d5] focus:border-transparent outline-none bg-white text-gray-900 placeholder-gray-400"
                 required
               />
               <button
