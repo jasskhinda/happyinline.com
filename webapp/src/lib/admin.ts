@@ -144,7 +144,7 @@ export const approveShop = async (shopId: string): Promise<{ success: boolean; e
     const { error } = await supabase
       .from('shops')
       .update({
-        status: 'active',
+        status: 'approved', // Valid statuses: draft, pending_review, approved, rejected, suspended
         is_active: true
       })
       .eq('id', shopId);
@@ -226,7 +226,7 @@ export const reactivateShop = async (shopId: string): Promise<{ success: boolean
     const { error } = await supabase
       .from('shops')
       .update({
-        status: 'active',
+        status: 'approved', // Valid statuses: draft, pending_review, approved, rejected, suspended
         is_active: true
       })
       .eq('id', shopId);
@@ -267,7 +267,7 @@ export const getPlatformStats = async (): Promise<{ success: boolean; stats?: Pl
     const { count: activeShops } = await supabase
       .from('shops')
       .select('*', { count: 'exact', head: true })
-      .eq('status', 'active');
+      .eq('status', 'approved');
 
     // Get user counts
     const { count: totalUsers } = await supabase

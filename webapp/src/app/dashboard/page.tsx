@@ -328,7 +328,7 @@ function DashboardContent() {
             )}
 
             {/* Shop Status Banner */}
-            {shop && shop.status !== 'active' && (
+            {shop && shop.status !== 'approved' && (
               <div className="mt-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
                 <p className="text-yellow-200 text-sm">
                   <strong>Shop Status:</strong> {shop.status === 'draft' ? 'Draft - Complete your setup and submit for review' : shop.status === 'pending_review' ? 'Pending Review - We\'ll review your business soon' : shop.status}

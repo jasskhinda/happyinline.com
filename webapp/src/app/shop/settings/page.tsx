@@ -244,7 +244,7 @@ export default function ShopSettingsPage() {
                   Submit for Review
                 </button>
               )}
-              {shop?.status === 'active' && (
+              {shop?.status === 'approved' && (
                 <button
                   onClick={handleToggleStatus}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${

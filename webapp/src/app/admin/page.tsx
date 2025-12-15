@@ -664,7 +664,7 @@ export default function AdminDashboard() {
                   </>
                 )}
 
-                {selectedShop.status === 'active' && (
+                {selectedShop.status === 'approved' && (
                   <button
                     onClick={() => handleSuspend(selectedShop)}
                     disabled={actionLoading}
