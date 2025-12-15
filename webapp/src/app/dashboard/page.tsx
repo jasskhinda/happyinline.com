@@ -62,8 +62,12 @@ function DashboardContent() {
         return;
       }
 
-      // Check user role - redirect providers to their dashboard
+      // Check user role - redirect to appropriate dashboard
       const profile = await getProfile(user.id);
+      if (profile?.role === 'super_admin') {
+        router.push('/admin');
+        return;
+      }
       if (profile?.role === 'provider') {
         router.push('/provider');
         return;
