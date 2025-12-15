@@ -330,11 +330,11 @@ export const getCustomerBookings = async (
       .eq('customer_id', customerId);
 
     if (filter === 'upcoming') {
-      query = query.in('status', ['pending', 'approved']);
+      query = query.in('status', ['pending', 'confirmed']);
     } else if (filter === 'completed') {
       query = query.eq('status', 'completed');
     } else if (filter === 'cancelled') {
-      query = query.in('status', ['cancelled', 'rejected']);
+      query = query.in('status', ['cancelled', 'no_show']);
     }
 
     query = query
