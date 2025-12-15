@@ -208,7 +208,7 @@ export default function ShopSettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-8 pt-32 flex-1 w-full">
+      <main className="w-full px-4 md:px-8 lg:px-12 py-8 pt-32 flex-1">
         {/* Status Messages */}
         {error && (
           <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6 text-red-200 flex items-center gap-2">
