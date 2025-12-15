@@ -927,3 +927,314 @@ export const uploadShopImage = async (
     return { success: false, error: error.message };
   }
 };
+
+// ============================================
+// SERVICE-PROVIDER ASSIGNMENTS
+// ============================================
+
+export interface ServiceProvider {
+  id: string;
+  service_id: string;
+  provider_id: string;
+  shop_id: string;
+  created_at: string;
+}
+
+/**
+ * Get providers assigned to a specific service
+ */
+export const getServiceProviders = async (serviceId: string): Promise<{
+  success: boolean;
+  providers?: { id: string; provider_id: string; user: { id: string; name: string; profile_image: string | null } }[];
+  error?: string
+}> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { data, error } = await supabase
+      .from('service_providers')
+      .select(`
+        id,
+        provider_id,
+        user:profiles!service_providers_provider_id_fkey(id, name, profile_image)
+      `)
+      .eq('service_id', serviceId);
+
+    if (error) {
+      console.error('Error fetching service providers:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, providers: data || [] };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get all service-provider assignments for a shop
+ */
+export const getShopServiceProviders = async (shopId: string): Promise<{
+  success: boolean;
+  assignments?: { service_id: string; provider_id: string }[];
+  error?: string
+}> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { data, error } = await supabase
+      .from('service_providers')
+      .select('service_id, provider_id')
+      .eq('shop_id', shopId);
+
+    if (error) {
+      console.error('Error fetching shop service providers:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, assignments: data || [] };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Assign a provider to a service
+ */
+export const assignServiceProvider = async (
+  shopId: string,
+  serviceId: string,
+  providerId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase
+      .from('service_providers')
+      .insert({
+        shop_id: shopId,
+        service_id: serviceId,
+        provider_id: providerId
+      });
+
+    if (error) {
+      // Check for unique constraint violation
+      if (error.code === '23505') {
+        return { success: false, error: 'Provider is already assigned to this service' };
+      }
+      console.error('Error assigning provider:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Remove a provider from a service
+ */
+export const removeServiceProvider = async (
+  serviceId: string,
+  providerId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase
+      .from('service_providers')
+      .delete()
+      .eq('service_id', serviceId)
+      .eq('provider_id', providerId);
+
+    if (error) {
+      console.error('Error removing provider from service:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update all provider assignments for a service (bulk update)
+ */
+export const updateServiceProviders = async (
+  shopId: string,
+  serviceId: string,
+  providerIds: string[]
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // Delete existing assignments
+    const { error: deleteError } = await supabase
+      .from('service_providers')
+      .delete()
+      .eq('service_id', serviceId);
+
+    if (deleteError) {
+      console.error('Error clearing service providers:', deleteError);
+      return { success: false, error: deleteError.message };
+    }
+
+    // Insert new assignments (if any)
+    if (providerIds.length > 0) {
+      const assignments = providerIds.map(providerId => ({
+        shop_id: shopId,
+        service_id: serviceId,
+        provider_id: providerId
+      }));
+
+      const { error: insertError } = await supabase
+        .from('service_providers')
+        .insert(assignments);
+
+      if (insertError) {
+        console.error('Error inserting service providers:', insertError);
+        return { success: false, error: insertError.message };
+      }
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get services that a specific provider can perform
+ */
+export const getProviderServices = async (providerId: string, shopId: string): Promise<{
+  success: boolean;
+  services?: ShopService[];
+  error?: string
+}> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // Get service IDs assigned to this provider
+    const { data: assignments, error: assignError } = await supabase
+      .from('service_providers')
+      .select('service_id')
+      .eq('provider_id', providerId)
+      .eq('shop_id', shopId);
+
+    if (assignError) {
+      console.error('Error fetching provider assignments:', assignError);
+      return { success: false, error: assignError.message };
+    }
+
+    if (!assignments || assignments.length === 0) {
+      return { success: true, services: [] };
+    }
+
+    // Get the actual service details
+    const serviceIds = assignments.map((a: { service_id: string }) => a.service_id);
+    const { data: services, error: servicesError } = await supabase
+      .from('shop_services')
+      .select('*')
+      .in('id', serviceIds)
+      .eq('is_active', true);
+
+    if (servicesError) {
+      console.error('Error fetching services:', servicesError);
+      return { success: false, error: servicesError.message };
+    }
+
+    return { success: true, services: services || [] };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get providers who can perform specific services
+ */
+export const getProvidersForServices = async (shopId: string, serviceIds: string[]): Promise<{
+  success: boolean;
+  providers?: ShopStaff[];
+  error?: string
+}> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // Get provider IDs who are assigned to ALL the selected services
+    const { data: assignments, error: assignError } = await supabase
+      .from('service_providers')
+      .select('provider_id, service_id')
+      .eq('shop_id', shopId)
+      .in('service_id', serviceIds);
+
+    if (assignError) {
+      console.error('Error fetching service providers:', assignError);
+      return { success: false, error: assignError.message };
+    }
+
+    if (!assignments || assignments.length === 0) {
+      return { success: true, providers: [] };
+    }
+
+    // Count how many of the selected services each provider can do
+    const providerServiceCount: { [key: string]: number } = {};
+    assignments.forEach((a: { provider_id: string; service_id: string }) => {
+      providerServiceCount[a.provider_id] = (providerServiceCount[a.provider_id] || 0) + 1;
+    });
+
+    // Filter to providers who can do ALL selected services
+    const qualifiedProviderIds = Object.entries(providerServiceCount)
+      .filter(([_, count]) => count === serviceIds.length)
+      .map(([providerId]) => providerId);
+
+    if (qualifiedProviderIds.length === 0) {
+      return { success: true, providers: [] };
+    }
+
+    // Get provider details
+    const { data: providers, error: providerError } = await supabase
+      .from('shop_staff')
+      .select(`
+        id,
+        shop_id,
+        user_id,
+        role,
+        bio,
+        specialties,
+        rating,
+        total_reviews,
+        is_available,
+        is_active,
+        hired_date,
+        user:profiles!shop_staff_user_id_fkey(
+          id,
+          name,
+          email,
+          phone,
+          profile_image
+        )
+      `)
+      .eq('shop_id', shopId)
+      .eq('is_active', true)
+      .eq('is_available', true)
+      .in('user_id', qualifiedProviderIds);
+
+    if (providerError) {
+      console.error('Error fetching providers:', providerError);
+      return { success: false, error: providerError.message };
+    }
+
+    return { success: true, providers: providers || [] };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};

@@ -10,8 +10,12 @@ import {
   addShopService,
   updateShopService,
   removeShopService,
+  getShopProviders,
+  getShopServiceProviders,
+  updateServiceProviders,
   Shop,
-  ShopService
+  ShopService,
+  ShopStaff
 } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -29,7 +33,10 @@ import {
   Tag,
   Search,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Users,
+  UserPlus,
+  UserMinus
 } from 'lucide-react';
 
 export default function ServicesPage() {
