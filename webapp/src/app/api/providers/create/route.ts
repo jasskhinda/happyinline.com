@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
         .update({
           name: name,
           phone: phone || null,
-          role: 'provider'
+          role: 'barber' // 'barber' is the valid role for providers in the database constraint
         })
         .eq('id', userId);
 

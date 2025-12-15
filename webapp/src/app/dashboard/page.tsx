@@ -68,7 +68,7 @@ function DashboardContent() {
         router.push('/admin');
         return;
       }
-      if (profile?.role === 'provider') {
+      if (profile?.role === 'barber') {
         router.push('/provider');
         return;
       }

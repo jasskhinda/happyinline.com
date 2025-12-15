@@ -83,7 +83,7 @@ export default function AdminDashboard() {
         // Not a super admin, redirect to appropriate dashboard
         if (profile?.role === 'owner') {
           router.push('/dashboard');
-        } else if (profile?.role === 'provider') {
+        } else if (profile?.role === 'barber') {
           router.push('/provider');
         } else if (profile?.role === 'customer') {
           router.push('/customer');

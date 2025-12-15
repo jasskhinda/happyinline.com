@@ -282,7 +282,7 @@ export const getPlatformStats = async (): Promise<{ success: boolean; stats?: Pl
     const { count: totalProviders } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('role', 'provider');
+      .eq('role', 'barber');
 
     const { count: totalCustomers } = await supabase
       .from('profiles')
