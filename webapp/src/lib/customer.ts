@@ -383,7 +383,7 @@ export const createBooking = async (bookingData: {
         appointment_date: bookingData.appointmentDate,
         appointment_time: bookingData.appointmentTime,
         total_amount: totalAmount,
-        status: 'pending',
+        status: 'approved',
         customer_notes: bookingData.customerNotes || null
       })
       .select()
