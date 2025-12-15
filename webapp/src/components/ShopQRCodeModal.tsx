@@ -35,11 +35,9 @@ export default function ShopQRCodeModal({ visible, onClose, shopId, shopName }: 
   const [copied, setCopied] = useState(false);
   const qrRef = useRef<HTMLDivElement>(null);
 
-  // Generate QR code value - Deep link URL for the app
-  const qrCodeValue = `happyinline://signup/shop/${shopId}`;
-
-  // Web URL for customers without the app
-  const webUrl = `https://happyinline.com/join/${shopId}`;
+  // Generate QR code value - Web URL that works with any phone camera
+  const qrCodeValue = `https://happyinline.com/join/${shopId}`;
+  const webUrl = qrCodeValue;
 
   useEffect(() => {
     if (visible && shopId) {
