@@ -26,7 +26,6 @@ interface Service {
   description: string | null;
   duration: number;
   price: number;
-  category: string | null;
 }
 
 interface Provider {

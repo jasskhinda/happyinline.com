@@ -39,7 +39,6 @@ export interface ShopServicePublic {
   name: string;
   description: string | null;
   duration: number;
-  category: string | null;
   price: number;
   is_active: boolean;
 }
@@ -221,7 +220,7 @@ export const getShopServicesPublic = async (shopId: string): Promise<{ success: 
 
     const { data: services, error } = await supabase
       .from('shop_services')
-      .select('id, name, description, duration, category, price, is_active')
+      .select('id, name, description, duration, price, is_active')
       .eq('shop_id', shopId)
       .eq('is_active', true)
       .order('name', { ascending: true });
