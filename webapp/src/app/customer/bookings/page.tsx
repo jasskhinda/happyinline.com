@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getProfile } from '@/lib/auth';
 import { getCustomerBookings, cancelCustomerBooking, CustomerBooking } from '@/lib/customer';
 import Header from '@/components/Header';
@@ -26,6 +26,7 @@ type TabType = 'upcoming' | 'completed' | 'cancelled';
 
 export default function CustomerBookingsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [bookings, setBookings] = useState<CustomerBooking[]>([]);
@@ -38,6 +39,14 @@ export default function CustomerBookingsPage() {
 
   useEffect(() => {
     loadData();
+
+    // Check for success query parameter (from new booking)
+    if (searchParams.get('success') === 'true') {
+      setSuccess('Booking created successfully! You will receive a confirmation soon.');
+      // Clear the URL parameter
+      router.replace('/customer/bookings');
+      setTimeout(() => setSuccess(''), 5000);
+    }
   }, []);
 
   useEffect(() => {

@@ -16,7 +16,6 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Smartphone,
   QrCode,
   CalendarDays
 } from 'lucide-react';
@@ -200,16 +199,14 @@ export default function CustomerDashboard() {
                   )}
                 </div>
 
-                {/* Book Now Button - Links to mobile app */}
-                <div className="mt-6 p-4 bg-[var(--brand)]/10 rounded-xl border border-[var(--brand)]/30">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Smartphone className="w-6 h-6 text-[var(--brand)]" />
-                    <span className="text-white font-medium">Book via Mobile App</span>
-                  </div>
-                  <p className="text-white/60 text-sm">
-                    Use the Happy InLine mobile app to book appointments, select services, and choose your preferred provider.
-                  </p>
-                </div>
+                {/* Book Now Button */}
+                <button
+                  onClick={() => router.push('/customer/book')}
+                  className="mt-6 w-full py-4 bg-[var(--brand)] text-white rounded-xl font-semibold hover:bg-[var(--brand)]/80 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Calendar className="w-5 h-5" />
+                  Book Appointment
+                </button>
               </div>
             </div>
 
