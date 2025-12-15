@@ -803,6 +803,9 @@ export const getProviderBookings = async (
     }
 
     // Get all bookings for this shop (providers see all shop bookings)
+    console.log('getProviderBookings - providerId:', providerId);
+    console.log('getProviderBookings - shop_id:', staffRecord.shop_id);
+
     let query = supabase
       .from('bookings')
       .select(`
@@ -824,6 +827,9 @@ export const getProviderBookings = async (
       .order('appointment_time', { ascending: true });
 
     const { data: bookings, error } = await query;
+
+    console.log('getProviderBookings - bookings count:', bookings?.length || 0);
+    console.log('getProviderBookings - error:', error);
 
     if (error) {
       console.error('Error fetching provider bookings:', error);
