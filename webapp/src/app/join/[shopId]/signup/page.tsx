@@ -122,6 +122,12 @@ export default function CustomerSignupPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Use API route to update profile (bypasses RLS)
+      console.log('Calling link-shop API with:', {
+        userId: authData.user.id,
+        shopId: shopId,
+        name: name.trim(),
+      });
+
       const linkResponse = await fetch('/api/customer/link-shop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -133,13 +139,15 @@ export default function CustomerSignupPage() {
         }),
       });
 
+      console.log('Link-shop API response status:', linkResponse.status);
       const linkResult = await linkResponse.json();
+      console.log('Link-shop API response:', linkResult);
 
       if (!linkResponse.ok) {
         console.error('Failed to link customer to shop:', linkResult.error);
         // Continue anyway - user account was created
       } else {
-        console.log('Customer linked to shop:', linkResult);
+        console.log('Customer successfully linked to shop:', linkResult);
       }
 
       // Redirect to customer dashboard
