@@ -112,26 +112,25 @@ export async function POST(request: NextRequest) {
 
       userId = authUser.user.id;
 
-      // 5. Create profile for the new user
+      // 5. Update the profile that was auto-created by Supabase trigger
+      // Wait a moment for the trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       const { error: profileError } = await adminClient
         .from('profiles')
-        .insert({
-          id: userId,
-          email: email.toLowerCase(),
+        .update({
           name: name,
           phone: phone || null,
-          role: 'provider',
-          subscription_plan: 'none',
-          subscription_status: null,
-          max_licenses: 0
-        });
+          role: 'provider'
+        })
+        .eq('id', userId);
 
       if (profileError) {
-        console.error('Error creating profile:', profileError);
+        console.error('Error updating profile:', profileError);
         // Try to clean up auth user
         await adminClient.auth.admin.deleteUser(userId);
         return NextResponse.json(
-          { error: 'Failed to create provider profile' },
+          { error: 'Failed to create provider profile: ' + profileError.message },
           { status: 500 }
         );
       }
