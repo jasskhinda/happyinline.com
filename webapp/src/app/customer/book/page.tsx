@@ -183,21 +183,13 @@ export default function BookingPage() {
   };
 
   const generateTimeSlots = (dateStr: string) => {
-    console.log('=== generateTimeSlots called ===');
-    console.log('dateStr:', dateStr);
-    console.log('shop:', shop);
-
-    if (!shop) {
-      console.log('No shop - returning empty');
-      return [];
-    }
+    if (!shop) return [];
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const date = new Date(dateStr + 'T12:00:00'); // Add time to avoid timezone issues
+    // Parse date parts directly to avoid timezone issues
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
     const dayName = dayNames[date.getDay()] as keyof OperatingHours;
-
-    console.log('dayName:', dayName);
-    console.log('shop.operating_hours:', JSON.stringify(shop.operating_hours));
 
     let openTime = '09:00';
     let closeTime = '17:00';
@@ -205,30 +197,21 @@ export default function BookingPage() {
     // Check per-day hours first
     if (shop.operating_hours && shop.operating_hours[dayName]) {
       const dayHours = shop.operating_hours[dayName];
-      console.log('dayHours for', dayName, ':', JSON.stringify(dayHours));
-      if (dayHours?.closed) {
-        console.log('Day is closed - returning empty');
-        return [];
-      }
+      if (dayHours?.closed) return [];
       if (dayHours?.open && dayHours?.close) {
-        openTime = dayHours.open;
-        closeTime = dayHours.close;
-        console.log('Using per-day hours:', openTime, '-', closeTime);
+        // Handle time format with or without seconds (10:00 or 10:00:00)
+        openTime = dayHours.open.substring(0, 5);
+        closeTime = dayHours.close.substring(0, 5);
       }
     } else if (shop.opening_time && shop.closing_time) {
       // Fallback to simple hours
-      openTime = shop.opening_time;
-      closeTime = shop.closing_time;
-      console.log('Using fallback hours:', openTime, '-', closeTime);
+      openTime = shop.opening_time.substring(0, 5);
+      closeTime = shop.closing_time.substring(0, 5);
     }
-
-    console.log('Final openTime:', openTime, 'closeTime:', closeTime);
 
     const slots: { value: string; display: string }[] = [];
     const [openHour, openMin] = openTime.split(':').map(Number);
     const [closeHour, closeMin] = closeTime.split(':').map(Number);
-
-    console.log('Parsed: openHour:', openHour, 'openMin:', openMin, 'closeHour:', closeHour, 'closeMin:', closeMin);
 
     let currentHour = openHour;
     let currentMin = openMin;
@@ -246,7 +229,6 @@ export default function BookingPage() {
       }
     }
 
-    console.log('Generated', slots.length, 'slots');
     return slots;
   };
 
@@ -270,8 +252,13 @@ export default function BookingPage() {
         continue;
       }
 
+      // Format date as YYYY-MM-DD using local timezone (not UTC)
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+
       dates.push({
-        value: date.toISOString().split('T')[0],
+        value: `${year}-${month}-${day}`,
         label: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       });
     }
