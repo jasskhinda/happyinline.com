@@ -97,25 +97,23 @@ export default function CustomerDashboard() {
     return true;
   };
 
-  const getTodayHours = (shop: ShopPublic): string => {
-    const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }) as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
-
+  const getHoursForDay = (shop: ShopPublic, dayName: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday'): string => {
     // Check per-day hours if available
     if (shop.operating_hours && shop.operating_hours[dayName]) {
       const dayHours = shop.operating_hours[dayName];
-      if (dayHours?.closed) return 'Closed today';
+      if (dayHours?.closed) return 'Closed';
       if (dayHours?.open && dayHours?.close) {
         return `${formatTime(dayHours.open)} - ${formatTime(dayHours.close)}`;
       }
     }
 
     // Fallback to simple hours
-    if (!shop.operating_days?.includes(dayName)) return 'Closed today';
+    if (!shop.operating_days?.includes(dayName)) return 'Closed';
     if (shop.opening_time && shop.closing_time) {
       return `${formatTime(shop.opening_time)} - ${formatTime(shop.closing_time)}`;
     }
 
-    return 'Hours not set';
+    return 'Not set';
   };
 
   const formatTime = (time: string): string => {
@@ -232,7 +230,7 @@ export default function CustomerDashboard() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                   {shop.address && (
                     <div className="flex items-center gap-2 text-white/80 text-sm">
                       <MapPin className="w-4 h-4 text-[var(--brand)]" />
@@ -245,9 +243,31 @@ export default function CustomerDashboard() {
                       {shop.phone}
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-white/80 text-sm">
+                </div>
+
+                {/* Operating Hours */}
+                <div className="bg-white/5 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-2 text-white font-medium mb-3">
                     <Clock className="w-4 h-4 text-[var(--brand)]" />
-                    Today: {getTodayHours(shop)}
+                    Operating Hours
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                      const dayKey = day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+                      const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                      const isToday = day === todayName;
+                      const hours = getHoursForDay(shop, dayKey);
+
+                      return (
+                        <div
+                          key={day}
+                          className={`flex justify-between py-1.5 px-2 rounded ${isToday ? 'bg-[var(--brand)]/20 text-white' : 'text-white/70'}`}
+                        >
+                          <span className={isToday ? 'font-medium' : ''}>{day.slice(0, 3)}</span>
+                          <span className={hours === 'Closed' ? 'text-red-400' : ''}>{hours}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

@@ -42,6 +42,22 @@ interface Provider {
   };
 }
 
+interface DayHours {
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
+interface OperatingHours {
+  Monday?: DayHours;
+  Tuesday?: DayHours;
+  Wednesday?: DayHours;
+  Thursday?: DayHours;
+  Friday?: DayHours;
+  Saturday?: DayHours;
+  Sunday?: DayHours;
+}
+
 interface Shop {
   id: string;
   name: string;
@@ -49,6 +65,7 @@ interface Shop {
   opening_time: string | null;
   closing_time: string | null;
   operating_days: string[] | null;
+  operating_hours: OperatingHours | null;
 }
 
 type BookingStep = 'services' | 'provider' | 'datetime' | 'confirm';
@@ -75,7 +92,7 @@ export default function BookingPage() {
   const [notes, setNotes] = useState('');
 
   // Available time slots
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<{ value: string; display: string }[]>([]);
 
   // Provider filtering state
   const [allProviders, setAllProviders] = useState<Provider[]>([]);
@@ -157,21 +174,51 @@ export default function BookingPage() {
     return selectedServices.reduce((sum, s) => sum + s.price, 0);
   };
 
-  const generateTimeSlots = () => {
-    if (!shop?.opening_time || !shop?.closing_time) {
-      // Default slots if no hours set
-      return ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00'];
+  const formatTimeDisplay = (time24: string): string => {
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  const generateTimeSlots = (dateStr: string) => {
+    if (!shop) return [];
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const date = new Date(dateStr + 'T12:00:00'); // Add time to avoid timezone issues
+    const dayName = dayNames[date.getDay()] as keyof OperatingHours;
+
+    let openTime = '09:00';
+    let closeTime = '17:00';
+
+    // Check per-day hours first
+    if (shop.operating_hours && shop.operating_hours[dayName]) {
+      const dayHours = shop.operating_hours[dayName];
+      if (dayHours?.closed) return [];
+      if (dayHours?.open && dayHours?.close) {
+        openTime = dayHours.open;
+        closeTime = dayHours.close;
+      }
+    } else if (shop.opening_time && shop.closing_time) {
+      // Fallback to simple hours
+      openTime = shop.opening_time;
+      closeTime = shop.closing_time;
     }
 
-    const slots: string[] = [];
-    const [openHour, openMin] = shop.opening_time.split(':').map(Number);
-    const [closeHour, closeMin] = shop.closing_time.split(':').map(Number);
+    const slots: { value: string; display: string }[] = [];
+    const [openHour, openMin] = openTime.split(':').map(Number);
+    const [closeHour, closeMin] = closeTime.split(':').map(Number);
 
     let currentHour = openHour;
     let currentMin = openMin;
 
     while (currentHour < closeHour || (currentHour === closeHour && currentMin < closeMin)) {
-      slots.push(`${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`);
+      const time24 = `${String(currentHour).padStart(2, '0')}:${String(currentMin).padStart(2, '0')}`;
+      slots.push({
+        value: time24,
+        display: formatTimeDisplay(time24)
+      });
       currentMin += 30;
       if (currentMin >= 60) {
         currentMin = 0;
@@ -190,10 +237,15 @@ export default function BookingPage() {
     for (let i = 0; i < 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      const dayName = dayNames[date.getDay()];
+      const dayName = dayNames[date.getDay()] as keyof OperatingHours;
 
-      // Check if shop is open on this day
-      if (shop?.operating_days && !shop.operating_days.includes(dayName)) {
+      // Check per-day hours first
+      if (shop?.operating_hours && shop.operating_hours[dayName]) {
+        if (shop.operating_hours[dayName]?.closed) {
+          continue; // Shop is closed this day
+        }
+      } else if (shop?.operating_days && !shop.operating_days.includes(dayName)) {
+        // Fallback to simple operating_days
         continue;
       }
 
@@ -239,7 +291,6 @@ export default function BookingPage() {
       setStep('provider');
     } else if (step === 'provider') {
       setStep('datetime');
-      setAvailableSlots(generateTimeSlots());
     } else if (step === 'datetime' && selectedDate && selectedTime) {
       setStep('confirm');
     }
@@ -515,7 +566,11 @@ export default function BookingPage() {
                   {getAvailableDates().map(date => (
                     <button
                       key={date.value}
-                      onClick={() => setSelectedDate(date.value)}
+                      onClick={() => {
+                        setSelectedDate(date.value);
+                        setSelectedTime(''); // Reset time when date changes
+                        setAvailableSlots(generateTimeSlots(date.value));
+                      }}
                       className={`p-3 rounded-lg text-center text-sm transition-all ${
                         selectedDate === date.value
                           ? 'bg-[var(--brand)] text-white'
@@ -535,15 +590,15 @@ export default function BookingPage() {
                   <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                     {availableSlots.map(slot => (
                       <button
-                        key={slot}
-                        onClick={() => setSelectedTime(slot)}
+                        key={slot.value}
+                        onClick={() => setSelectedTime(slot.value)}
                         className={`p-3 rounded-lg text-center text-sm transition-all ${
-                          selectedTime === slot
+                          selectedTime === slot.value
                             ? 'bg-[var(--brand)] text-white'
                             : 'bg-white/10 text-white hover:bg-white/20'
                         }`}
                       >
-                        {slot}
+                        {slot.display}
                       </button>
                     ))}
                   </div>
@@ -588,11 +643,11 @@ export default function BookingPage() {
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-sm text-white/60 mb-1">Date & Time</p>
                   <p className="text-white font-medium">
-                    {new Date(selectedDate).toLocaleDateString('en-US', {
+                    {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', {
                       weekday: 'long',
                       month: 'long',
                       day: 'numeric'
-                    })} at {selectedTime}
+                    })} at {formatTimeDisplay(selectedTime)}
                   </p>
                 </div>
 
