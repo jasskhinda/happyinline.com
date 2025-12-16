@@ -318,11 +318,14 @@ export default function CustomerDashboard() {
                             {booking.services?.map((s: any) => s.name).join(', ') || 'Service'}
                           </p>
                           <p className="text-white/60 text-sm">
-                            {new Date(booking.appointment_date).toLocaleDateString('en-US', {
-                              weekday: 'short',
-                              month: 'short',
-                              day: 'numeric'
-                            })} at {booking.appointment_time}
+                            {(() => {
+                              const [year, month, day] = booking.appointment_date.split('-').map(Number);
+                              return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'short',
+                                day: 'numeric'
+                              });
+                            })()} at {booking.appointment_time}
                           </p>
                         </div>
                         {getStatusBadge(booking.status)}

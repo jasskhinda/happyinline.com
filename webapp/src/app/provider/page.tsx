@@ -161,8 +161,9 @@ export default function ProviderDashboard() {
   };
 
   const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    // Parse date parts directly to avoid timezone issues
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
