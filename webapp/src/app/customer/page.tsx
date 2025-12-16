@@ -18,7 +18,8 @@ import {
   AlertCircle,
   QrCode,
   CalendarDays,
-  Megaphone
+  Megaphone,
+  Settings
 } from 'lucide-react';
 
 export default function CustomerDashboard() {
@@ -176,11 +177,20 @@ export default function CustomerDashboard() {
 
       <main className="max-w-4xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
         {/* Welcome */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">Hello, {userName}!</h2>
-          <p className="text-[var(--brand)]">
-            {hasLinkedShop ? 'Welcome to your shop' : 'Get started with the mobile app'}
-          </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">Hello, {userName}!</h2>
+            <p className="text-[var(--brand)]">
+              {hasLinkedShop ? 'Welcome to your shop' : 'Get started with the mobile app'}
+            </p>
+          </div>
+          <button
+            onClick={() => router.push('/customer/settings')}
+            className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+            title="Settings"
+          >
+            <Settings className="w-6 h-6 text-white" />
+          </button>
         </div>
 
         {hasLinkedShop && shop ? (

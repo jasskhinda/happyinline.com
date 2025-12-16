@@ -348,6 +348,79 @@ export const upgradeSubscription = async (userId: string, newPlanName: string) =
 };
 
 /**
+ * Update user profile (name, phone, etc.)
+ */
+export const updateProfile = async (
+  userId: string,
+  updates: { name?: string; phone?: string }
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId);
+
+    if (error) {
+      console.error('Error updating profile:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update user email (requires re-authentication)
+ */
+export const updateEmail = async (newEmail: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase.auth.updateUser({
+      email: newEmail.toLowerCase().trim()
+    });
+
+    if (error) {
+      console.error('Error updating email:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Update user password
+ */
+export const updatePassword = async (newPassword: string): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      console.error('Error updating password:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Cancel subscription via Edge Function
  */
 export const cancelSubscription = async (userId: string, reason: string = '') => {

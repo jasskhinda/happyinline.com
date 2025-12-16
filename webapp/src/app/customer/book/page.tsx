@@ -127,8 +127,6 @@ export default function BookingPage() {
         return;
       }
 
-      console.log('Shop data from API:', shopResult.shop);
-      console.log('Operating hours:', shopResult.shop?.operating_hours);
       setShop(shopResult.shop as Shop);
 
       // Load services and providers
@@ -208,9 +206,6 @@ export default function BookingPage() {
       closeTime = shop.closing_time;
     }
 
-    // Debug logging
-    console.log('generateTimeSlots:', { dateStr, dayName, openTime, closeTime, operatingHours: shop.operating_hours });
-
     const slots: { value: string; display: string }[] = [];
     const [openHour, openMin] = openTime.split(':').map(Number);
     const [closeHour, closeMin] = closeTime.split(':').map(Number);
@@ -231,7 +226,6 @@ export default function BookingPage() {
       }
     }
 
-    console.log('Generated slots:', slots.length);
     return slots;
   };
 
@@ -593,12 +587,6 @@ export default function BookingPage() {
               {selectedDate && (
                 <div>
                   <label className="block text-sm text-white/80 mb-2">Time</label>
-                  {/* Debug info - remove after fixing */}
-                  {shop?.operating_hours && (
-                    <div className="bg-red-500/20 p-2 mb-2 rounded text-xs text-white/80 break-all">
-                      DEBUG: {JSON.stringify(shop.operating_hours)}
-                    </div>
-                  )}
                   {availableSlots.length === 0 ? (
                     <p className="text-white/60 text-center py-4">No available time slots for this date</p>
                   ) : (
