@@ -127,6 +127,8 @@ export default function BookingPage() {
         return;
       }
 
+      console.log('Shop data from API:', shopResult.shop);
+      console.log('Operating hours:', shopResult.shop?.operating_hours);
       setShop(shopResult.shop as Shop);
 
       // Load services and providers
