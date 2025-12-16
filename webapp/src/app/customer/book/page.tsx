@@ -183,11 +183,21 @@ export default function BookingPage() {
   };
 
   const generateTimeSlots = (dateStr: string) => {
-    if (!shop) return [];
+    console.log('=== generateTimeSlots called ===');
+    console.log('dateStr:', dateStr);
+    console.log('shop:', shop);
+
+    if (!shop) {
+      console.log('No shop - returning empty');
+      return [];
+    }
 
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const date = new Date(dateStr + 'T12:00:00'); // Add time to avoid timezone issues
     const dayName = dayNames[date.getDay()] as keyof OperatingHours;
+
+    console.log('dayName:', dayName);
+    console.log('shop.operating_hours:', JSON.stringify(shop.operating_hours));
 
     let openTime = '09:00';
     let closeTime = '17:00';
@@ -195,20 +205,30 @@ export default function BookingPage() {
     // Check per-day hours first
     if (shop.operating_hours && shop.operating_hours[dayName]) {
       const dayHours = shop.operating_hours[dayName];
-      if (dayHours?.closed) return [];
+      console.log('dayHours for', dayName, ':', JSON.stringify(dayHours));
+      if (dayHours?.closed) {
+        console.log('Day is closed - returning empty');
+        return [];
+      }
       if (dayHours?.open && dayHours?.close) {
         openTime = dayHours.open;
         closeTime = dayHours.close;
+        console.log('Using per-day hours:', openTime, '-', closeTime);
       }
     } else if (shop.opening_time && shop.closing_time) {
       // Fallback to simple hours
       openTime = shop.opening_time;
       closeTime = shop.closing_time;
+      console.log('Using fallback hours:', openTime, '-', closeTime);
     }
+
+    console.log('Final openTime:', openTime, 'closeTime:', closeTime);
 
     const slots: { value: string; display: string }[] = [];
     const [openHour, openMin] = openTime.split(':').map(Number);
     const [closeHour, closeMin] = closeTime.split(':').map(Number);
+
+    console.log('Parsed: openHour:', openHour, 'openMin:', openMin, 'closeHour:', closeHour, 'closeMin:', closeMin);
 
     let currentHour = openHour;
     let currentMin = openMin;
@@ -226,6 +246,7 @@ export default function BookingPage() {
       }
     }
 
+    console.log('Generated', slots.length, 'slots');
     return slots;
   };
 
