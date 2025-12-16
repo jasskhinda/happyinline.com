@@ -1,4 +1,5 @@
 import { getSupabaseClient } from './supabase';
+import { OperatingHours } from './shop';
 
 // ============================================
 // TYPES
@@ -22,6 +23,8 @@ export interface ShopPublic {
   operating_days: string[] | null;
   opening_time: string | null;
   closing_time: string | null;
+  operating_hours: OperatingHours | null;
+  announcement: string | null;
   is_manually_closed: boolean;
   status: string;
   category?: {
@@ -192,6 +195,8 @@ export const getShopById = async (shopId: string): Promise<{ success: boolean; s
         operating_days,
         opening_time,
         closing_time,
+        operating_hours,
+        announcement,
         is_manually_closed,
         status
       `)
@@ -483,6 +488,8 @@ export const getCustomerLinkedShop = async (customerId: string): Promise<{
         operating_days,
         opening_time,
         closing_time,
+        operating_hours,
+        announcement,
         is_manually_closed,
         status
       `)

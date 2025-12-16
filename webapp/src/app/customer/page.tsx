@@ -17,7 +17,8 @@ import {
   XCircle,
   AlertCircle,
   QrCode,
-  CalendarDays
+  CalendarDays,
+  Megaphone
 } from 'lucide-react';
 
 export default function CustomerDashboard() {
@@ -74,16 +75,55 @@ export default function CustomerDashboard() {
     if (shop.is_manually_closed) return false;
 
     const now = new Date();
-    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+    const dayName = now.toLocaleDateString('en-US', { weekday: 'long' }) as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+    const currentTime = now.toTimeString().slice(0, 5);
 
+    // Check per-day hours if available
+    if (shop.operating_hours && shop.operating_hours[dayName]) {
+      const dayHours = shop.operating_hours[dayName];
+      if (dayHours?.closed) return false;
+      if (dayHours?.open && dayHours?.close) {
+        return currentTime >= dayHours.open && currentTime <= dayHours.close;
+      }
+    }
+
+    // Fallback to simple hours
     if (!shop.operating_days?.includes(dayName)) return false;
 
     if (shop.opening_time && shop.closing_time) {
-      const currentTime = now.toTimeString().slice(0, 5);
       return currentTime >= shop.opening_time && currentTime <= shop.closing_time;
     }
 
     return true;
+  };
+
+  const getTodayHours = (shop: ShopPublic): string => {
+    const dayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }) as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
+    // Check per-day hours if available
+    if (shop.operating_hours && shop.operating_hours[dayName]) {
+      const dayHours = shop.operating_hours[dayName];
+      if (dayHours?.closed) return 'Closed today';
+      if (dayHours?.open && dayHours?.close) {
+        return `${formatTime(dayHours.open)} - ${formatTime(dayHours.close)}`;
+      }
+    }
+
+    // Fallback to simple hours
+    if (!shop.operating_days?.includes(dayName)) return 'Closed today';
+    if (shop.opening_time && shop.closing_time) {
+      return `${formatTime(shop.opening_time)} - ${formatTime(shop.closing_time)}`;
+    }
+
+    return 'Hours not set';
+  };
+
+  const formatTime = (time: string): string => {
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minutes} ${ampm}`;
   };
 
   const getStatusBadge = (status: string) => {
@@ -184,6 +224,14 @@ export default function CustomerDashboard() {
                   <p className="text-white/70 text-sm mb-4">{shop.description}</p>
                 )}
 
+                {/* Announcement Banner */}
+                {shop.announcement && (
+                  <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-start gap-3">
+                    <Megaphone className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-yellow-100 text-sm">{shop.announcement}</p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {shop.address && (
                     <div className="flex items-center gap-2 text-white/80 text-sm">
@@ -197,12 +245,10 @@ export default function CustomerDashboard() {
                       {shop.phone}
                     </div>
                   )}
-                  {shop.opening_time && shop.closing_time && (
-                    <div className="flex items-center gap-2 text-white/80 text-sm">
-                      <Clock className="w-4 h-4 text-[var(--brand)]" />
-                      {shop.opening_time} - {shop.closing_time}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 text-white/80 text-sm">
+                    <Clock className="w-4 h-4 text-[var(--brand)]" />
+                    Today: {getTodayHours(shop)}
+                  </div>
                 </div>
 
                 {/* Book Now Button */}
