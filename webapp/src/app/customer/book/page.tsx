@@ -206,6 +206,9 @@ export default function BookingPage() {
       closeTime = shop.closing_time;
     }
 
+    // Debug logging
+    console.log('generateTimeSlots:', { dateStr, dayName, openTime, closeTime, operatingHours: shop.operating_hours });
+
     const slots: { value: string; display: string }[] = [];
     const [openHour, openMin] = openTime.split(':').map(Number);
     const [closeHour, closeMin] = closeTime.split(':').map(Number);
@@ -226,6 +229,7 @@ export default function BookingPage() {
       }
     }
 
+    console.log('Generated slots:', slots.length);
     return slots;
   };
 
@@ -587,21 +591,25 @@ export default function BookingPage() {
               {selectedDate && (
                 <div>
                   <label className="block text-sm text-white/80 mb-2">Time</label>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                    {availableSlots.map(slot => (
-                      <button
-                        key={slot.value}
-                        onClick={() => setSelectedTime(slot.value)}
-                        className={`p-3 rounded-lg text-center text-sm transition-all ${
-                          selectedTime === slot.value
-                            ? 'bg-[var(--brand)] text-white'
-                            : 'bg-white/10 text-white hover:bg-white/20'
-                        }`}
-                      >
-                        {slot.display}
-                      </button>
-                    ))}
-                  </div>
+                  {availableSlots.length === 0 ? (
+                    <p className="text-white/60 text-center py-4">No available time slots for this date</p>
+                  ) : (
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      {availableSlots.map(slot => (
+                        <button
+                          key={slot.value}
+                          onClick={() => setSelectedTime(slot.value)}
+                          className={`p-3 rounded-lg text-center text-sm transition-all ${
+                            selectedTime === slot.value
+                              ? 'bg-[var(--brand)] text-white'
+                              : 'bg-white/10 text-white hover:bg-white/20'
+                          }`}
+                        >
+                          {slot.display}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
