@@ -4,6 +4,23 @@ import { getSupabaseClient } from './supabase';
 // TYPES
 // ============================================
 
+// Per-day operating hours
+export interface DayHours {
+  open: string;   // e.g., "09:00"
+  close: string;  // e.g., "18:00"
+  closed: boolean;
+}
+
+export interface OperatingHours {
+  Monday?: DayHours;
+  Tuesday?: DayHours;
+  Wednesday?: DayHours;
+  Thursday?: DayHours;
+  Friday?: DayHours;
+  Saturday?: DayHours;
+  Sunday?: DayHours;
+}
+
 export interface Shop {
   id: string;
   name: string;
@@ -23,6 +40,8 @@ export interface Shop {
   operating_days: string[] | null;
   opening_time: string | null;
   closing_time: string | null;
+  operating_hours: OperatingHours | null;  // Per-day hours
+  announcement: string | null;             // Shop announcement/banner
   is_manually_closed: boolean;
   status: 'draft' | 'pending_review' | 'approved' | 'rejected' | 'suspended' | 'active';
   is_active: boolean;
@@ -759,6 +778,37 @@ export const updateBookingStatus = async (
 
     if (error) {
       console.error('Error updating booking:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Reschedule a booking to a new date/time
+ */
+export const rescheduleBooking = async (
+  bookingId: string,
+  newDate: string,
+  newTime: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        appointment_date: newDate,
+        appointment_time: newTime
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      console.error('Error rescheduling booking:', error);
       return { success: false, error: error.message };
     }
 

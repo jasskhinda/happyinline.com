@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getSubscriptionStatus } from '@/lib/auth';
-import { getMyShop, updateShop, toggleShopStatus, submitShopForReview, deleteShop, Shop } from '@/lib/shop';
+import { getMyShop, updateShop, toggleShopStatus, submitShopForReview, deleteShop, Shop, OperatingHours, DayHours } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import {
@@ -21,10 +21,12 @@ import {
   AlertTriangle,
   CheckCircle,
   Power,
-  Send
+  Send,
+  Megaphone
 } from 'lucide-react';
 
-const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
+type DayOfWeek = typeof DAYS_OF_WEEK[number];
 
 export default function ShopSettingsPage() {
   const router = useRouter();
@@ -50,6 +52,9 @@ export default function ShopSettingsPage() {
   const [operatingDays, setOperatingDays] = useState<string[]>([]);
   const [openingTime, setOpeningTime] = useState('09:00');
   const [closingTime, setClosingTime] = useState('18:00');
+  const [operatingHours, setOperatingHours] = useState<OperatingHours>({});
+  const [announcement, setAnnouncement] = useState('');
+  const [usePerDayHours, setUsePerDayHours] = useState(false);
 
   useEffect(() => {
     loadShop();
@@ -89,6 +94,24 @@ export default function ShopSettingsPage() {
       setOperatingDays(userShop.operating_days || []);
       setOpeningTime(userShop.opening_time || '09:00');
       setClosingTime(userShop.closing_time || '18:00');
+      setAnnouncement(userShop.announcement || '');
+
+      // Check if per-day hours are set
+      if (userShop.operating_hours && Object.keys(userShop.operating_hours).length > 0) {
+        setOperatingHours(userShop.operating_hours);
+        setUsePerDayHours(true);
+      } else {
+        // Initialize with default hours based on operating_days
+        const defaultHours: OperatingHours = {};
+        DAYS_OF_WEEK.forEach(day => {
+          defaultHours[day] = {
+            open: userShop.opening_time || '09:00',
+            close: userShop.closing_time || '18:00',
+            closed: !userShop.operating_days?.includes(day)
+          };
+        });
+        setOperatingHours(defaultHours);
+      }
     } catch (err) {
       console.error('Error loading shop:', err);
       setError('Failed to load shop data');
@@ -105,6 +128,27 @@ export default function ShopSettingsPage() {
     }
   };
 
+  const updateDayHours = (day: DayOfWeek, field: keyof DayHours, value: string | boolean) => {
+    setOperatingHours(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [field]: value
+      }
+    }));
+  };
+
+  const toggleDayClosed = (day: DayOfWeek) => {
+    setOperatingHours(prev => ({
+      ...prev,
+      [day]: {
+        open: prev[day]?.open || '09:00',
+        close: prev[day]?.close || '18:00',
+        closed: !prev[day]?.closed
+      }
+    }));
+  };
+
   const handleSave = async () => {
     if (!shop) return;
 
@@ -113,6 +157,12 @@ export default function ShopSettingsPage() {
     setSuccess('');
 
     try {
+      // If using per-day hours, derive operating_days from the hours
+      let finalOperatingDays = operatingDays;
+      if (usePerDayHours) {
+        finalOperatingDays = DAYS_OF_WEEK.filter(day => !operatingHours[day]?.closed);
+      }
+
       const result = await updateShop(shop.id, {
         name,
         description,
@@ -123,9 +173,11 @@ export default function ShopSettingsPage() {
         phone,
         email,
         website,
-        operating_days: operatingDays,
+        operating_days: finalOperatingDays,
         opening_time: openingTime,
-        closing_time: closingTime
+        closing_time: closingTime,
+        operating_hours: usePerDayHours ? operatingHours : null,
+        announcement: announcement.trim() || null
       });
 
       if (result.success) {
@@ -405,6 +457,33 @@ export default function ShopSettingsPage() {
           </div>
         </div>
 
+        {/* Shop Announcement */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <Megaphone className="w-6 h-6 text-[#0393d5]" />
+            Shop Announcement
+          </h2>
+
+          <div>
+            <label className="block text-sm font-medium text-[#0393d5] mb-2">
+              Display a message to customers (e.g., "Wednesday: Military/First Responders get a discount!")
+            </label>
+            <textarea
+              value={announcement}
+              onChange={(e) => setAnnouncement(e.target.value)}
+              rows={2}
+              placeholder="Enter announcement text to display to customers..."
+              className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+            />
+            {announcement && (
+              <div className="mt-3 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                <p className="text-yellow-200 text-sm font-medium">Preview:</p>
+                <p className="text-white">{announcement}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Operating Hours */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
           <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
@@ -413,51 +492,130 @@ export default function ShopSettingsPage() {
           </h2>
 
           <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-[#0393d5] mb-3">
-                Operating Days
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {DAYS_OF_WEEK.map((day) => (
-                  <button
-                    key={day}
-                    onClick={() => toggleDay(day)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      operatingDays.includes(day)
-                        ? 'bg-[#0393d5] text-white'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                    }`}
-                  >
-                    {day.slice(0, 3)}
-                  </button>
-                ))}
+            {/* Toggle between simple and per-day hours */}
+            <div className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10">
+              <div>
+                <p className="text-white font-medium">Different hours per day</p>
+                <p className="text-[#0393d5] text-sm">Set unique hours for each day of the week</p>
               </div>
+              <button
+                onClick={() => setUsePerDayHours(!usePerDayHours)}
+                className={`w-14 h-8 rounded-full transition-colors relative ${
+                  usePerDayHours ? 'bg-[#0393d5]' : 'bg-white/20'
+                }`}
+              >
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                  usePerDayHours ? 'left-7' : 'left-1'
+                }`} />
+              </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-[#0393d5] mb-2">
-                  Opening Time
-                </label>
-                <input
-                  type="time"
-                  value={openingTime}
-                  onChange={(e) => setOpeningTime(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
-                />
+            {!usePerDayHours ? (
+              // Simple mode - same hours for all days
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-[#0393d5] mb-3">
+                    Operating Days
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day}
+                        onClick={() => toggleDay(day)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          operatingDays.includes(day)
+                            ? 'bg-[#0393d5] text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                      >
+                        {day.slice(0, 3)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                      Opening Time
+                    </label>
+                    <input
+                      type="time"
+                      value={openingTime}
+                      onChange={(e) => setOpeningTime(e.target.value)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                      Closing Time
+                    </label>
+                    <input
+                      type="time"
+                      value={closingTime}
+                      onChange={(e) => setClosingTime(e.target.value)}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              // Per-day mode
+              <div className="space-y-3">
+                {DAYS_OF_WEEK.map((day) => {
+                  const dayHours = operatingHours[day] || { open: '09:00', close: '18:00', closed: false };
+                  return (
+                    <div
+                      key={day}
+                      className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                        dayHours.closed
+                          ? 'bg-white/5 border-white/10'
+                          : 'bg-[#0393d5]/10 border-[#0393d5]/30'
+                      }`}
+                    >
+                      <div className="w-24">
+                        <span className={`font-medium ${dayHours.closed ? 'text-white/50' : 'text-white'}`}>
+                          {day}
+                        </span>
+                      </div>
+
+                      {!dayHours.closed ? (
+                        <>
+                          <input
+                            type="time"
+                            value={dayHours.open}
+                            onChange={(e) => updateDayHours(day, 'open', e.target.value)}
+                            className="bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#0393d5] w-32"
+                          />
+                          <span className="text-white/50">to</span>
+                          <input
+                            type="time"
+                            value={dayHours.close}
+                            onChange={(e) => updateDayHours(day, 'close', e.target.value)}
+                            className="bg-white/10 border border-white/20 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-[#0393d5] w-32"
+                          />
+                        </>
+                      ) : (
+                        <span className="text-white/50 italic">Closed</span>
+                      )}
+
+                      <div className="ml-auto">
+                        <button
+                          onClick={() => toggleDayClosed(day)}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                            dayHours.closed
+                              ? 'bg-[#0393d5]/20 text-[#0393d5] hover:bg-[#0393d5]/30'
+                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                          }`}
+                        >
+                          {dayHours.closed ? 'Open' : 'Close'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-[#0393d5] mb-2">
-                  Closing Time
-                </label>
-                <input
-                  type="time"
-                  value={closingTime}
-                  onChange={(e) => setClosingTime(e.target.value)}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
-                />
-              </div>
-            </div>
+            )}
           </div>
         </div>
 

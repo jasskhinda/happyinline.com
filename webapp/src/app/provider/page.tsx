@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getProfile } from '@/lib/auth';
-import { getProviderBookings, updateBookingStatus, Shop, Booking } from '@/lib/shop';
+import { getProviderBookings, updateBookingStatus, rescheduleBooking, Shop, Booking } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import {
@@ -20,7 +20,8 @@ import {
   CalendarDays,
   CheckCircle,
   XCircle,
-  Filter
+  Filter,
+  CalendarClock
 } from 'lucide-react';
 
 export default function ProviderDashboard() {
@@ -39,6 +40,13 @@ export default function ProviderDashboard() {
 
   // Action states
   const [processingBookingId, setProcessingBookingId] = useState<string | null>(null);
+
+  // Reschedule modal state
+  const [rescheduleModalOpen, setRescheduleModalOpen] = useState(false);
+  const [rescheduleBookingData, setRescheduleBookingData] = useState<Booking | null>(null);
+  const [newDate, setNewDate] = useState('');
+  const [newTime, setNewTime] = useState('');
+  const [rescheduling, setRescheduling] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -117,6 +125,38 @@ export default function ProviderDashboard() {
       setError('Failed to update booking');
     } finally {
       setProcessingBookingId(null);
+    }
+  };
+
+  const openRescheduleModal = (booking: Booking) => {
+    setRescheduleBookingData(booking);
+    setNewDate(booking.appointment_date);
+    setNewTime(booking.appointment_time);
+    setRescheduleModalOpen(true);
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleBookingData || !newDate || !newTime) return;
+
+    setRescheduling(true);
+    setError('');
+
+    try {
+      const result = await rescheduleBooking(rescheduleBookingData.id, newDate, newTime);
+
+      if (result.success) {
+        setSuccess('Appointment rescheduled successfully!');
+        setRescheduleModalOpen(false);
+        setRescheduleBookingData(null);
+        loadData();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(result.error || 'Failed to reschedule appointment');
+      }
+    } catch (err) {
+      setError('Failed to reschedule appointment');
+    } finally {
+      setRescheduling(false);
     }
   };
 
@@ -428,17 +468,37 @@ export default function ProviderDashboard() {
                         )}
 
                         {booking.status === 'confirmed' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => openRescheduleModal(booking)}
+                              className="flex items-center gap-1 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors text-sm border border-amber-500/30"
+                            >
+                              <CalendarClock className="w-4 h-4" />
+                              Reschedule
+                            </button>
+                            <button
+                              onClick={() => handleUpdateStatus(booking.id, 'completed')}
+                              disabled={processingBookingId === booking.id}
+                              className="flex items-center gap-1 px-4 py-2 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+                            >
+                              {processingBookingId === booking.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4" />
+                              )}
+                              Mark Complete
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Reschedule button for pending bookings */}
+                        {booking.status === 'pending' && (
                           <button
-                            onClick={() => handleUpdateStatus(booking.id, 'completed')}
-                            disabled={processingBookingId === booking.id}
-                            className="flex items-center gap-1 px-4 py-2 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+                            onClick={() => openRescheduleModal(booking)}
+                            className="flex items-center gap-1 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors text-sm border border-amber-500/30 mt-2"
                           >
-                            {processingBookingId === booking.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4" />
-                            )}
-                            Mark Complete
+                            <CalendarClock className="w-4 h-4" />
+                            Reschedule
                           </button>
                         )}
                       </div>
@@ -452,6 +512,98 @@ export default function ProviderDashboard() {
       </main>
 
       <Footer />
+
+      {/* Reschedule Modal */}
+      {rescheduleModalOpen && rescheduleBookingData && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl p-6 max-w-md w-full border border-white/20">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+                <CalendarClock className="w-5 h-5 text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Reschedule Appointment</h3>
+                <p className="text-white/60 text-sm">
+                  {rescheduleBookingData.customer?.name || 'Customer'}
+                </p>
+              </div>
+            </div>
+
+            {/* Current appointment info */}
+            <div className="bg-white/5 rounded-lg p-4 mb-6">
+              <p className="text-white/60 text-xs uppercase tracking-wider mb-2">Current Appointment</p>
+              <div className="flex items-center gap-4 text-white">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#0393d5]" />
+                  <span>{formatDate(rescheduleBookingData.appointment_date)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#0393d5]" />
+                  <span>{formatTime(rescheduleBookingData.appointment_time)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* New date/time inputs */}
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                  New Date
+                </label>
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                  New Time
+                </label>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setRescheduleModalOpen(false);
+                  setRescheduleBookingData(null);
+                }}
+                disabled={rescheduling}
+                className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReschedule}
+                disabled={rescheduling || !newDate || !newTime}
+                className="flex-1 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {rescheduling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Rescheduling...
+                  </>
+                ) : (
+                  <>
+                    <CalendarClock className="w-4 h-4" />
+                    Reschedule
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
