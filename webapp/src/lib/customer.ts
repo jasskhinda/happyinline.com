@@ -413,13 +413,13 @@ export const cancelCustomerBooking = async (bookingId: string, customerId: strin
   try {
     const supabase = getSupabaseClient();
 
-    // Only allow cancelling own bookings that are pending or approved
+    // Only allow cancelling own bookings that are pending, approved, or confirmed
     const { error } = await supabase
       .from('bookings')
       .update({ status: 'cancelled' })
       .eq('id', bookingId)
       .eq('customer_id', customerId)
-      .in('status', ['pending', 'approved']);
+      .in('status', ['pending', 'approved', 'confirmed']);
 
     if (error) {
       console.error('Error cancelling booking:', error);
