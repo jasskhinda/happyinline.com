@@ -251,7 +251,7 @@ export default function CustomerDashboard() {
                     <Clock className="w-4 h-4 text-[var(--brand)]" />
                     Operating Hours
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="space-y-1.5 text-sm">
                     {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
                       const dayKey = day as 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
                       const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
@@ -261,9 +261,9 @@ export default function CustomerDashboard() {
                       return (
                         <div
                           key={day}
-                          className={`flex justify-between py-1.5 px-2 rounded ${isToday ? 'bg-[var(--brand)]/20 text-white' : 'text-white/70'}`}
+                          className={`flex justify-between py-1.5 px-3 rounded ${isToday ? 'bg-[var(--brand)]/20 text-white' : 'text-white/70'}`}
                         >
-                          <span className={isToday ? 'font-medium' : ''}>{day.slice(0, 3)}</span>
+                          <span className={`w-12 ${isToday ? 'font-medium' : ''}`}>{day.slice(0, 3)}</span>
                           <span className={hours === 'Closed' ? 'text-red-400' : ''}>{hours}</span>
                         </div>
                       );
