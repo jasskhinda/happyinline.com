@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getSubscriptionStatus } from '@/lib/auth';
 import { getMyShop, updateShop, toggleShopStatus, submitShopForReview, deleteShop, Shop, OperatingHours, DayHours } from '@/lib/shop';
+import { getSupabaseClient } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import {
@@ -22,7 +23,10 @@ import {
   CheckCircle,
   Power,
   Send,
-  Megaphone
+  Megaphone,
+  Camera,
+  Image as ImageIcon,
+  Upload
 } from 'lucide-react';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
@@ -38,6 +42,14 @@ export default function ShopSettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  // Image upload state
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   // Form fields
   const [name, setName] = useState('');
@@ -82,6 +94,8 @@ export default function ShopSettingsPage() {
 
       setShop(userShop);
       // Populate form
+      setLogoUrl(userShop.logo_url || null);
+      setCoverUrl(userShop.cover_image_url || null);
       setName(userShop.name || '');
       setDescription(userShop.description || '');
       setAddress(userShop.address || '');
@@ -147,6 +161,75 @@ export default function ShopSettingsPage() {
         closed: !prev[day]?.closed
       }
     }));
+  };
+
+  const handleImageUpload = async (file: File, type: 'logo' | 'cover') => {
+    if (!shop) return;
+
+    const setUploading = type === 'logo' ? setUploadingLogo : setUploadingCover;
+    const setUrl = type === 'logo' ? setLogoUrl : setCoverUrl;
+
+    setUploading(true);
+    setError('');
+
+    try {
+      const supabase = getSupabaseClient();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${shop.id}/${type}-${Date.now()}.${fileExt}`;
+
+      // Upload to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('shop-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw new Error(uploadError.message);
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('shop-images')
+        .getPublicUrl(fileName);
+
+      // Update shop in database
+      const updateField = type === 'logo' ? 'logo_url' : 'cover_image_url';
+      const { error: updateError } = await supabase
+        .from('shops')
+        .update({ [updateField]: publicUrl })
+        .eq('id', shop.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      // Update local state
+      setUrl(publicUrl);
+      setShop({ ...shop, [updateField]: publicUrl });
+      setSuccess(`${type === 'logo' ? 'Logo' : 'Cover image'} updated successfully!`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err.message || `Failed to upload ${type}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, 'logo');
+    }
+  };
+
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file, 'cover');
+    }
   };
 
   const handleSave = async () => {
@@ -309,6 +392,104 @@ export default function ShopSettingsPage() {
                   {shop.is_manually_closed ? 'Open Shop' : 'Close Shop'}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* Store Images */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <ImageIcon className="w-6 h-6 text-[#0393d5]" />
+            Store Images
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Logo Upload */}
+            <div>
+              <label className="block text-sm font-medium text-[#0393d5] mb-3">
+                Business Logo
+              </label>
+              <div className="relative">
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="hidden"
+                />
+                <div
+                  onClick={() => logoInputRef.current?.click()}
+                  className="relative cursor-pointer group"
+                >
+                  {logoUrl ? (
+                    <div className="relative">
+                      <img
+                        src={logoUrl}
+                        alt="Store Logo"
+                        className="w-32 h-32 rounded-2xl object-cover border-2 border-white/20 group-hover:border-[#0393d5] transition-all"
+                      />
+                      <div className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-white/30 flex flex-col items-center justify-center gap-2 hover:border-[#0393d5] transition-all bg-white/5">
+                      <Upload className="w-8 h-8 text-[#0393d5]" />
+                      <span className="text-white/60 text-xs">Upload Logo</span>
+                    </div>
+                  )}
+                  {uploadingLogo && (
+                    <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 text-[#0393d5] animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-white/50 text-xs mt-2">Square image recommended (e.g., 200x200)</p>
+              </div>
+            </div>
+
+            {/* Cover Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-[#0393d5] mb-3">
+                Cover Image
+              </label>
+              <div className="relative">
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverChange}
+                  className="hidden"
+                />
+                <div
+                  onClick={() => coverInputRef.current?.click()}
+                  className="relative cursor-pointer group"
+                >
+                  {coverUrl ? (
+                    <div className="relative">
+                      <img
+                        src={coverUrl}
+                        alt="Cover Image"
+                        className="w-full h-32 rounded-2xl object-cover border-2 border-white/20 group-hover:border-[#0393d5] transition-all"
+                      />
+                      <div className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-32 rounded-2xl border-2 border-dashed border-white/30 flex flex-col items-center justify-center gap-2 hover:border-[#0393d5] transition-all bg-white/5">
+                      <Upload className="w-8 h-8 text-[#0393d5]" />
+                      <span className="text-white/60 text-xs">Upload Cover Image</span>
+                    </div>
+                  )}
+                  {uploadingCover && (
+                    <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center">
+                      <Loader2 className="w-8 h-8 text-[#0393d5] animate-spin" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-white/50 text-xs mt-2">Wide image recommended (e.g., 1200x400)</p>
+              </div>
             </div>
           </div>
         </div>
