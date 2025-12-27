@@ -26,7 +26,8 @@ import {
   Plus,
   Gift,
   AlertTriangle,
-  QrCode
+  QrCode,
+  Eye
 } from 'lucide-react';
 import ShopQRCodeModal from '@/components/ShopQRCodeModal';
 
@@ -271,7 +272,7 @@ function DashboardContent() {
             <h3 className="text-xl font-semibold text-white mb-4">Business Management</h3>
 
             {shop ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <button
                   onClick={() => router.push('/shop/settings')}
                   className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
@@ -313,6 +314,16 @@ function DashboardContent() {
                     <CalendarDays className="w-6 h-6 text-[#0393d5]" />
                   </div>
                   <span className="text-white font-medium text-sm">Bookings</span>
+                </button>
+
+                <button
+                  onClick={() => window.open(`/store/${shop.id}`, '_blank')}
+                  className="flex flex-col items-center gap-2 bg-gradient-to-br from-[#0393d5]/20 to-green-500/20 hover:from-[#0393d5]/30 hover:to-green-500/30 rounded-xl p-4 transition-all border border-[#0393d5]/30"
+                >
+                  <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <Eye className="w-6 h-6 text-green-400" />
+                  </div>
+                  <span className="text-white font-medium text-sm">View Store</span>
                 </button>
               </div>
             ) : (
