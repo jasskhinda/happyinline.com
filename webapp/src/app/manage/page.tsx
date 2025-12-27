@@ -95,8 +95,10 @@ export default function ManagePage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'N/A';
-    // Parse date parts directly to avoid timezone issues
-    const [year, month, day] = dateString.split('-').map(Number);
+    // Handle ISO timestamps (T separator), Postgres timestamps (space separator), and date-only strings
+    const dateOnly = dateString.split('T')[0].split(' ')[0]; // Get just the date part
+    const [year, month, day] = dateOnly.split('-').map(Number);
+    if (!year || !month || !day) return 'N/A';
     return new Date(year, month - 1, day).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
