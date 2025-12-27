@@ -152,7 +152,7 @@ export default function StorePreviewPage() {
                   <div className="flex items-center gap-1 text-yellow-400 mt-1">
                     <Star className="w-4 h-4 fill-current" />
                     <span>{shop.rating.toFixed(1)}</span>
-                    <span className="text-white/60 text-sm">({shop.review_count || 0} reviews)</span>
+                    <span className="text-white/60 text-sm">({shop.total_reviews || 0} reviews)</span>
                   </div>
                 )}
               </div>
@@ -254,10 +254,10 @@ export default function StorePreviewPage() {
                       key={provider.id}
                       className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center gap-3"
                     >
-                      {provider.avatar_url ? (
+                      {provider.user?.profile_image ? (
                         <img
-                          src={provider.avatar_url}
-                          alt={provider.name}
+                          src={provider.user.profile_image}
+                          alt={provider.user?.name || 'Provider'}
                           className="w-12 h-12 rounded-full object-cover"
                         />
                       ) : (
@@ -266,7 +266,7 @@ export default function StorePreviewPage() {
                         </div>
                       )}
                       <div>
-                        <h3 className="text-white font-medium">{provider.name}</h3>
+                        <h3 className="text-white font-medium">{provider.user?.name || 'Provider'}</h3>
                         {provider.rating && (
                           <div className="flex items-center gap-1 text-yellow-400 text-sm">
                             <Star className="w-3 h-3 fill-current" />
