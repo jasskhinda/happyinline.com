@@ -228,7 +228,7 @@ function SubscribeContent() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-6xl mx-auto px-4 py-12 pt-32 flex-1 w-full">
+      <main className="max-w-[1400px] mx-auto px-6 py-12 pt-32 flex-1 w-full">
         {showCheckout && selectedPlan && userId ? (
           <div className="max-w-lg mx-auto">
             <Elements

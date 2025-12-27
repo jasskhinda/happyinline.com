@@ -129,7 +129,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-6xl mx-auto px-4 py-8 pt-32 flex-1">
+      <main className="max-w-[1400px] mx-auto px-6 py-8 pt-32 flex-1">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">

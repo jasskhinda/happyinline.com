@@ -287,7 +287,7 @@ export default function CreateShopPage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--primary-dark)] via-[var(--primary)] to-[var(--primary-dark)] flex flex-col">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-8 pt-32 flex-1 w-full">
+      <main className="max-w-[1400px] mx-auto px-6 py-8 pt-32 flex-1 w-full">
         {/* Progress Steps */}
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-2">

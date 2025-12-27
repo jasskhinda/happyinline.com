@@ -123,7 +123,7 @@ export default function ManagePage() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-12 pt-32 flex-1 w-full">
+      <main className="max-w-[1400px] mx-auto px-6 py-12 pt-32 flex-1 w-full">
         <h2 className="text-3xl font-bold text-white mb-8">Manage Subscription</h2>
 
         {/* Cancel Result Message */}
