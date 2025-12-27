@@ -339,6 +339,15 @@ export default function BookingPage() {
         throw new Error(result.error || 'Failed to create booking');
       }
 
+      // Send email notifications (non-blocking)
+      if (result.booking?.id) {
+        fetch('/api/booking/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookingId: result.booking.id }),
+        }).catch(err => console.error('Failed to send booking notifications:', err));
+      }
+
       // Redirect to success/bookings page
       router.push('/customer/bookings?success=true');
 
