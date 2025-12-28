@@ -148,7 +148,7 @@ export default function StorePreviewPage() {
                     <BadgeCheck className="w-6 h-6 text-[#0393d5]" />
                   )}
                 </div>
-                {shop.rating && (
+                {shop.rating !== null && shop.rating > 0 && (
                   <div className="flex items-center gap-1 text-yellow-400 mt-1">
                     <Star className="w-4 h-4 fill-current" />
                     <span>{shop.rating.toFixed(1)}</span>
@@ -267,7 +267,7 @@ export default function StorePreviewPage() {
                       )}
                       <div>
                         <h3 className="text-white font-medium">{provider.user?.name || 'Provider'}</h3>
-                        {provider.rating && (
+                        {provider.rating !== null && provider.rating > 0 && (
                           <div className="flex items-center gap-1 text-yellow-400 text-sm">
                             <Star className="w-3 h-3 fill-current" />
                             <span>{provider.rating.toFixed(1)}</span>
