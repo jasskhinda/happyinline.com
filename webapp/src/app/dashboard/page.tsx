@@ -130,7 +130,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-[1400px] mx-auto px-6 py-8 pt-32 flex-1">
+      <main className="w-full max-w-[1600px] mx-auto px-8 lg:px-12 py-8 pt-32 flex-1">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2">
@@ -377,9 +377,9 @@ function DashboardContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Subscription Card */}
-          <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                 <CreditCard className="w-6 h-6 text-[#0393d5]" />
@@ -516,7 +516,7 @@ function DashboardContent() {
           </div>
 
           {/* Profile Card */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-6">
               <User className="w-6 h-6 text-[#0393d5]" />
               Profile
