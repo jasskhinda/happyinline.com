@@ -32,8 +32,13 @@ import {
   X,
   ChevronRight,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  Video,
+  Link as LinkIcon,
+  Lock,
+  FileText
 } from 'lucide-react';
+import { ServiceType } from '@/lib/customer';
 
 export default function ShopDetailsPage() {
   const router = useRouter();
@@ -48,7 +53,7 @@ export default function ShopDetailsPage() {
 
   // Booking state
   const [showBookingModal, setShowBookingModal] = useState(false);
-  const [bookingStep, setBookingStep] = useState(0); // 0: services, 1: provider, 2: datetime, 3: confirm
+  const [bookingStep, setBookingStep] = useState(0); // 0: services, 1: service format (if needed), 2: provider, 3: datetime, 4: confirm
   const [selectedServices, setSelectedServices] = useState<ShopServicePublic[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<ProviderPublic | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
@@ -57,6 +62,8 @@ export default function ShopDetailsPage() {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  // Track service format choice for services that offer both in-person and online
+  const [serviceFormatChoices, setServiceFormatChoices] = useState<Record<string, 'in_person' | 'online'>>({});
 
   useEffect(() => {
     loadData();
@@ -184,6 +191,25 @@ export default function ShopDetailsPage() {
     setCustomerNotes('');
     setBookingError('');
     setBookingSuccess(false);
+    setServiceFormatChoices({});
+  };
+
+  // Check if any selected service needs format choice (has "both" type)
+  const needsFormatChoice = () => {
+    return selectedServices.some(s => s.service_type === 'both');
+  };
+
+  // Get the effective service type for a service
+  const getEffectiveServiceType = (service: ShopServicePublic): 'in_person' | 'online' => {
+    if (service.service_type === 'both') {
+      return serviceFormatChoices[service.id] || 'in_person';
+    }
+    return service.service_type === 'online' ? 'online' : 'in_person';
+  };
+
+  // Check if any selected service will be online
+  const hasOnlineService = () => {
+    return selectedServices.some(s => getEffectiveServiceType(s) === 'online');
   };
 
   const isShopOpen = () => {
@@ -320,7 +346,21 @@ export default function ShopDetailsPage() {
                   className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10"
                 >
                   <div>
-                    <h4 className="text-white font-medium">{service.name}</h4>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-white font-medium">{service.name}</h4>
+                      {service.service_type === 'online' && (
+                        <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded flex items-center gap-1">
+                          <Video className="w-3 h-3" />
+                          Online
+                        </span>
+                      )}
+                      {service.service_type === 'both' && (
+                        <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
+                          <Video className="w-3 h-3" />
+                          In-Person / Online
+                        </span>
+                      )}
+                    </div>
                     <p className="text-white/50 text-sm">
                       {service.duration} min
                     </p>
@@ -416,7 +456,7 @@ export default function ShopDetailsPage() {
                 <>
                   {/* Progress Steps */}
                   <div className="flex justify-center gap-2 mb-6">
-                    {[0, 1, 2, 3].map((s) => (
+                    {Array.from({ length: needsFormatChoice() ? 5 : 4 }).map((_, s) => (
                       <div
                         key={s}
                         className={`w-3 h-3 rounded-full transition-all ${
@@ -451,7 +491,21 @@ export default function ShopDetailsPage() {
                               }`}
                             >
                               <div className="text-left">
-                                <p className="text-white font-medium">{service.name}</p>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-white font-medium">{service.name}</p>
+                                  {service.service_type === 'online' && (
+                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                      <Video className="w-3 h-3" />
+                                      Online
+                                    </span>
+                                  )}
+                                  {service.service_type === 'both' && (
+                                    <span className="text-xs bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                      <Video className="w-3 h-3" />
+                                      Both
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-white/50 text-sm">{service.duration} min</p>
                               </div>
                               <div className="flex items-center gap-3">
@@ -465,8 +519,52 @@ export default function ShopDetailsPage() {
                     </div>
                   )}
 
-                  {/* Step 1: Select Provider */}
-                  {bookingStep === 1 && (
+                  {/* Step 1: Choose Format (only if any service has "both" type) */}
+                  {bookingStep === 1 && needsFormatChoice() && (
+                    <div>
+                      <h4 className="text-lg font-medium text-white mb-4">Choose Service Format</h4>
+                      <p className="text-white/60 text-sm mb-4">Some services you selected can be done in-person or online. Please choose your preference.</p>
+                      <div className="space-y-4">
+                        {selectedServices.filter(s => s.service_type === 'both').map((service) => (
+                          <div key={service.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
+                            <p className="text-white font-medium mb-3">{service.name}</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => setServiceFormatChoices(prev => ({ ...prev, [service.id]: 'in_person' }))}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                                  (serviceFormatChoices[service.id] || 'in_person') === 'in_person'
+                                    ? 'bg-[#0393d5]/20 border-[#0393d5] text-white'
+                                    : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                                }`}
+                              >
+                                <MapPin className="w-5 h-5" />
+                                <span className="text-sm font-medium">In-Person</span>
+                              </button>
+                              <button
+                                onClick={() => setServiceFormatChoices(prev => ({ ...prev, [service.id]: 'online' }))}
+                                className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                                  serviceFormatChoices[service.id] === 'online'
+                                    ? 'bg-purple-500/20 border-purple-500 text-white'
+                                    : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                                }`}
+                              >
+                                <Video className="w-5 h-5" />
+                                <span className="text-sm font-medium">Online</span>
+                              </button>
+                            </div>
+                            {serviceFormatChoices[service.id] === 'online' && service.online_instructions && (
+                              <div className="mt-3 p-3 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                                <p className="text-purple-300 text-sm">{service.online_instructions}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 2: Select Provider (or step 1 if no format choice needed) */}
+                  {((bookingStep === 1 && !needsFormatChoice()) || (bookingStep === 2 && needsFormatChoice())) && (
                     <div>
                       <h4 className="text-lg font-medium text-white mb-4">Select Provider (Optional)</h4>
                       <div className="space-y-2">
@@ -508,8 +606,8 @@ export default function ShopDetailsPage() {
                     </div>
                   )}
 
-                  {/* Step 2: Select Date & Time */}
-                  {bookingStep === 2 && (
+                  {/* Step 3: Select Date & Time (or step 2 if no format choice needed) */}
+                  {((bookingStep === 2 && !needsFormatChoice()) || (bookingStep === 3 && needsFormatChoice())) && (
                     <div>
                       <h4 className="text-lg font-medium text-white mb-4">Select Date & Time</h4>
                       <div className="space-y-4">
@@ -545,8 +643,8 @@ export default function ShopDetailsPage() {
                     </div>
                   )}
 
-                  {/* Step 3: Confirm */}
-                  {bookingStep === 3 && (
+                  {/* Step 4: Confirm (or step 3 if no format choice needed) */}
+                  {((bookingStep === 3 && !needsFormatChoice()) || (bookingStep === 4 && needsFormatChoice())) && (
                     <div>
                       <h4 className="text-lg font-medium text-white mb-4">Confirm Booking</h4>
                       <div className="space-y-4">
@@ -554,7 +652,14 @@ export default function ShopDetailsPage() {
                           <h5 className="text-[#0393d5] text-sm font-medium mb-2">Services</h5>
                           {selectedServices.map(s => (
                             <div key={s.id} className="flex justify-between text-white text-sm py-1">
-                              <span>{s.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span>{s.name}</span>
+                                {getEffectiveServiceType(s) === 'online' && (
+                                  <span className="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">
+                                    Online
+                                  </span>
+                                )}
+                              </div>
                               <span>${s.price}</span>
                             </div>
                           ))}
@@ -563,6 +668,38 @@ export default function ShopDetailsPage() {
                             <span>${getTotalPrice().toFixed(2)}</span>
                           </div>
                         </div>
+
+                        {/* Online Meeting Details */}
+                        {hasOnlineService() && (
+                          <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30">
+                            <h5 className="text-purple-300 text-sm font-medium mb-2 flex items-center gap-2">
+                              <Video className="w-4 h-4" />
+                              Online Meeting Details
+                            </h5>
+                            {selectedServices.filter(s => getEffectiveServiceType(s) === 'online').map(s => (
+                              <div key={s.id} className="mb-3 last:mb-0">
+                                <p className="text-white font-medium text-sm">{s.name}</p>
+                                {s.online_meeting_link && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <LinkIcon className="w-3 h-3 text-purple-400" />
+                                    <a href={s.online_meeting_link} target="_blank" rel="noopener noreferrer" className="text-purple-300 text-sm hover:underline break-all">
+                                      {s.online_meeting_link}
+                                    </a>
+                                  </div>
+                                )}
+                                {s.online_meeting_password && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Lock className="w-3 h-3 text-purple-400" />
+                                    <span className="text-purple-300 text-sm">Password: {s.online_meeting_password}</span>
+                                  </div>
+                                )}
+                                {s.online_instructions && (
+                                  <p className="text-purple-300/70 text-xs mt-1">{s.online_instructions}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                           <h5 className="text-[#0393d5] text-sm font-medium mb-2">Appointment</h5>
@@ -602,37 +739,47 @@ export default function ShopDetailsPage() {
                       Back
                     </button>
                   )}
-                  {bookingStep < 3 ? (
-                    <button
-                      onClick={() => setBookingStep(bookingStep + 1)}
-                      disabled={
-                        (bookingStep === 0 && selectedServices.length === 0) ||
-                        (bookingStep === 2 && (!selectedDate || !selectedTime))
-                      }
-                      className="flex-1 bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                      Continue
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleBooking}
-                      disabled={bookingLoading}
-                      className="flex-1 bg-gradient-to-r from-[#0393d5] to-purple-500 hover:from-[#027bb5] hover:to-purple-600 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      {bookingLoading ? (
-                        <>
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          Booking...
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-5 h-5" />
-                          Confirm Booking
-                        </>
-                      )}
-                    </button>
-                  )}
+                  {(() => {
+                    const maxStep = needsFormatChoice() ? 4 : 3;
+                    const dateTimeStep = needsFormatChoice() ? 3 : 2;
+                    const isLastStep = bookingStep === maxStep;
+
+                    if (!isLastStep) {
+                      return (
+                        <button
+                          onClick={() => setBookingStep(bookingStep + 1)}
+                          disabled={
+                            (bookingStep === 0 && selectedServices.length === 0) ||
+                            (bookingStep === dateTimeStep && (!selectedDate || !selectedTime))
+                          }
+                          className="flex-1 bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          Continue
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      );
+                    } else {
+                      return (
+                        <button
+                          onClick={handleBooking}
+                          disabled={bookingLoading}
+                          className="flex-1 bg-gradient-to-r from-[#0393d5] to-purple-500 hover:from-[#027bb5] hover:to-purple-600 text-white font-medium py-3 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {bookingLoading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              Booking...
+                            </>
+                          ) : (
+                            <>
+                              <Check className="w-5 h-5" />
+                              Confirm Booking
+                            </>
+                          )}
+                        </button>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
             )}

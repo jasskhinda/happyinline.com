@@ -72,6 +72,8 @@ export interface ShopStaff {
   };
 }
 
+export type ServiceType = 'in_person' | 'online' | 'both';
+
 export interface ShopService {
   id: string;
   shop_id: string;
@@ -83,6 +85,10 @@ export interface ShopService {
   icon_url: string | null;
   price: number;
   is_active: boolean;
+  service_type: ServiceType;
+  online_meeting_link: string | null;
+  online_meeting_password: string | null;
+  online_instructions: string | null;
 }
 
 export interface Booking {
@@ -624,6 +630,10 @@ export const addShopService = async (
     duration: number;
     category?: string;
     price: number;
+    service_type?: ServiceType;
+    online_meeting_link?: string;
+    online_meeting_password?: string;
+    online_instructions?: string;
   }
 ): Promise<{ success: boolean; service?: ShopService; error?: string }> => {
   try {
@@ -639,7 +649,11 @@ export const addShopService = async (
         duration: serviceData.duration,
         category: serviceData.category || 'General',
         price: serviceData.price,
-        is_active: true
+        is_active: true,
+        service_type: serviceData.service_type || 'in_person',
+        online_meeting_link: serviceData.online_meeting_link || null,
+        online_meeting_password: serviceData.online_meeting_password || null,
+        online_instructions: serviceData.online_instructions || null
       })
       .select()
       .single();

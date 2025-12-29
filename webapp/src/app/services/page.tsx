@@ -36,8 +36,14 @@ import {
   ToggleRight,
   Users,
   UserPlus,
-  UserMinus
+  UserMinus,
+  MapPin,
+  Video,
+  Link as LinkIcon,
+  Lock,
+  FileText
 } from 'lucide-react';
+import { ServiceType } from '@/lib/shop';
 
 export default function ServicesPage() {
   const router = useRouter();
@@ -61,6 +67,10 @@ export default function ServicesPage() {
   const [customDuration, setCustomDuration] = useState('30');
   const [customPrice, setCustomPrice] = useState('');
   const [customCategory, setCustomCategory] = useState('General');
+  const [customServiceType, setCustomServiceType] = useState<ServiceType>('in_person');
+  const [customOnlineLink, setCustomOnlineLink] = useState('');
+  const [customOnlinePassword, setCustomOnlinePassword] = useState('');
+  const [customOnlineInstructions, setCustomOnlineInstructions] = useState('');
   const [addingService, setAddingService] = useState(false);
 
   // Edit service form state
@@ -69,6 +79,10 @@ export default function ServicesPage() {
   const [editDuration, setEditDuration] = useState('30');
   const [editPrice, setEditPrice] = useState('');
   const [editIsActive, setEditIsActive] = useState(true);
+  const [editServiceType, setEditServiceType] = useState<ServiceType>('in_person');
+  const [editOnlineLink, setEditOnlineLink] = useState('');
+  const [editOnlinePassword, setEditOnlinePassword] = useState('');
+  const [editOnlineInstructions, setEditOnlineInstructions] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Delete state
@@ -183,7 +197,11 @@ export default function ServicesPage() {
         description: customDescription.trim() || undefined,
         duration: parseInt(customDuration) || 30,
         category: customCategory,
-        price: parseFloat(customPrice)
+        price: parseFloat(customPrice),
+        service_type: customServiceType,
+        online_meeting_link: (customServiceType === 'online' || customServiceType === 'both') ? customOnlineLink.trim() || undefined : undefined,
+        online_meeting_password: (customServiceType === 'online' || customServiceType === 'both') ? customOnlinePassword.trim() || undefined : undefined,
+        online_instructions: (customServiceType === 'online' || customServiceType === 'both') ? customOnlineInstructions.trim() || undefined : undefined
       });
 
       if (result.success) {
@@ -209,6 +227,10 @@ export default function ServicesPage() {
     setCustomDuration('30');
     setCustomPrice('');
     setCustomCategory('General');
+    setCustomServiceType('in_person');
+    setCustomOnlineLink('');
+    setCustomOnlinePassword('');
+    setCustomOnlineInstructions('');
   };
 
   const handleEditService = (service: ShopService) => {
@@ -218,6 +240,10 @@ export default function ServicesPage() {
     setEditDuration(service.duration.toString());
     setEditPrice(service.price.toString());
     setEditIsActive(service.is_active);
+    setEditServiceType(service.service_type || 'in_person');
+    setEditOnlineLink(service.online_meeting_link || '');
+    setEditOnlinePassword(service.online_meeting_password || '');
+    setEditOnlineInstructions(service.online_instructions || '');
     setShowEditModal(true);
   };
 
@@ -233,7 +259,11 @@ export default function ServicesPage() {
         description: editDescription.trim() || null,
         duration: parseInt(editDuration) || 30,
         price: parseFloat(editPrice),
-        is_active: editIsActive
+        is_active: editIsActive,
+        service_type: editServiceType,
+        online_meeting_link: (editServiceType === 'online' || editServiceType === 'both') ? editOnlineLink.trim() || null : null,
+        online_meeting_password: (editServiceType === 'online' || editServiceType === 'both') ? editOnlinePassword.trim() || null : null,
+        online_instructions: (editServiceType === 'online' || editServiceType === 'both') ? editOnlineInstructions.trim() || null : null
       });
 
       if (result.success) {
@@ -457,12 +487,25 @@ export default function ServicesPage() {
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <h4 className={`text-lg font-medium ${
                               service.is_active ? 'text-white' : 'text-white/50'
                             }`}>
                               {service.name}
                             </h4>
+                            {/* Service Type Badge */}
+                            {service.service_type === 'online' && (
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                Online
+                              </span>
+                            )}
+                            {service.service_type === 'both' && (
+                              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                In-Person / Online
+                              </span>
+                            )}
                             {!service.is_active && (
                               <span className="text-xs bg-white/10 text-white/50 px-2 py-0.5 rounded">
                                 Inactive
@@ -721,6 +764,112 @@ export default function ServicesPage() {
                     </div>
                   </div>
 
+                  {/* Service Type Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Service Type *
+                    </label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCustomServiceType('in_person')}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                          customServiceType === 'in_person'
+                            ? 'bg-[#0393d5]/20 border-[#0393d5] text-white'
+                            : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                        }`}
+                      >
+                        <MapPin className="w-5 h-5" />
+                        <span className="text-xs font-medium">In-Person</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCustomServiceType('online')}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                          customServiceType === 'online'
+                            ? 'bg-purple-500/20 border-purple-500 text-white'
+                            : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                        }`}
+                      >
+                        <Video className="w-5 h-5" />
+                        <span className="text-xs font-medium">Online</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCustomServiceType('both')}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                          customServiceType === 'both'
+                            ? 'bg-blue-500/20 border-blue-500 text-white'
+                            : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                        }`}
+                      >
+                        <div className="flex gap-0.5">
+                          <MapPin className="w-4 h-4" />
+                          <Video className="w-4 h-4" />
+                        </div>
+                        <span className="text-xs font-medium">Both</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Online Meeting Details (shown for online or both) */}
+                  {(customServiceType === 'online' || customServiceType === 'both') && (
+                    <div className="space-y-4 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                      <p className="text-sm text-purple-300 font-medium flex items-center gap-2">
+                        <Video className="w-4 h-4" />
+                        Online Meeting Details
+                      </p>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">
+                          Meeting Link (Zoom, Google Meet, etc.)
+                        </label>
+                        <div className="relative">
+                          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                          <input
+                            type="url"
+                            value={customOnlineLink}
+                            onChange={(e) => setCustomOnlineLink(e.target.value)}
+                            placeholder="https://zoom.us/j/..."
+                            className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">
+                          Meeting Password (optional)
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                          <input
+                            type="text"
+                            value={customOnlinePassword}
+                            onChange={(e) => setCustomOnlinePassword(e.target.value)}
+                            placeholder="Enter meeting password if required"
+                            className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-white mb-2">
+                          Additional Instructions
+                        </label>
+                        <div className="relative">
+                          <FileText className="absolute left-3 top-3 w-5 h-5 text-purple-400" />
+                          <textarea
+                            value={customOnlineInstructions}
+                            onChange={(e) => setCustomOnlineInstructions(e.target.value)}
+                            placeholder="e.g., Please join 5 minutes early. If you prefer in-person, specify in the notes field."
+                            rows={3}
+                            className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     onClick={handleAddCustomService}
                     disabled={!customName.trim() || !customPrice.trim() || addingService}
@@ -748,7 +897,7 @@ export default function ServicesPage() {
       {/* Edit Service Modal */}
       {showEditModal && selectedService && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-md border border-white/20">
+          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-lg border border-white/20 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-white">Edit Service</h3>
               <button
@@ -762,7 +911,7 @@ export default function ServicesPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-white mb-2">
                   Service Name *
@@ -823,6 +972,112 @@ export default function ServicesPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Service Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-white mb-2">
+                  Service Type *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditServiceType('in_person')}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                      editServiceType === 'in_person'
+                        ? 'bg-[#0393d5]/20 border-[#0393d5] text-white'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                    }`}
+                  >
+                    <MapPin className="w-5 h-5" />
+                    <span className="text-xs font-medium">In-Person</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditServiceType('online')}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                      editServiceType === 'online'
+                        ? 'bg-purple-500/20 border-purple-500 text-white'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                    }`}
+                  >
+                    <Video className="w-5 h-5" />
+                    <span className="text-xs font-medium">Online</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditServiceType('both')}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border transition-all ${
+                      editServiceType === 'both'
+                        ? 'bg-blue-500/20 border-blue-500 text-white'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                    }`}
+                  >
+                    <div className="flex gap-0.5">
+                      <MapPin className="w-4 h-4" />
+                      <Video className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-medium">Both</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Online Meeting Details (shown for online or both) */}
+              {(editServiceType === 'online' || editServiceType === 'both') && (
+                <div className="space-y-4 p-4 bg-purple-500/10 rounded-lg border border-purple-500/30">
+                  <p className="text-sm text-purple-300 font-medium flex items-center gap-2">
+                    <Video className="w-4 h-4" />
+                    Online Meeting Details
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Meeting Link (Zoom, Google Meet, etc.)
+                    </label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                      <input
+                        type="url"
+                        value={editOnlineLink}
+                        onChange={(e) => setEditOnlineLink(e.target.value)}
+                        placeholder="https://zoom.us/j/..."
+                        className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Meeting Password (optional)
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                      <input
+                        type="text"
+                        value={editOnlinePassword}
+                        onChange={(e) => setEditOnlinePassword(e.target.value)}
+                        placeholder="Enter meeting password if required"
+                        className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-2">
+                      Additional Instructions
+                    </label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-3 w-5 h-5 text-purple-400" />
+                      <textarea
+                        value={editOnlineInstructions}
+                        onChange={(e) => setEditOnlineInstructions(e.target.value)}
+                        placeholder="e.g., Please join 5 minutes early. If you prefer in-person, specify in the notes field."
+                        rows={3}
+                        className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Active Toggle */}
               <div className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10">

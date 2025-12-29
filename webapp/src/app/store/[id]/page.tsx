@@ -25,7 +25,8 @@ import {
   User,
   DollarSign,
   Calendar,
-  ExternalLink
+  ExternalLink,
+  Video
 } from 'lucide-react';
 
 export default function StorePreviewPage() {
@@ -211,7 +212,21 @@ export default function StorePreviewPage() {
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h3 className="text-white font-medium">{service.name}</h3>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-white font-medium">{service.name}</h3>
+                            {service.service_type === 'online' && (
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                Online
+                              </span>
+                            )}
+                            {service.service_type === 'both' && (
+                              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                In-Person / Online
+                              </span>
+                            )}
+                          </div>
                           {service.description && (
                             <p className="text-white/60 text-sm mt-1">{service.description}</p>
                           )}

@@ -37,6 +37,8 @@ export interface ShopPublic {
   };
 }
 
+export type ServiceType = 'in_person' | 'online' | 'both';
+
 export interface ShopServicePublic {
   id: string;
   name: string;
@@ -44,6 +46,10 @@ export interface ShopServicePublic {
   duration: number;
   price: number;
   is_active: boolean;
+  service_type: ServiceType;
+  online_meeting_link: string | null;
+  online_meeting_password: string | null;
+  online_instructions: string | null;
 }
 
 export interface ProviderPublic {
