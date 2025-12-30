@@ -20,6 +20,11 @@ export interface Profile {
   payment_method_last4: string | null;
   payment_method_brand: string | null;
   business_name: string | null;
+  // Google Calendar integration
+  google_calendar_connected: boolean | null;
+  google_calendar_access_token: string | null;
+  google_calendar_refresh_token: string | null;
+  google_calendar_token_expiry: string | null;
 }
 
 export interface SubscriptionStatus extends Profile {
