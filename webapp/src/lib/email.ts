@@ -269,4 +269,93 @@ export const sendBookingNotifications = async (data: BookingEmailData): Promise<
   };
 };
 
+// Generate OTP email HTML
+const generateOTPEmailHTML = (otp: string, purpose: 'email_change' | 'verification'): string => {
+  const title = purpose === 'email_change' ? 'Email Change Verification' : 'Email Verification';
+  const message = purpose === 'email_change'
+    ? 'You requested to change your email address. Please use the code below to verify your new email:'
+    : 'Please use the code below to verify your email address:';
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} - Happy InLine</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #09264b 0%, #0a3a6b 100%); padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
+      <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Happy InLine</h1>
+      <p style="color: #0393d5; margin: 10px 0 0 0; font-size: 14px;">Skip the wait. Join the line.</p>
+    </div>
+
+    <!-- Content -->
+    <div style="background: #ffffff; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #09264b; margin: 0 0 10px 0; font-size: 22px;">${title}</h2>
+
+      <p style="color: #666; margin: 0 0 25px 0; font-size: 16px;">
+        ${message}
+      </p>
+
+      <!-- OTP Code -->
+      <div style="background: linear-gradient(135deg, #09264b 0%, #0a3a6b 100%); border-radius: 12px; padding: 30px; text-align: center; margin-bottom: 25px;">
+        <p style="color: #0393d5; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px;">Your Verification Code</p>
+        <p style="color: #ffffff; font-size: 40px; font-weight: bold; margin: 0; letter-spacing: 8px;">${otp}</p>
+      </div>
+
+      <p style="color: #888; font-size: 14px; margin: 0 0 10px 0;">
+        This code will expire in <strong>10 minutes</strong>.
+      </p>
+
+      <p style="color: #888; font-size: 14px; margin: 0;">
+        If you didn't request this code, please ignore this email.
+      </p>
+
+      <!-- Footer Message -->
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #888; font-size: 14px; margin: 0;">
+          Need help? Contact our support team.
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Happy InLine. All rights reserved.</p>
+      <p style="margin: 5px 0 0 0;">Skip the wait. Join the line.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
+
+// Send OTP verification email
+export const sendOTPEmail = async (
+  email: string,
+  otp: string,
+  purpose: 'email_change' | 'verification' = 'verification'
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const subject = purpose === 'email_change'
+      ? 'Verify Your New Email Address - Happy InLine'
+      : 'Email Verification Code - Happy InLine';
+
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: email,
+      subject,
+      html: generateOTPEmailHTML(otp, purpose),
+    });
+    console.log(`✅ OTP email sent to ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send OTP email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 export default transporter;

@@ -26,8 +26,14 @@ import {
   Megaphone,
   Camera,
   Image as ImageIcon,
-  Upload
+  Upload,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  LogOut
 } from 'lucide-react';
+import { getProfile, updateProfile, updatePassword, signOut } from '@/lib/auth';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
 type DayOfWeek = typeof DAYS_OF_WEEK[number];
@@ -42,6 +48,27 @@ export default function ShopSettingsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  // Account settings state
+  const [profileName, setProfileName] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
+  const [originalProfileEmail, setOriginalProfileEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [savingEmail, setSavingEmail] = useState(false);
+
+  // Email change OTP state
+  const [showEmailOTPModal, setShowEmailOTPModal] = useState(false);
+  const [emailOTP, setEmailOTP] = useState('');
+  const [pendingNewEmail, setPendingNewEmail] = useState('');
+  const [sendingOTP, setSendingOTP] = useState(false);
+  const [verifyingOTP, setVerifyingOTP] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Image upload state
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +107,8 @@ export default function ShopSettingsPage() {
         return;
       }
 
+      setUserId(user.id);
+
       const subStatus = await getSubscriptionStatus(user.id);
       if (!subStatus?.isActive) {
         router.push('/subscribe');
@@ -90,6 +119,14 @@ export default function ShopSettingsPage() {
       if (shopError || !userShop) {
         router.push('/shop/create');
         return;
+      }
+
+      // Load profile data
+      const profile = await getProfile(user.id);
+      if (profile) {
+        setProfileName(profile.name || '');
+        setProfileEmail(profile.email || user.email || '');
+        setOriginalProfileEmail(profile.email || user.email || '');
       }
 
       setShop(userShop);
@@ -326,6 +363,155 @@ export default function ShopSettingsPage() {
       setError(err.message || 'An unexpected error occurred');
       setDeleting(false);
     }
+  };
+
+  // Account Settings Handlers
+  const handleSaveProfileName = async () => {
+    if (!userId) return;
+
+    setSavingProfile(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const result = await updateProfile(userId, { name: profileName });
+      if (result.success) {
+        setSuccess('Name updated successfully!');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(result.error || 'Failed to update name');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword) {
+      setError('Please enter a new password');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setSavingPassword(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const result = await updatePassword(newPassword);
+      if (result.success) {
+        setSuccess('Password changed successfully!');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError(result.error || 'Failed to change password');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const handleStartEmailChange = () => {
+    if (!profileEmail || profileEmail === originalProfileEmail) {
+      setError('Please enter a different email address');
+      return;
+    }
+    setPendingNewEmail(profileEmail);
+    setShowEmailOTPModal(true);
+    setOtpSent(false);
+    setEmailOTP('');
+  };
+
+  const handleSendOTP = async () => {
+    if (!userId || !pendingNewEmail) return;
+
+    setSendingOTP(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'send',
+          email: originalProfileEmail,
+          userId,
+          newEmail: pendingNewEmail
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send OTP');
+      }
+
+      setOtpSent(true);
+      setSuccess('Verification code sent to ' + pendingNewEmail);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to send verification code');
+    } finally {
+      setSendingOTP(false);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (!userId || !emailOTP) return;
+
+    setVerifyingOTP(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          userId,
+          otp: emailOTP
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to verify OTP');
+      }
+
+      // Success - email updated
+      setOriginalProfileEmail(pendingNewEmail);
+      setProfileEmail(pendingNewEmail);
+      setShowEmailOTPModal(false);
+      setEmailOTP('');
+      setPendingNewEmail('');
+      setOtpSent(false);
+      setSuccess('Email updated successfully!');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to verify code');
+    } finally {
+      setVerifyingOTP(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
   };
 
   if (loading) {
@@ -821,6 +1007,144 @@ export default function ShopSettingsPage() {
           </button>
         </div>
 
+        {/* Account Settings */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <User className="w-6 h-6 text-[#0393d5]" />
+            Account Settings
+          </h2>
+
+          {/* Name */}
+          <div className="mb-6 pb-6 border-b border-white/10">
+            <h3 className="text-lg font-medium text-white mb-4">Your Name</h3>
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                <input
+                  type="text"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                />
+              </div>
+              <button
+                onClick={handleSaveProfileName}
+                disabled={savingProfile}
+                className="flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all disabled:opacity-50"
+              >
+                {savingProfile ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Save className="w-5 h-5" />
+                )}
+                Save
+              </button>
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="mb-6 pb-6 border-b border-white/10">
+            <h3 className="text-lg font-medium text-white mb-4">Email Address</h3>
+            <div className="flex gap-4">
+              <div className="flex-1 relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                <input
+                  type="email"
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                />
+              </div>
+              <button
+                onClick={handleStartEmailChange}
+                disabled={savingEmail || profileEmail === originalProfileEmail}
+                className="flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all disabled:opacity-50"
+              >
+                <Mail className="w-5 h-5" />
+                Change Email
+              </button>
+            </div>
+            <p className="text-white/50 text-sm mt-2">
+              Changing your email requires verification via a code sent to the new email.
+            </p>
+          </div>
+
+          {/* Password */}
+          <div className="mb-6 pb-6 border-b border-white/10">
+            <h3 className="text-lg font-medium text-white mb-4">Change Password</h3>
+            <div className="space-y-4">
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-12 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#0393d5]" />
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-11 pr-12 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <button
+                onClick={handleChangePassword}
+                disabled={savingPassword || !newPassword}
+                className="flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all disabled:opacity-50"
+              >
+                {savingPassword ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Changing...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-5 h-5" />
+                    Change Password
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Sign Out */}
+          <div>
+            <h3 className="text-lg font-medium text-white mb-4">Sign Out</h3>
+            <p className="text-white/50 text-sm mb-4">
+              Sign out from your account on this device.
+            </p>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-all border border-white/20"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+
         {/* Danger Zone */}
         <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
           <h2 className="text-xl font-semibold text-red-400 mb-4 flex items-center gap-2">
@@ -884,6 +1208,105 @@ export default function ShopSettingsPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email Change OTP Modal */}
+      {showEmailOTPModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl p-6 max-w-md w-full border border-white/20">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Mail className="w-6 h-6 text-[#0393d5]" />
+              Verify New Email
+            </h3>
+
+            {!otpSent ? (
+              <>
+                <p className="text-white/80 text-sm mb-4">
+                  We&apos;ll send a verification code to:
+                </p>
+                <div className="bg-white/10 border border-white/20 rounded-lg p-4 mb-4">
+                  <p className="text-[#0393d5] font-medium">{pendingNewEmail}</p>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowEmailOTPModal(false);
+                      setProfileEmail(originalProfileEmail);
+                    }}
+                    className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSendOTP}
+                    disabled={sendingOTP}
+                    className="flex-1 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {sendingOTP ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      'Send Code'
+                    )}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-white/80 text-sm mb-4">
+                  Enter the 6-digit code we sent to <strong className="text-[#0393d5]">{pendingNewEmail}</strong>
+                </p>
+                <input
+                  type="text"
+                  value={emailOTP}
+                  onChange={(e) => setEmailOTP(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-4 px-4 text-white text-center text-2xl tracking-[0.5em] placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#0393d5] mb-4"
+                />
+                <p className="text-white/50 text-sm mb-4 text-center">
+                  Didn&apos;t receive the code?{' '}
+                  <button
+                    onClick={handleSendOTP}
+                    disabled={sendingOTP}
+                    className="text-[#0393d5] hover:underline disabled:opacity-50"
+                  >
+                    Resend
+                  </button>
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowEmailOTPModal(false);
+                      setProfileEmail(originalProfileEmail);
+                      setOtpSent(false);
+                      setEmailOTP('');
+                    }}
+                    className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleVerifyOTP}
+                    disabled={verifyingOTP || emailOTP.length !== 6}
+                    className="flex-1 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {verifyingOTP ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      'Verify & Update'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
