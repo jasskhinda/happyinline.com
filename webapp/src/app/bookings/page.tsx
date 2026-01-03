@@ -31,14 +31,11 @@ import {
   ChevronDown,
   DollarSign,
   CalendarDays,
-  Scissors,
-  List,
-  Grid3X3
+  Scissors
 } from 'lucide-react';
 import BookingCalendar from '@/components/BookingCalendar';
 
 type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
-type ViewMode = 'list' | 'calendar';
 
 const STATUS_TABS: { key: BookingStatus | 'all'; label: string; color: string }[] = [
   { key: 'all', label: 'All', color: 'white' },
@@ -67,7 +64,6 @@ export default function BookingsPage() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   useEffect(() => {
     loadData();
@@ -383,166 +379,17 @@ export default function BookingsPage() {
               )}
             </div>
 
-            {/* View Toggle */}
-            <div className="flex bg-white/10 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  viewMode === 'list' ? 'bg-[#0393d5] text-white' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <List className="w-4 h-4" />
-                <span className="hidden sm:inline">List</span>
-              </button>
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  viewMode === 'calendar' ? 'bg-[#0393d5] text-white' : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-                <span className="hidden sm:inline">Calendar</span>
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Calendar View */}
-        {viewMode === 'calendar' ? (
-          <BookingCalendar
-            bookings={bookings}
-            providers={providers}
-            onViewBooking={viewBookingDetails}
-            selectedProvider={selectedProvider}
-            onProviderChange={setSelectedProvider}
-          />
-        ) : (
-          /* List View */
-          <div className="space-y-6">
-            {sortedDates.length === 0 ? (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 p-12 text-center">
-                <Calendar className="w-16 h-16 text-[#0393d5]/50 mx-auto mb-4" />
-                <h4 className="text-xl font-medium text-white mb-2">No Bookings Found</h4>
-                <p className="text-[#0393d5]">
-                  {activeTab === 'pending'
-                    ? 'No pending bookings to review'
-                    : 'No bookings match your filters'}
-                </p>
-              </div>
-            ) : (
-              sortedDates.map(date => (
-                <div key={date}>
-                  <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-[#0393d5]" />
-                    {formatDate(date)}
-                    <span className="text-[#0393d5] font-normal text-sm">
-                      ({groupedBookings[date].length} booking{groupedBookings[date].length !== 1 ? 's' : ''})
-                    </span>
-                  </h3>
-
-                  <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 divide-y divide-white/10">
-                    {groupedBookings[date].map(booking => (
-                      <div key={booking.id} className="p-4 md:p-6">
-                        <div className="flex flex-col md:flex-row md:items-center gap-4">
-                          {/* Time */}
-                          <div className="flex items-center gap-3 md:w-32">
-                            <div className="w-10 h-10 rounded-lg bg-[#0393d5]/20 flex items-center justify-center">
-                              <Clock className="w-5 h-5 text-[#0393d5]" />
-                            </div>
-                            <span className="text-white font-medium">
-                              {formatTime(booking.appointment_time)}
-                            </span>
-                          </div>
-
-                          {/* Customer Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="text-white font-medium truncate">
-                                {booking.customer?.name || 'Unknown Customer'}
-                              </h4>
-                              <span className={`text-xs px-2 py-0.5 rounded-full border ${getStatusColor(booking.status)}`}>
-                                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                              </span>
-                            </div>
-                            <p className="text-[#0393d5] text-sm truncate">
-                              {booking.customer?.email || booking.customer?.phone}
-                            </p>
-                            {booking.services && booking.services.length > 0 && (
-                              <div className="flex items-center gap-2 mt-2">
-                                <Scissors className="w-4 h-4 text-white/50" />
-                                <span className="text-white/70 text-sm">
-                                  {booking.services.map((s: any) => s.name || s).join(', ')}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Provider */}
-                          {booking.barber && (
-                            <div className="flex items-center gap-2 text-white/70">
-                              <User className="w-4 h-4" />
-                              <span className="text-sm">{booking.barber.name}</span>
-                            </div>
-                          )}
-
-                          {/* Amount */}
-                          <div className="flex items-center gap-1 text-white font-semibold">
-                            <DollarSign className="w-4 h-4" />
-                            {booking.total_amount.toFixed(2)}
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => viewBookingDetails(booking)}
-                              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-colors"
-                            >
-                              View
-                            </button>
-                            {booking.status === 'pending' && (
-                              <>
-                                <button
-                                  onClick={() => handleAction(booking, 'approve')}
-                                  className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
-                                >
-                                  <CheckCircle className="w-4 h-4" />
-                                  Approve
-                                </button>
-                                <button
-                                  onClick={() => handleAction(booking, 'reject')}
-                                  className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors flex items-center gap-1"
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                  Reject
-                                </button>
-                              </>
-                            )}
-                            {booking.status === 'confirmed' && (
-                              <>
-                                <button
-                                  onClick={() => handleAction(booking, 'complete')}
-                                  className="px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition-colors"
-                                >
-                                  Complete
-                                </button>
-                                <button
-                                  onClick={() => handleAction(booking, 'cancel')}
-                                  className="px-3 py-1.5 bg-red-500/80 hover:bg-red-600 text-white text-sm rounded-lg transition-colors"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        <BookingCalendar
+          bookings={bookings}
+          providers={providers}
+          onViewBooking={viewBookingDetails}
+          selectedProvider={selectedProvider}
+          onProviderChange={setSelectedProvider}
+        />
       </main>
 
       <Footer />
