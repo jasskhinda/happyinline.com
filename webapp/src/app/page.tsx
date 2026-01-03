@@ -220,6 +220,16 @@ export default function LandingPage() {
             Sign In
           </Link>
         </div>
+        <p className="mt-8 text-sm text-white/60">
+          By using Happy InLine, you agree to our{' '}
+          <Link href="/privacy" className="text-[#0393d5] underline hover:text-white">
+            Privacy Policy
+          </Link>{' '}
+          and{' '}
+          <Link href="/terms" className="text-[#0393d5] underline hover:text-white">
+            Terms of Service
+          </Link>
+        </p>
       </section>
 
       <Footer />
