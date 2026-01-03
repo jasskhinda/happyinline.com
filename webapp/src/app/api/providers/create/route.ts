@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient, generateProviderPassword } from '@/lib/supabase-admin';
-import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const adminClient = createAdminClient();
+    const normalizedEmail = email.toLowerCase().trim();
 
     // 1. Check if owner has available licenses
     const { data: ownerProfile, error: ownerError } = await adminClient
@@ -60,19 +60,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Check if user already exists
-    const { data: existingUser } = await adminClient
+    // 3. Check if user already exists in profiles table
+    const { data: existingProfile } = await adminClient
       .from('profiles')
-      .select('id, role')
-      .eq('email', email.toLowerCase())
+      .select('id, role, name')
+      .eq('email', normalizedEmail)
       .single();
 
     let userId: string;
     let generatedPassword: string | null = null;
+    let isNewUser = false;
 
-    if (existingUser) {
-      // User already exists - just add them to shop_staff
-      userId = existingUser.id;
+    if (existingProfile) {
+      // User already exists in our system
+      userId = existingProfile.id;
 
       // Check if already a provider at this shop
       const { data: existingStaff } = await adminClient
@@ -84,55 +85,116 @@ export async function POST(request: NextRequest) {
 
       if (existingStaff) {
         return NextResponse.json(
-          { error: 'This user is already a provider at your business' },
+          { error: `This email (${normalizedEmail}) is already registered as a provider at your business.` },
           { status: 400 }
         );
       }
+
+      // User exists but not a provider at this shop - add them
+      // No password generated for existing users
     } else {
-      // 4. Create new user account with generated password
-      generatedPassword = generateProviderPassword();
+      // User doesn't exist in profiles - check if they exist in auth.users
+      // This can happen if they started signup but didn't complete it
+      const { data: authUsers } = await adminClient.auth.admin.listUsers();
+      const existingAuthUser = authUsers?.users?.find(
+        u => u.email?.toLowerCase() === normalizedEmail
+      );
 
-      const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
-        email: email.toLowerCase(),
-        password: generatedPassword,
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          name: name,
-          phone: phone || null
+      if (existingAuthUser) {
+        // Auth user exists but no profile - this is an incomplete signup
+        // We'll use their existing auth account and create/update their profile
+        userId = existingAuthUser.id;
+
+        // Create or update their profile
+        const { error: upsertError } = await adminClient
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: normalizedEmail,
+            name: name,
+            phone: phone || null,
+            role: 'barber'
+          });
+
+        if (upsertError) {
+          console.error('Error upserting profile:', upsertError);
+          return NextResponse.json(
+            { error: 'Failed to create provider profile. Please try again.' },
+            { status: 500 }
+          );
         }
-      });
 
-      if (authError || !authUser.user) {
-        console.error('Error creating auth user:', authError);
-        return NextResponse.json(
-          { error: authError?.message || 'Failed to create user account' },
-          { status: 500 }
+        // Generate a new password for them since they may not have completed signup
+        generatedPassword = generateProviderPassword();
+
+        // Update their password
+        const { error: updateError } = await adminClient.auth.admin.updateUserById(
+          userId,
+          { password: generatedPassword }
         );
-      }
 
-      userId = authUser.user.id;
+        if (updateError) {
+          console.error('Error updating user password:', updateError);
+          // Continue anyway - they might be able to use password reset
+        } else {
+          isNewUser = true;
+        }
+      } else {
+        // 4. Create new user account with generated password
+        generatedPassword = generateProviderPassword();
+        isNewUser = true;
 
-      // 5. Update the profile that was auto-created by Supabase trigger
-      // Wait a moment for the trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 500));
+        const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
+          email: normalizedEmail,
+          password: generatedPassword,
+          email_confirm: true, // Auto-confirm email
+          user_metadata: {
+            name: name,
+            phone: phone || null
+          }
+        });
 
-      const { error: profileError } = await adminClient
-        .from('profiles')
-        .update({
-          name: name,
-          phone: phone || null,
-          role: 'barber' // 'barber' is the valid role for providers in the database constraint
-        })
-        .eq('id', userId);
+        if (authError || !authUser.user) {
+          console.error('Error creating auth user:', authError);
 
-      if (profileError) {
-        console.error('Error updating profile:', profileError);
-        // Try to clean up auth user
-        await adminClient.auth.admin.deleteUser(userId);
-        return NextResponse.json(
-          { error: 'Failed to create provider profile: ' + profileError.message },
-          { status: 500 }
-        );
+          // Check if it's a duplicate email error
+          if (authError?.message?.includes('already been registered') ||
+              authError?.message?.includes('already exists')) {
+            return NextResponse.json(
+              { error: `An account with email ${normalizedEmail} already exists. Please use a different email.` },
+              { status: 400 }
+            );
+          }
+
+          return NextResponse.json(
+            { error: authError?.message || 'Failed to create user account' },
+            { status: 500 }
+          );
+        }
+
+        userId = authUser.user.id;
+
+        // 5. Wait for profile trigger, then update
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const { error: profileError } = await adminClient
+          .from('profiles')
+          .update({
+            name: name,
+            phone: phone || null,
+            role: 'barber'
+          })
+          .eq('id', userId);
+
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          // Try to clean up auth user
+          await adminClient.auth.admin.deleteUser(userId);
+          return NextResponse.json(
+            { error: 'Failed to create provider profile. Please try again.' },
+            { status: 500 }
+          );
+        }
       }
     }
 
@@ -149,8 +211,17 @@ export async function POST(request: NextRequest) {
 
     if (staffError) {
       console.error('Error adding to shop_staff:', staffError);
+
+      // Check for duplicate
+      if (staffError.message?.includes('duplicate') || staffError.code === '23505') {
+        return NextResponse.json(
+          { error: 'This provider is already registered at your business.' },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { error: 'Failed to add provider to shop' },
+        { error: 'Failed to add provider to shop. Please try again.' },
         { status: 500 }
       );
     }
@@ -166,17 +237,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       userId,
-      generatedPassword, // null if existing user
-      isNewUser: generatedPassword !== null,
-      message: generatedPassword
-        ? `Provider account created. Temporary password: ${generatedPassword}`
+      generatedPassword: isNewUser ? generatedPassword : null,
+      isNewUser,
+      message: isNewUser && generatedPassword
+        ? `Provider account created successfully!`
         : 'Existing user added as provider'
     });
 
   } catch (error: any) {
     console.error('Provider creation error:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: error.message || 'An unexpected error occurred. Please try again.' },
       { status: 500 }
     );
   }
