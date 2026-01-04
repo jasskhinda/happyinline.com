@@ -371,13 +371,24 @@ export default function BookingPage() {
         shopId: shop.id,
         customerId: userId,
         barberId: selectedProvider?.user_id,
-        services: selectedServices.map(s => ({
-          id: s.id,
-          name: s.name,
-          price: s.price,
-          duration: s.duration,
-          chosen_format: s.service_type === 'both' ? serviceFormatChoices[s.id] : undefined
-        })),
+        services: selectedServices.map(s => {
+          // Determine the chosen format for each service
+          let chosen_format: 'in_person' | 'online';
+          if (s.service_type === 'both') {
+            chosen_format = serviceFormatChoices[s.id] || 'in_person';
+          } else if (s.service_type === 'online') {
+            chosen_format = 'online';
+          } else {
+            chosen_format = 'in_person';
+          }
+          return {
+            id: s.id,
+            name: s.name,
+            price: s.price,
+            duration: s.duration,
+            chosen_format
+          };
+        }),
         appointmentDate: selectedDate,
         appointmentTime: selectedTime,
         customerNotes: notes || undefined

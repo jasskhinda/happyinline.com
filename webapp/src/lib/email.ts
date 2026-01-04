@@ -73,11 +73,23 @@ const generateBookingEmailHTML = (
     return 'in_person';
   };
 
+  // Debug logging
+  console.log('📧 Email template - services data:', data.services.map(s => ({
+    name: s.name,
+    chosen_format: s.chosen_format,
+    service_type: s.service_type,
+    effectiveFormat: getEffectiveFormat(s),
+    online_meeting_link: s.online_meeting_link
+  })));
+
   // Separate services by format
-  const onlineServices = data.services.filter(s => getEffectiveFormat(s) === 'online' && s.online_meeting_link);
+  const onlineServices = data.services.filter(s => getEffectiveFormat(s) === 'online');
   const inPersonServices = data.services.filter(s => getEffectiveFormat(s) === 'in_person');
   const hasOnlineServices = onlineServices.length > 0;
   const hasInPersonServices = inPersonServices.length > 0;
+  const hasOnlineMeetingLinks = onlineServices.some(s => s.online_meeting_link);
+
+  console.log('📧 Email template - hasOnlineServices:', hasOnlineServices, 'hasInPersonServices:', hasInPersonServices, 'recipientType:', recipientType);
 
   // Generate services HTML with format badges
   const servicesHTML = data.services
@@ -212,6 +224,7 @@ const generateBookingEmailHTML = (
         <div style="background: rgba(255,255,255,0.15); border-radius: 12px; padding: 20px; margin-bottom: ${onlineServices.indexOf(s) < onlineServices.length - 1 ? '15px' : '0'};">
           <p style="color: #ffffff; font-size: 16px; font-weight: 600; margin: 0 0 15px 0;">${s.name}</p>
 
+          ${s.online_meeting_link ? `
           <!-- JOIN NOW Button -->
           <div style="text-align: center; margin-bottom: 20px;">
             <a href="${s.online_meeting_link}"
@@ -224,6 +237,13 @@ const generateBookingEmailHTML = (
             <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">Meeting Link</p>
             <p style="color: #ffffff; font-size: 13px; margin: 0; word-break: break-all;">${s.online_meeting_link}</p>
           </div>
+          ` : `
+          <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 15px;">
+            <p style="color: rgba(255,255,255,0.9); font-size: 14px; margin: 0; text-align: center;">
+              Meeting details will be provided by ${data.shopName}
+            </p>
+          </div>
+          `}
 
           ${s.online_meeting_password ? `
           <div style="background: rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; margin-top: 10px;">
@@ -241,7 +261,7 @@ const generateBookingEmailHTML = (
         </div>
         `).join('')}
         <p style="color: rgba(255,255,255,0.8); font-size: 13px; margin: 20px 0 0 0; text-align: center;">
-          ⏰ Please join the meeting a few minutes before your scheduled time.
+          ${hasOnlineMeetingLinks ? '⏰ Please join the meeting a few minutes before your scheduled time.' : '⏰ The business will contact you with meeting details before your appointment.'}
         </p>
       </div>
       ` : ''}

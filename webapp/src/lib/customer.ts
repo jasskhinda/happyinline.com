@@ -348,9 +348,12 @@ export const getCustomerBookings = async (
       query = query.in('status', ['cancelled', 'no_show']);
     }
 
+    // For upcoming: show soonest first (ascending)
+    // For completed/cancelled: show most recent first (descending)
+    const ascending = filter === 'upcoming';
     query = query
-      .order('appointment_date', { ascending: filter === 'upcoming' })
-      .order('appointment_time', { ascending: true });
+      .order('appointment_date', { ascending })
+      .order('appointment_time', { ascending });
 
     const { data: bookings, error } = await query;
 

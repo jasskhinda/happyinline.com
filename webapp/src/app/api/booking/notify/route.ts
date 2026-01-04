@@ -152,6 +152,7 @@ export async function POST(request: NextRequest) {
     console.log('  - Customer:', customer.email);
     console.log('  - Owner:', owner?.email || 'N/A');
     console.log('  - Provider:', provider?.email || 'N/A');
+    console.log('  - Services with online info:', JSON.stringify(servicesWithOnlineInfo, null, 2));
 
     const results = await sendBookingNotifications(emailData);
 
