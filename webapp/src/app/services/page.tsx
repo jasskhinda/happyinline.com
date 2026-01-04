@@ -188,6 +188,12 @@ export default function ServicesPage() {
   const handleAddCustomService = async () => {
     if (!shop || !customName.trim() || !customPrice.trim()) return;
 
+    // Validate meeting link is required for online/both service types
+    if ((customServiceType === 'online' || customServiceType === 'both') && !customOnlineLink.trim()) {
+      setError('Meeting link is required for online services');
+      return;
+    }
+
     setAddingService(true);
     setError('');
 
@@ -249,6 +255,12 @@ export default function ServicesPage() {
 
   const handleSaveEdit = async () => {
     if (!selectedService || !editName.trim() || !editPrice.trim()) return;
+
+    // Validate meeting link is required for online/both service types
+    if ((editServiceType === 'online' || editServiceType === 'both') && !editOnlineLink.trim()) {
+      setError('Meeting link is required for online services');
+      return;
+    }
 
     setSavingEdit(true);
     setError('');
@@ -822,7 +834,7 @@ export default function ServicesPage() {
 
                       <div>
                         <label className="block text-sm font-medium text-white mb-2">
-                          Meeting Link (Zoom, Google Meet, etc.)
+                          Meeting Link (Zoom, Google Meet, etc.) <span className="text-red-400">*</span>
                         </label>
                         <div className="relative">
                           <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
@@ -831,9 +843,14 @@ export default function ServicesPage() {
                             value={customOnlineLink}
                             onChange={(e) => setCustomOnlineLink(e.target.value)}
                             placeholder="https://zoom.us/j/..."
-                            className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                            className={`w-full pl-11 pr-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 ${
+                              !customOnlineLink.trim() ? 'border-red-500/50' : 'border-white/20'
+                            }`}
                           />
                         </div>
+                        {!customOnlineLink.trim() && (
+                          <p className="text-red-400 text-xs mt-1">Required for online services</p>
+                        )}
                       </div>
 
                       <div>
@@ -872,7 +889,7 @@ export default function ServicesPage() {
 
                   <button
                     onClick={handleAddCustomService}
-                    disabled={!customName.trim() || !customPrice.trim() || addingService}
+                    disabled={!customName.trim() || !customPrice.trim() || addingService || ((customServiceType === 'online' || customServiceType === 'both') && !customOnlineLink.trim())}
                     className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {addingService ? (
@@ -1031,7 +1048,7 @@ export default function ServicesPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-white mb-2">
-                      Meeting Link (Zoom, Google Meet, etc.)
+                      Meeting Link (Zoom, Google Meet, etc.) <span className="text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
@@ -1040,9 +1057,14 @@ export default function ServicesPage() {
                         value={editOnlineLink}
                         onChange={(e) => setEditOnlineLink(e.target.value)}
                         placeholder="https://zoom.us/j/..."
-                        className="w-full pl-11 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500"
+                        className={`w-full pl-11 pr-4 py-3 bg-white/10 border rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-purple-500 ${
+                          !editOnlineLink.trim() ? 'border-red-500/50' : 'border-white/20'
+                        }`}
                       />
                     </div>
+                    {!editOnlineLink.trim() && (
+                      <p className="text-red-400 text-xs mt-1">Required for online services</p>
+                    )}
                   </div>
 
                   <div>
@@ -1099,7 +1121,7 @@ export default function ServicesPage() {
 
               <button
                 onClick={handleSaveEdit}
-                disabled={!editName.trim() || !editPrice.trim() || savingEdit}
+                disabled={!editName.trim() || !editPrice.trim() || savingEdit || ((editServiceType === 'online' || editServiceType === 'both') && !editOnlineLink.trim())}
                 className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {savingEdit ? (
