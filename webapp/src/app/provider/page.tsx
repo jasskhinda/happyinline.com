@@ -6,23 +6,18 @@ import { getCurrentUser, getProfile, Profile } from '@/lib/auth';
 import { getProviderBookings, updateBookingStatus, rescheduleBooking, Shop, Booking } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ProviderCalendar from '@/components/ProviderCalendar';
 import {
   Loader2,
   Calendar,
   Clock,
-  User,
-  Phone,
-  Mail,
   Check,
   X,
   AlertCircle,
   Store,
   CalendarDays,
-  CheckCircle,
-  XCircle,
-  Filter,
   CalendarClock,
-  Link,
+  Link as LinkIcon,
   Unlink
 } from 'lucide-react';
 
@@ -41,10 +36,6 @@ function ProviderDashboardContent() {
   // Calendar sync state
   const [calendarConnecting, setCalendarConnecting] = useState(false);
   const [calendarDisconnecting, setCalendarDisconnecting] = useState(false);
-
-  // Filter state
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [dateFilter, setDateFilter] = useState<string>('');
 
   // Action states
   const [processingBookingId, setProcessingBookingId] = useState<string | null>(null);
@@ -69,7 +60,7 @@ function ProviderDashboardContent() {
       setError('Failed to connect Google Calendar. Please try again.');
       window.history.replaceState({}, '', '/provider');
     }
-  }, [statusFilter, dateFilter, searchParams]);
+  }, [searchParams]);
 
   const loadData = async () => {
     try {
@@ -104,12 +95,8 @@ function ProviderDashboardContent() {
         return;
       }
 
-      // Get provider bookings
-      const filters: { status?: string; date?: string } = {};
-      if (statusFilter) filters.status = statusFilter;
-      if (dateFilter) filters.date = dateFilter;
-
-      const result = await getProviderBookings(user.id, filters);
+      // Get provider bookings (no filters - calendar shows all)
+      const result = await getProviderBookings(user.id);
 
       if (!result.success) {
         setError(result.error || 'Failed to load bookings');
@@ -379,7 +366,7 @@ function ProviderDashboardContent() {
                 {profile?.google_calendar_connected ? (
                   <Check className="w-6 h-6 text-green-400" />
                 ) : (
-                  <Link className="w-6 h-6 text-purple-400" />
+                  <LinkIcon className="w-6 h-6 text-purple-400" />
                 )}
               </div>
               <div className="flex-1">
@@ -414,7 +401,7 @@ function ProviderDashboardContent() {
                   {calendarConnecting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Link className="w-4 h-4" />
+                    <LinkIcon className="w-4 h-4" />
                   )}
                   Connect Calendar
                 </button>
@@ -423,216 +410,13 @@ function ProviderDashboardContent() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 mb-6">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2 text-white">
-              <Filter className="w-5 h-5 text-[#0393d5]" />
-              <span className="font-medium">Filters:</span>
-            </div>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#0393d5]"
-            >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#0393d5]"
-            />
-
-            {(statusFilter || dateFilter) && (
-              <button
-                onClick={() => {
-                  setStatusFilter('');
-                  setDateFilter('');
-                }}
-                className="px-4 py-2 text-[#0393d5] hover:text-white transition-colors"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Bookings List */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
-          <div className="p-6 border-b border-white/10">
-            <h3 className="text-lg font-semibold text-white">Your Bookings</h3>
-            <p className="text-[#0393d5] text-sm mt-1">
-              Manage your assigned appointments
-            </p>
-          </div>
-
-          {bookings.length === 0 ? (
-            <div className="p-12 text-center">
-              <Calendar className="w-16 h-16 text-[#0393d5]/50 mx-auto mb-4" />
-              <h4 className="text-xl font-medium text-white mb-2">No Bookings Yet</h4>
-              <p className="text-[#0393d5]">
-                {statusFilter || dateFilter
-                  ? 'No bookings match your filters'
-                  : 'You don\'t have any bookings assigned yet'}
-              </p>
-            </div>
-          ) : (
-            <div className="divide-y divide-white/10">
-              {Object.entries(groupedBookings).map(([date, dateBookings]) => (
-                <div key={date}>
-                  {/* Date Header */}
-                  <div className="bg-white/5 px-6 py-3">
-                    <p className="text-[#0393d5] font-medium">
-                      {date === todayStr ? 'Today' : formatDate(date)}
-                    </p>
-                  </div>
-
-                  {/* Bookings for this date */}
-                  {dateBookings.map((booking) => (
-                    <div key={booking.id} className="p-6 flex items-start gap-4 flex-wrap">
-                      {/* Time */}
-                      <div className="w-20 text-center flex-shrink-0">
-                        <p className="text-2xl font-bold text-white">
-                          {formatTime(booking.appointment_time).split(' ')[0]}
-                        </p>
-                        <p className="text-[#0393d5] text-sm">
-                          {formatTime(booking.appointment_time).split(' ')[1]}
-                        </p>
-                      </div>
-
-                      {/* Customer Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
-                          <User className="w-5 h-5 text-[#0393d5]" />
-                          <span className="text-white font-medium">
-                            {booking.customer?.name || 'Unknown Customer'}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </span>
-                        </div>
-
-                        {booking.customer?.phone && (
-                          <div className="flex items-center gap-2 text-white/60 text-sm mb-1">
-                            <Phone className="w-4 h-4" />
-                            <span>{booking.customer.phone}</span>
-                          </div>
-                        )}
-
-                        {booking.customer?.email && (
-                          <div className="flex items-center gap-2 text-white/60 text-sm mb-2">
-                            <Mail className="w-4 h-4" />
-                            <span>{booking.customer.email}</span>
-                          </div>
-                        )}
-
-                        {/* Services */}
-                        {booking.services && booking.services.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Services</p>
-                            <div className="flex gap-2 flex-wrap">
-                              {booking.services.map((service: any, idx: number) => (
-                                <span
-                                  key={idx}
-                                  className="bg-white/10 text-white text-sm px-3 py-1 rounded-lg"
-                                >
-                                  {service.name} - ${service.price}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {booking.customer_notes && (
-                          <div className="mt-2 p-3 bg-white/5 rounded-lg">
-                            <p className="text-white/60 text-xs uppercase tracking-wider mb-1">Customer Notes</p>
-                            <p className="text-white text-sm">{booking.customer_notes}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Total & Actions */}
-                      <div className="flex flex-col items-end gap-3">
-                        <div className="text-right">
-                          <p className="text-white/60 text-xs">Total</p>
-                          <p className="text-2xl font-bold text-white">${booking.total_amount}</p>
-                        </div>
-
-                        {/* Action Buttons based on status */}
-                        {booking.status === 'pending' && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
-                              disabled={processingBookingId === booking.id}
-                              className="flex items-center gap-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
-                            >
-                              {processingBookingId === booking.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <CheckCircle className="w-4 h-4" />
-                              )}
-                              Confirm
-                            </button>
-                            <button
-                              onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
-                              disabled={processingBookingId === booking.id}
-                              className="flex items-center gap-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors text-sm disabled:opacity-50"
-                            >
-                              <XCircle className="w-4 h-4" />
-                              Decline
-                            </button>
-                          </div>
-                        )}
-
-                        {booking.status === 'confirmed' && (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => openRescheduleModal(booking)}
-                              className="flex items-center gap-1 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors text-sm border border-amber-500/30"
-                            >
-                              <CalendarClock className="w-4 h-4" />
-                              Reschedule
-                            </button>
-                            <button
-                              onClick={() => handleUpdateStatus(booking.id, 'completed')}
-                              disabled={processingBookingId === booking.id}
-                              className="flex items-center gap-1 px-4 py-2 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg transition-colors text-sm disabled:opacity-50"
-                            >
-                              {processingBookingId === booking.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <CheckCircle className="w-4 h-4" />
-                              )}
-                              Mark Complete
-                            </button>
-                          </div>
-                        )}
-
-                        {/* Reschedule button for pending bookings */}
-                        {booking.status === 'pending' && (
-                          <button
-                            onClick={() => openRescheduleModal(booking)}
-                            className="flex items-center gap-1 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors text-sm border border-amber-500/30 mt-2"
-                          >
-                            <CalendarClock className="w-4 h-4" />
-                            Reschedule
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Calendar View */}
+        <ProviderCalendar
+          bookings={bookings}
+          onUpdateStatus={handleUpdateStatus}
+          onReschedule={openRescheduleModal}
+          processingBookingId={processingBookingId}
+        />
       </main>
 
       <Footer />
