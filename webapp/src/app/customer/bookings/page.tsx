@@ -19,7 +19,8 @@ import {
   XCircle,
   CheckCircle,
   DollarSign,
-  Phone
+  Phone,
+  Video
 } from 'lucide-react';
 
 type TabType = 'upcoming' | 'completed' | 'cancelled';
@@ -306,8 +307,30 @@ function CustomerBookingsContent() {
                     <div className="bg-white/5 rounded-lg p-3">
                       <p className="text-[#0393d5] text-xs font-medium mb-2">Services</p>
                       {booking.services.map((service: any, idx: number) => (
-                        <div key={idx} className="flex justify-between text-sm py-1">
-                          <span className="text-white">{service.name || service}</span>
+                        <div key={idx} className="flex justify-between items-center text-sm py-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white">{service.name || service}</span>
+                            {/* Service Format Badge */}
+                            {service.chosen_format && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded flex items-center gap-1 ${
+                                service.chosen_format === 'online'
+                                  ? 'bg-purple-500/20 text-purple-300'
+                                  : 'bg-emerald-500/20 text-emerald-300'
+                              }`}>
+                                {service.chosen_format === 'online' ? (
+                                  <>
+                                    <Video className="w-3 h-3" />
+                                    Online
+                                  </>
+                                ) : (
+                                  <>
+                                    <MapPin className="w-3 h-3" />
+                                    In-Person
+                                  </>
+                                )}
+                              </span>
+                            )}
+                          </div>
                           {service.price && <span className="text-white/70">${service.price}</span>}
                         </div>
                       ))}

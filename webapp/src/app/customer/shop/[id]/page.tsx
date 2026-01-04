@@ -159,7 +159,8 @@ export default function ShopDetailsPage() {
           id: s.id,
           name: s.name,
           price: s.price,
-          duration: s.duration
+          duration: s.duration,
+          chosen_format: s.service_type === 'both' ? (serviceFormatChoices[s.id] || 'in_person') : undefined
         })),
         appointmentDate: selectedDate,
         appointmentTime: selectedTime,
