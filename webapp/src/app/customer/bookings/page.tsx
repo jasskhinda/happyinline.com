@@ -182,7 +182,7 @@ function CustomerBookingsContent() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+      <main className="w-full px-4 md:px-8 lg:px-12 py-6 pt-32 flex-1">
         {/* Page Title */}
         <h1 className="text-2xl font-bold text-white mb-6">My Bookings</h1>
 

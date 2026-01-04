@@ -261,7 +261,7 @@ export default function ShopDetailsPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+      <main className="w-full px-4 md:px-8 lg:px-12 py-6 pt-32 flex-1">
         {/* Cover & Info */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden mb-6">
           {/* Cover */}
@@ -477,7 +477,7 @@ export default function ShopDetailsPage() {
                   {bookingStep === 0 && (
                     <div>
                       <h4 className="text-lg font-medium text-white mb-4">Select Services</h4>
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                      <div className="space-y-2">
                         {services.map((service) => {
                           const isSelected = selectedServices.find(s => s.id === service.id);
                           return (
@@ -730,6 +730,24 @@ export default function ShopDetailsPage() {
             {/* Modal Footer */}
             {!bookingSuccess && (
               <div className="p-6 border-t border-white/10 flex-shrink-0">
+                {/* Show summary on step 0 when services are selected */}
+                {bookingStep === 0 && selectedServices.length > 0 && (
+                  <div className="flex items-center justify-between mb-4 pb-4 border-b border-white/10">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1.5 text-white/70">
+                        <Clock className="w-4 h-4" />
+                        <span>{getTotalDuration()} min</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-white font-semibold">
+                        <DollarSign className="w-4 h-4 text-[#0393d5]" />
+                        <span>${getTotalPrice().toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-white/50">
+                      {selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected
+                    </p>
+                  </div>
+                )}
                 <div className="flex gap-3">
                   {bookingStep > 0 && (
                     <button

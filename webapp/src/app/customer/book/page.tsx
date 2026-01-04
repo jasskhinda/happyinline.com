@@ -423,7 +423,7 @@ export default function BookingPage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--primary-dark)] via-[var(--primary)] to-[var(--primary-dark)] flex flex-col">
       <Header />
 
-      <main className="max-w-2xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+      <main className="w-full px-4 md:px-8 lg:px-12 py-6 pt-32 flex-1">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
@@ -470,7 +470,7 @@ export default function BookingPage() {
         )}
 
         {/* Step Content */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
+        <div className={`bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden ${step === 'services' && selectedServices.length > 0 ? 'mb-32' : ''}`}>
           {/* Services Step */}
           {step === 'services' && (
             <div className="p-6">
@@ -577,34 +577,13 @@ export default function BookingPage() {
                 </div>
               )}
 
-              {selectedServices.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-white/20">
-                  {/* Reminder to select format */}
-                  {!allFormatsSelected() && (
-                    <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 mb-4 flex items-start gap-2">
-                      <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-amber-200 text-sm">
-                        Please select In-Person or Online for the highlighted services above.
-                      </p>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-white/80 mb-2">
-                    <span>Duration:</span>
-                    <span>{getTotalDuration()} min</span>
-                  </div>
-                  <div className="flex justify-between text-white font-semibold mb-4">
-                    <span>Total:</span>
-                    <span>${getTotalPrice().toFixed(2)}</span>
-                  </div>
-                  {/* Inline Continue Button */}
-                  <button
-                    onClick={handleNext}
-                    disabled={!allFormatsSelected()}
-                    className="w-full py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    Continue
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
+              {/* Show format warning inline if needed */}
+              {selectedServices.length > 0 && !allFormatsSelected() && (
+                <div className="mt-4 bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-amber-200 text-sm">
+                    Please select In-Person or Online for the highlighted services above.
+                  </p>
                 </div>
               )}
             </div>
@@ -890,6 +869,42 @@ export default function BookingPage() {
             </div>
           )}
         </div>
+
+        {/* Sticky Footer Bar - Only on services step when services are selected */}
+        {step === 'services' && selectedServices.length > 0 && (
+          <div className="fixed bottom-0 left-0 right-0 bg-[#0a2540]/95 backdrop-blur-lg border-t border-white/20 p-4 z-50">
+            <div className="w-full px-4 md:px-8 lg:px-12 mx-auto">
+              <div className="flex items-center justify-between gap-4">
+                {/* Summary */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-1.5 text-white/70">
+                      <Clock className="w-4 h-4" />
+                      <span>{getTotalDuration()} min</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-white font-semibold">
+                      <DollarSign className="w-4 h-4 text-[var(--brand)]" />
+                      <span>${getTotalPrice().toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-white/50 mt-1">
+                    {selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected
+                  </p>
+                </div>
+
+                {/* Continue Button */}
+                <button
+                  onClick={handleNext}
+                  disabled={!allFormatsSelected()}
+                  className="px-6 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                >
+                  Continue
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

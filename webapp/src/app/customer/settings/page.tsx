@@ -182,7 +182,7 @@ export default function CustomerSettingsPage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--primary-dark)] via-[var(--primary)] to-[var(--primary-dark)] flex flex-col">
       <Header />
 
-      <main className="max-w-2xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+      <main className="w-full px-4 md:px-8 lg:px-12 py-6 pt-32 flex-1">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button

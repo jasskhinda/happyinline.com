@@ -175,7 +175,7 @@ export default function CustomerDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--primary-dark)] via-[var(--primary)] to-[var(--primary-dark)] flex flex-col">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 py-6 pt-32 flex-1 w-full">
+      <main className="w-full px-4 md:px-8 lg:px-12 py-6 pt-32 flex-1">
         {/* Welcome */}
         <div className="flex items-center justify-between mb-6">
           <div>
