@@ -90,8 +90,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // User exists but not a provider at this shop - add them
-      // No password generated for existing users
+      // User exists but not a provider at this shop - don't allow adding existing users
+      // They should register themselves or be invited
+      return NextResponse.json(
+        { error: `An account with email "${normalizedEmail}" already exists. The user must register as a provider themselves, or use a different email.` },
+        { status: 400 }
+      );
     } else {
       // User doesn't exist in profiles - check if they exist in auth.users
       // This can happen if they started signup but didn't complete it
@@ -102,43 +106,11 @@ export async function POST(request: NextRequest) {
 
       if (existingAuthUser) {
         // Auth user exists but no profile - this is an incomplete signup
-        // We'll use their existing auth account and create/update their profile
-        userId = existingAuthUser.id;
-
-        // Create or update their profile
-        const { error: upsertError } = await adminClient
-          .from('profiles')
-          .upsert({
-            id: userId,
-            email: normalizedEmail,
-            name: name,
-            phone: phone || null,
-            role: 'barber'
-          });
-
-        if (upsertError) {
-          console.error('Error upserting profile:', upsertError);
-          return NextResponse.json(
-            { error: 'Failed to create provider profile. Please try again.' },
-            { status: 500 }
-          );
-        }
-
-        // Generate a new password for them since they may not have completed signup
-        generatedPassword = generateProviderPassword();
-
-        // Update their password
-        const { error: updateError } = await adminClient.auth.admin.updateUserById(
-          userId,
-          { password: generatedPassword }
+        // Show error - the email is already in use
+        return NextResponse.json(
+          { error: `An account with email "${normalizedEmail}" already exists but is not fully set up. Please use a different email or have the user complete their registration.` },
+          { status: 400 }
         );
-
-        if (updateError) {
-          console.error('Error updating user password:', updateError);
-          // Continue anyway - they might be able to use password reset
-        } else {
-          isNewUser = true;
-        }
       } else {
         // 4. Create new user account with generated password
         generatedPassword = generateProviderPassword();
