@@ -866,10 +866,7 @@ export const getProviderBookings = async (
       return { success: false, error: 'Failed to fetch shop details' };
     }
 
-    // Get all bookings for this shop (providers see all shop bookings)
-    console.log('getProviderBookings - providerId:', providerId);
-    console.log('getProviderBookings - shop_id:', staffRecord.shop_id);
-
+    // Get only bookings assigned to this specific provider
     let query = supabase
       .from('bookings')
       .select(`
@@ -877,7 +874,8 @@ export const getProviderBookings = async (
         customer:profiles!bookings_customer_id_fkey(id, name, email, phone, profile_image),
         barber:profiles!bookings_barber_id_fkey(id, name, profile_image)
       `)
-      .eq('shop_id', staffRecord.shop_id);
+      .eq('shop_id', staffRecord.shop_id)
+      .eq('barber_id', providerId); // Only show this provider's bookings
 
     if (filters?.status) {
       query = query.eq('status', filters.status);
@@ -891,9 +889,6 @@ export const getProviderBookings = async (
       .order('appointment_time', { ascending: true });
 
     const { data: bookings, error } = await query;
-
-    console.log('getProviderBookings - bookings count:', bookings?.length || 0);
-    console.log('getProviderBookings - error:', error);
 
     if (error) {
       console.error('Error fetching provider bookings:', error);
