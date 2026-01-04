@@ -43,6 +43,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch full service details including online meeting info
+    const serviceIds = (booking.services || []).map((s: any) => s.id).filter(Boolean);
+    let servicesWithOnlineInfo: any[] = booking.services || [];
+
+    if (serviceIds.length > 0) {
+      const { data: fullServices } = await supabase
+        .from('shop_services')
+        .select('id, name, price, duration, service_type, online_meeting_link, online_meeting_password, online_instructions')
+        .in('id', serviceIds);
+
+      if (fullServices && fullServices.length > 0) {
+        // Merge booking service data with full service details
+        servicesWithOnlineInfo = (booking.services || []).map((bookedService: any) => {
+          const fullService = fullServices.find((fs: any) => fs.id === bookedService.id);
+          return {
+            ...bookedService,
+            service_type: fullService?.service_type || 'in_person',
+            online_meeting_link: fullService?.online_meeting_link || null,
+            online_meeting_password: fullService?.online_meeting_password || null,
+            online_instructions: fullService?.online_instructions || null
+          };
+        });
+      }
+    }
+
     // Fetch customer details
     const { data: customer, error: customerError } = await supabase
       .from('profiles')
@@ -115,7 +140,7 @@ export async function POST(request: NextRequest) {
       shopName: shop.name,
       shopAddress: fullAddress || undefined,
       shopPhone: shop.phone || undefined,
-      services: booking.services || [],
+      services: servicesWithOnlineInfo,
       appointmentDate: booking.appointment_date,
       appointmentTime: booking.appointment_time,
       totalAmount: booking.total_amount || 0,

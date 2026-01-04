@@ -11,6 +11,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+interface ServiceWithOnlineInfo {
+  name: string;
+  price: number;
+  duration: number;
+  service_type?: 'in_person' | 'online' | 'both';
+  online_meeting_link?: string;
+  online_meeting_password?: string;
+  online_instructions?: string;
+}
+
 interface BookingEmailData {
   customerName: string;
   customerEmail: string;
@@ -21,7 +31,7 @@ interface BookingEmailData {
   shopName: string;
   shopAddress?: string;
   shopPhone?: string;
-  services: { name: string; price: number; duration: number }[];
+  services: ServiceWithOnlineInfo[];
   appointmentDate: string;
   appointmentTime: string;
   totalAmount: number;
@@ -55,8 +65,19 @@ const generateBookingEmailHTML = (
   data: BookingEmailData,
   recipientType: 'customer' | 'owner' | 'provider'
 ): string => {
+  // Check for online services with meeting info
+  const onlineServices = data.services.filter(
+    s => (s.service_type === 'online' || s.service_type === 'both') && s.online_meeting_link
+  );
+  const hasOnlineMeeting = onlineServices.length > 0;
+
   const servicesHTML = data.services
-    .map(s => `<li style="margin-bottom: 8px;">${s.name} - $${s.price.toFixed(2)} (${s.duration} min)</li>`)
+    .map(s => {
+      const typeLabel = s.service_type === 'online' ? ' <span style="color: #8b5cf6;">(Online)</span>'
+        : s.service_type === 'both' ? ' <span style="color: #3b82f6;">(In-Person/Online)</span>'
+        : '';
+      return `<li style="margin-bottom: 8px;">${s.name}${typeLabel} - $${s.price.toFixed(2)} (${s.duration} min)</li>`;
+    })
     .join('');
 
   const greeting = recipientType === 'customer'
@@ -161,10 +182,45 @@ const generateBookingEmailHTML = (
       </div>
       ` : ''}
 
+      ${hasOnlineMeeting && recipientType === 'customer' ? `
+      <!-- Online Meeting Details -->
+      <div style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #ffffff; margin: 0 0 15px 0; font-size: 18px; display: flex; align-items: center;">
+          <span style="margin-right: 8px;">📹</span> Online Meeting Details
+        </h3>
+        ${onlineServices.map(s => `
+        <div style="background: rgba(255,255,255,0.15); border-radius: 8px; padding: 15px; margin-bottom: ${onlineServices.indexOf(s) < onlineServices.length - 1 ? '10px' : '0'};">
+          <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px;">${s.name}</p>
+          <div style="margin-bottom: 12px;">
+            <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0 0 4px 0;">Meeting Link</p>
+            <a href="${s.online_meeting_link}" style="color: #ffffff; font-size: 14px; font-weight: 600; word-break: break-all; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 6px; display: inline-block;">
+              🔗 Join Meeting
+            </a>
+          </div>
+          ${s.online_meeting_password ? `
+          <div style="margin-bottom: 12px;">
+            <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0 0 4px 0;">Password</p>
+            <p style="color: #ffffff; font-size: 16px; font-weight: 600; margin: 0; font-family: monospace; background: rgba(255,255,255,0.2); padding: 6px 10px; border-radius: 4px; display: inline-block;">${s.online_meeting_password}</p>
+          </div>
+          ` : ''}
+          ${s.online_instructions ? `
+          <div>
+            <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0 0 4px 0;">Instructions</p>
+            <p style="color: #ffffff; font-size: 14px; margin: 0; line-height: 1.5;">${s.online_instructions}</p>
+          </div>
+          ` : ''}
+        </div>
+        `).join('')}
+        <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 15px 0 0 0; text-align: center;">
+          Please join the meeting a few minutes before your scheduled time.
+        </p>
+      </div>
+      ` : ''}
+
       ${data.shopAddress ? `
       <!-- Location -->
       <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="color: #09264b; margin: 0 0 10px 0; font-size: 18px;">Location</h3>
+        <h3 style="color: #09264b; margin: 0 0 10px 0; font-size: 18px;">📍 Location</h3>
         <p style="color: #666; margin: 0;">${data.shopAddress}</p>
         ${data.shopPhone ? `<p style="color: #666; margin: 5px 0 0 0;">Phone: ${data.shopPhone}</p>` : ''}
       </div>
