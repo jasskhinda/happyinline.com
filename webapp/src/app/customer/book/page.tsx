@@ -592,10 +592,19 @@ export default function BookingPage() {
                     <span>Duration:</span>
                     <span>{getTotalDuration()} min</span>
                   </div>
-                  <div className="flex justify-between text-white font-semibold">
+                  <div className="flex justify-between text-white font-semibold mb-4">
                     <span>Total:</span>
                     <span>${getTotalPrice().toFixed(2)}</span>
                   </div>
+                  {/* Inline Continue Button */}
+                  <button
+                    onClick={handleNext}
+                    disabled={!allFormatsSelected()}
+                    className="w-full py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    Continue
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
                 </div>
               )}
             </div>
@@ -840,49 +849,46 @@ export default function BookingPage() {
             </div>
           )}
 
-          {/* Footer Actions */}
-          <div className="p-4 border-t border-white/20 flex gap-3">
-            {step !== 'services' && (
+          {/* Footer Actions - hidden on services step since button is inline */}
+          {step !== 'services' && (
+            <div className="p-4 border-t border-white/20 flex gap-3">
               <button
                 onClick={handleBack}
                 className="flex-1 py-3 bg-white/10 text-white rounded-xl font-medium hover:bg-white/20 transition-colors"
               >
                 Back
               </button>
-            )}
 
-            {step !== 'confirm' ? (
-              <button
-                onClick={handleNext}
-                disabled={
-                  (step === 'services' && (selectedServices.length === 0 || !allFormatsSelected())) ||
-                  (step === 'datetime' && (!selectedDate || !selectedTime))
-                }
-                className="flex-1 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                Continue
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="flex-1 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Booking...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    Confirm Booking
-                  </>
-                )}
-              </button>
-            )}
-          </div>
+              {step !== 'confirm' ? (
+                <button
+                  onClick={handleNext}
+                  disabled={step === 'datetime' && (!selectedDate || !selectedTime)}
+                  className="flex-1 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  Continue
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="flex-1 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Booking...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      Confirm Booking
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
