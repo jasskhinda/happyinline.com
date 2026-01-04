@@ -13,7 +13,11 @@ import {
   XCircle,
   CalendarClock,
   Loader2,
-  X
+  X,
+  Video,
+  MapPin,
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 import { Booking } from '@/lib/shop';
 
@@ -305,14 +309,55 @@ export default function ProviderCalendar({
 
                     {/* Services */}
                     {booking.services && booking.services.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-3">
+                      <div className="space-y-2 mb-3">
                         {booking.services.map((service: any, idx: number) => (
-                          <span
-                            key={idx}
-                            className="bg-white/10 text-white text-xs px-2 py-1 rounded"
-                          >
-                            {service.name}
-                          </span>
+                          <div key={idx} className="bg-white/5 rounded-lg p-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-white text-sm font-medium">{service.name}</span>
+                              {/* Service Type Badge */}
+                              {service.service_type === 'in_person' && (
+                                <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  In-Person
+                                </span>
+                              )}
+                              {service.service_type === 'online' && (
+                                <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                  <Video className="w-3 h-3" />
+                                  Online
+                                </span>
+                              )}
+                              {service.service_type === 'both' && (
+                                <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                  <Video className="w-3 h-3" />
+                                  In-Person / Online
+                                </span>
+                              )}
+                            </div>
+                            {/* Online Meeting Link */}
+                            {(service.service_type === 'online' || service.service_type === 'both') && service.online_meeting_link && (
+                              <div className="mt-2 bg-purple-500/10 rounded-lg p-2 border border-purple-500/20">
+                                <a
+                                  href={service.online_meeting_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm transition-colors"
+                                >
+                                  <ExternalLink className="w-4 h-4" />
+                                  <span className="font-medium">Join Meeting</span>
+                                </a>
+                                {service.online_meeting_password && (
+                                  <div className="flex items-center gap-2 mt-1 text-xs text-purple-300/70">
+                                    <Lock className="w-3 h-3" />
+                                    <span>Password: <span className="font-mono font-medium text-purple-300">{service.online_meeting_password}</span></span>
+                                  </div>
+                                )}
+                                {service.online_instructions && (
+                                  <p className="mt-1 text-xs text-purple-300/70">{service.online_instructions}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}

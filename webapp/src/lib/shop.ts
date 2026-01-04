@@ -762,6 +762,46 @@ export const getShopBookings = async (
       return { success: false, error: error.message };
     }
 
+    // Enrich bookings with full service details (including online meeting info)
+    if (bookings && bookings.length > 0) {
+      // Collect all unique service IDs
+      const serviceIds = new Set<string>();
+      bookings.forEach((booking: any) => {
+        (booking.services || []).forEach((s: any) => {
+          if (s.id) serviceIds.add(s.id);
+        });
+      });
+
+      if (serviceIds.size > 0) {
+        // Fetch full service details
+        const { data: fullServices } = await supabase
+          .from('shop_services')
+          .select('id, service_type, online_meeting_link, online_meeting_password, online_instructions')
+          .in('id', Array.from(serviceIds));
+
+        if (fullServices && fullServices.length > 0) {
+          // Create a map for quick lookup
+          const serviceMap = new Map(fullServices.map((s: any) => [s.id, s]));
+
+          // Enrich each booking's services
+          bookings.forEach((booking: any) => {
+            if (booking.services) {
+              booking.services = booking.services.map((s: any) => {
+                const fullService = serviceMap.get(s.id) as any;
+                return {
+                  ...s,
+                  service_type: fullService?.service_type || 'in_person',
+                  online_meeting_link: fullService?.online_meeting_link || null,
+                  online_meeting_password: fullService?.online_meeting_password || null,
+                  online_instructions: fullService?.online_instructions || null
+                };
+              });
+            }
+          });
+        }
+      }
+    }
+
     return { success: true, bookings: bookings || [] };
   } catch (error: any) {
     console.error('Unexpected error:', error);
@@ -893,6 +933,46 @@ export const getProviderBookings = async (
     if (error) {
       console.error('Error fetching provider bookings:', error);
       return { success: false, error: error.message };
+    }
+
+    // Enrich bookings with full service details (including online meeting info)
+    if (bookings && bookings.length > 0) {
+      // Collect all unique service IDs
+      const serviceIds = new Set<string>();
+      bookings.forEach((booking: any) => {
+        (booking.services || []).forEach((s: any) => {
+          if (s.id) serviceIds.add(s.id);
+        });
+      });
+
+      if (serviceIds.size > 0) {
+        // Fetch full service details
+        const { data: fullServices } = await supabase
+          .from('shop_services')
+          .select('id, service_type, online_meeting_link, online_meeting_password, online_instructions')
+          .in('id', Array.from(serviceIds));
+
+        if (fullServices && fullServices.length > 0) {
+          // Create a map for quick lookup
+          const serviceMap = new Map(fullServices.map((s: any) => [s.id, s]));
+
+          // Enrich each booking's services
+          bookings.forEach((booking: any) => {
+            if (booking.services) {
+              booking.services = booking.services.map((s: any) => {
+                const fullService = serviceMap.get(s.id) as any;
+                return {
+                  ...s,
+                  service_type: fullService?.service_type || 'in_person',
+                  online_meeting_link: fullService?.online_meeting_link || null,
+                  online_meeting_password: fullService?.online_meeting_password || null,
+                  online_instructions: fullService?.online_instructions || null
+                };
+              });
+            }
+          });
+        }
+      }
     }
 
     return { success: true, bookings: bookings || [], shop };

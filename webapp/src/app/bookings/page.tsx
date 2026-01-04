@@ -31,7 +31,11 @@ import {
   ChevronDown,
   DollarSign,
   CalendarDays,
-  Scissors
+  Scissors,
+  Video,
+  MapPin,
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 import BookingCalendar from '@/components/BookingCalendar';
 
@@ -470,15 +474,59 @@ export default function BookingsPage() {
               {selectedBooking.services && selectedBooking.services.length > 0 && (
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <h4 className="text-sm font-medium text-[#0393d5] mb-3">Services</h4>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {selectedBooking.services.map((service: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Scissors className="w-4 h-4 text-white/50" />
-                          <span className="text-white">{service.name || service}</span>
+                      <div key={idx} className="bg-white/5 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Scissors className="w-4 h-4 text-white/50" />
+                            <span className="text-white font-medium">{service.name || service}</span>
+                            {/* Service Type Badge */}
+                            {service.service_type === 'in_person' && (
+                              <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                In-Person
+                              </span>
+                            )}
+                            {service.service_type === 'online' && (
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                Online
+                              </span>
+                            )}
+                            {service.service_type === 'both' && (
+                              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                In-Person / Online
+                              </span>
+                            )}
+                          </div>
+                          {service.price && (
+                            <span className="text-white/80">${service.price}</span>
+                          )}
                         </div>
-                        {service.price && (
-                          <span className="text-white/80">${service.price}</span>
+                        {/* Online Meeting Link */}
+                        {(service.service_type === 'online' || service.service_type === 'both') && service.online_meeting_link && (
+                          <div className="mt-2 bg-purple-500/10 rounded-lg p-2 border border-purple-500/20">
+                            <a
+                              href={service.online_meeting_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              <span className="font-medium">Join Meeting</span>
+                            </a>
+                            {service.online_meeting_password && (
+                              <div className="flex items-center gap-2 mt-1 text-xs text-purple-300/70">
+                                <Lock className="w-3 h-3" />
+                                <span>Password: <span className="font-mono font-medium text-purple-300">{service.online_meeting_password}</span></span>
+                              </div>
+                            )}
+                            {service.online_instructions && (
+                              <p className="mt-1 text-xs text-purple-300/70">{service.online_instructions}</p>
+                            )}
+                          </div>
                         )}
                       </div>
                     ))}
