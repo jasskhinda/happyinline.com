@@ -33,6 +33,9 @@ interface Service {
   service_type?: ServiceType;
 }
 
+// Track customer's chosen format for services with "both" type
+type ServiceFormatChoice = 'in_person' | 'online';
+
 interface Provider {
   id: string;
   user_id: string;
@@ -95,6 +98,9 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
+
+  // Track customer's format choice for services with "both" type
+  const [serviceFormatChoices, setServiceFormatChoices] = useState<Record<string, ServiceFormatChoice>>({});
 
   // Available time slots
   const [availableSlots, setAvailableSlots] = useState<{ value: string; display: string }[]>([]);
@@ -161,9 +167,45 @@ export default function BookingPage() {
     setSelectedServices(prev => {
       const exists = prev.find(s => s.id === service.id);
       if (exists) {
+        // Remove format choice when deselecting
+        setServiceFormatChoices(choices => {
+          const newChoices = { ...choices };
+          delete newChoices[service.id];
+          return newChoices;
+        });
         return prev.filter(s => s.id !== service.id);
       }
       return [...prev, service];
+    });
+  };
+
+  const setServiceFormat = (serviceId: string, format: ServiceFormatChoice) => {
+    setServiceFormatChoices(prev => ({
+      ...prev,
+      [serviceId]: format
+    }));
+  };
+
+  // Check if all "both" type services have a format selected
+  const allFormatsSelected = () => {
+    const bothServices = selectedServices.filter(s => s.service_type === 'both');
+    return bothServices.every(s => serviceFormatChoices[s.id]);
+  };
+
+  // Get the effective service type for display/booking
+  const getEffectiveServiceType = (service: Service): 'in_person' | 'online' => {
+    if (service.service_type === 'both') {
+      return serviceFormatChoices[service.id] || 'in_person';
+    }
+    return service.service_type === 'online' ? 'online' : 'in_person';
+  };
+
+  // Check if any selected service will be online
+  const hasOnlineService = () => {
+    return selectedServices.some(s => {
+      if (s.service_type === 'online') return true;
+      if (s.service_type === 'both' && serviceFormatChoices[s.id] === 'online') return true;
+      return false;
     });
   };
 
@@ -272,7 +314,7 @@ export default function BookingPage() {
   };
 
   const handleNext = async () => {
-    if (step === 'services' && selectedServices.length > 0) {
+    if (step === 'services' && selectedServices.length > 0 && allFormatsSelected()) {
       // Fetch providers who can perform the selected services
       setLoadingProviders(true);
       setNoQualifiedProviders(false);
@@ -333,7 +375,8 @@ export default function BookingPage() {
           id: s.id,
           name: s.name,
           price: s.price,
-          duration: s.duration
+          duration: s.duration,
+          chosen_format: s.service_type === 'both' ? serviceFormatChoices[s.id] : undefined
         })),
         appointmentDate: selectedDate,
         appointmentTime: selectedTime,
@@ -440,59 +483,111 @@ export default function BookingPage() {
                 <p className="text-white/60 text-center py-8">No services available</p>
               ) : (
                 <div className="space-y-3">
-                  {services.map(service => (
-                    <button
-                      key={service.id}
-                      onClick={() => toggleService(service)}
-                      className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                        selectedServices.find(s => s.id === service.id)
-                          ? 'border-[var(--brand)] bg-[var(--brand)]/20'
-                          : 'border-white/20 hover:border-white/40 bg-white/5'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-medium text-white">{service.name}</p>
-                            {/* Service Type Badge */}
-                            {service.service_type === 'in_person' && (
-                              <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                In-Person
-                              </span>
-                            )}
-                            {service.service_type === 'online' && (
-                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <Video className="w-3 h-3" />
-                                Online
-                              </span>
-                            )}
-                            {service.service_type === 'both' && (
-                              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                <Video className="w-3 h-3" />
-                                In-Person / Online
-                              </span>
-                            )}
+                  {services.map(service => {
+                    const isSelected = selectedServices.find(s => s.id === service.id);
+                    return (
+                      <div key={service.id} className="space-y-2">
+                        <button
+                          onClick={() => toggleService(service)}
+                          className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                            isSelected
+                              ? 'border-[var(--brand)] bg-[var(--brand)]/20'
+                              : 'border-white/20 hover:border-white/40 bg-white/5'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium text-white">{service.name}</p>
+                                {/* Service Type Badge */}
+                                {service.service_type === 'in_person' && (
+                                  <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    In-Person
+                                  </span>
+                                )}
+                                {service.service_type === 'online' && (
+                                  <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <Video className="w-3 h-3" />
+                                    Online
+                                  </span>
+                                )}
+                                {service.service_type === 'both' && (
+                                  <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    <span className="mx-0.5">/</span>
+                                    <Video className="w-3 h-3" />
+                                    Choose Format
+                                  </span>
+                                )}
+                              </div>
+                              {service.description && (
+                                <p className="text-sm text-white/60 mt-1">{service.description}</p>
+                              )}
+                              <p className="text-sm text-white/60 mt-1">{service.duration} min</p>
+                            </div>
+                            <div className="text-right ml-3">
+                              <p className="font-semibold text-[var(--brand)]">${service.price}</p>
+                              {isSelected && (
+                                <CheckCircle className="w-5 h-5 text-[var(--brand)] mt-1 ml-auto" />
+                              )}
+                            </div>
                           </div>
-                          {service.description && (
-                            <p className="text-sm text-white/60 mt-1">{service.description}</p>
-                          )}
-                          <p className="text-sm text-white/60 mt-1">{service.duration} min</p>
-                        </div>
-                        <div className="text-right ml-3">
-                          <p className="font-semibold text-[var(--brand)]">${service.price}</p>
-                          {selectedServices.find(s => s.id === service.id) && (
-                            <CheckCircle className="w-5 h-5 text-[var(--brand)] mt-1 ml-auto" />
-                          )}
-                        </div>
+                        </button>
+
+                        {/* Format Selection for "both" type services when selected */}
+                        {isSelected && service.service_type === 'both' && (
+                          <div className="ml-4 p-3 bg-white/5 rounded-lg border border-white/10">
+                            <p className="text-sm text-white/80 mb-2">How would you like this service?</p>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setServiceFormat(service.id, 'in_person');
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                                  serviceFormatChoices[service.id] === 'in_person'
+                                    ? 'bg-emerald-500 text-white'
+                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                }`}
+                              >
+                                <MapPin className="w-4 h-4" />
+                                In-Person
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setServiceFormat(service.id, 'online');
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                                  serviceFormatChoices[service.id] === 'online'
+                                    ? 'bg-purple-500 text-white'
+                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                }`}
+                              >
+                                <Video className="w-4 h-4" />
+                                Online
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
               {selectedServices.length > 0 && (
                 <div className="mt-6 pt-4 border-t border-white/20">
+                  {/* Reminder to select format */}
+                  {!allFormatsSelected() && (
+                    <div className="bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 mb-4 flex items-start gap-2">
+                      <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-amber-200 text-sm">
+                        Please select In-Person or Online for the highlighted services above.
+                      </p>
+                    </div>
+                  )}
                   <div className="flex justify-between text-white/80 mb-2">
                     <span>Duration:</span>
                     <span>{getTotalDuration()} min</span>
@@ -666,37 +761,49 @@ export default function BookingPage() {
                 {/* Services Summary */}
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-sm text-white/60 mb-2">Services</p>
-                  {selectedServices.map(s => (
-                    <div key={s.id} className="flex justify-between items-center text-white py-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span>{s.name}</span>
-                        {s.service_type === 'in_person' && (
-                          <span className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5" />
-                            In-Person
-                          </span>
-                        )}
-                        {s.service_type === 'online' && (
-                          <span className="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded flex items-center gap-1">
-                            <Video className="w-2.5 h-2.5" />
-                            Online
-                          </span>
-                        )}
-                        {s.service_type === 'both' && (
-                          <span className="text-xs bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded flex items-center gap-1">
-                            <Video className="w-2.5 h-2.5" />
-                            In-Person / Online
-                          </span>
-                        )}
+                  {selectedServices.map(s => {
+                    const effectiveType = getEffectiveServiceType(s);
+                    return (
+                      <div key={s.id} className="flex justify-between items-center text-white py-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span>{s.name}</span>
+                          {effectiveType === 'in_person' && (
+                            <span className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                              <MapPin className="w-2.5 h-2.5" />
+                              In-Person
+                            </span>
+                          )}
+                          {effectiveType === 'online' && (
+                            <span className="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                              <Video className="w-2.5 h-2.5" />
+                              Online
+                            </span>
+                          )}
+                        </div>
+                        <span className="ml-2">${s.price}</span>
                       </div>
-                      <span className="ml-2">${s.price}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div className="border-t border-white/20 mt-2 pt-2 flex justify-between font-semibold text-white">
                     <span>Total</span>
                     <span>${getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
+
+                {/* Online Service Notice */}
+                {hasOnlineService() && (
+                  <div className="bg-purple-500/20 border border-purple-500/30 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <Video className="w-5 h-5 text-purple-300 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-purple-200 font-medium">Online Service Included</p>
+                        <p className="text-purple-300/80 text-sm mt-1">
+                          You'll receive the meeting link and details in your confirmation email.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Provider */}
                 <div className="bg-white/5 rounded-xl p-4">
@@ -748,7 +855,7 @@ export default function BookingPage() {
               <button
                 onClick={handleNext}
                 disabled={
-                  (step === 'services' && selectedServices.length === 0) ||
+                  (step === 'services' && (selectedServices.length === 0 || !allFormatsSelected())) ||
                   (step === 'datetime' && (!selectedDate || !selectedTime))
                 }
                 className="flex-1 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
