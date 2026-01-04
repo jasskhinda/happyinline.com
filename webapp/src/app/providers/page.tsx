@@ -6,10 +6,14 @@ import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus } from '@/lib
 import {
   getMyShop,
   getShopProviders,
+  getShopServices,
+  getShopServiceProviders,
   updateProvider,
   removeProvider,
+  updateProviderServices,
   Shop,
-  ShopStaff
+  ShopStaff,
+  ShopService
 } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -29,7 +33,8 @@ import {
   User,
   Copy,
   Eye,
-  EyeOff
+  EyeOff,
+  Scissors
 } from 'lucide-react';
 
 export default function ProvidersPage() {
@@ -70,6 +75,14 @@ export default function ProvidersPage() {
   // Remove provider state
   const [removingProvider, setRemovingProvider] = useState(false);
 
+  // Service assignment state
+  const [services, setServices] = useState<ShopService[]>([]);
+  const [serviceAssignments, setServiceAssignments] = useState<{ service_id: string; provider_id: string }[]>([]);
+  const [showServicesModal, setShowServicesModal] = useState(false);
+  const [assigningProvider, setAssigningProvider] = useState<ShopStaff | null>(null);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [savingServices, setSavingServices] = useState(false);
+
   useEffect(() => {
     loadData();
   }, []);
@@ -104,6 +117,18 @@ export default function ProvidersPage() {
       const providersResult = await getShopProviders(shopResult.shop.id);
       if (providersResult.success && providersResult.providers) {
         setProviders(providersResult.providers);
+      }
+
+      // Load services
+      const servicesResult = await getShopServices(shopResult.shop.id);
+      if (servicesResult.success && servicesResult.services) {
+        setServices(servicesResult.services);
+      }
+
+      // Load service-provider assignments
+      const assignmentsResult = await getShopServiceProviders(shopResult.shop.id);
+      if (assignmentsResult.success && assignmentsResult.assignments) {
+        setServiceAssignments(assignmentsResult.assignments);
       }
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -145,30 +170,34 @@ export default function ProvidersPage() {
       });
 
       const result = await response.json();
+      console.log('Provider creation result:', result);
 
       if (!response.ok) {
         setError(result.error || 'Failed to add provider');
         return;
       }
 
-      // If new user was created, show credentials
-      if (result.isNewUser && result.generatedPassword) {
+      // Close the add modal first
+      setShowAddModal(false);
+
+      // If new user was created with password, show credentials modal
+      if (result.generatedPassword) {
         setNewProviderCredentials({
           email: providerEmail.trim(),
           password: result.generatedPassword,
           name: providerName.trim(),
         });
-        setShowAddModal(false);
         setShowCredentialsModal(true);
       } else {
-        setSuccess('Provider added successfully!');
-        setShowAddModal(false);
+        // Existing user was added (no new password)
+        setSuccess('Existing user added as provider successfully!');
       }
 
       resetAddForm();
       loadData();
     } catch (err) {
-      setError('Failed to add provider');
+      console.error('Provider creation error:', err);
+      setError('Failed to add provider. Please try again.');
     } finally {
       setAddingProvider(false);
     }
@@ -253,6 +282,57 @@ export default function ProvidersPage() {
     navigator.clipboard.writeText(text);
     setSuccess('Copied to clipboard!');
     setTimeout(() => setSuccess(''), 2000);
+  };
+
+  // Service assignment handlers
+  const handleOpenServicesModal = (provider: ShopStaff) => {
+    setAssigningProvider(provider);
+    // Get currently assigned service IDs for this provider
+    const currentAssignments = serviceAssignments
+      .filter(a => a.provider_id === provider.user_id)
+      .map(a => a.service_id);
+    setSelectedServiceIds(currentAssignments);
+    setShowServicesModal(true);
+  };
+
+  const handleToggleServiceAssignment = (serviceId: string) => {
+    setSelectedServiceIds(prev =>
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
+    );
+  };
+
+  const handleSaveServiceAssignments = async () => {
+    if (!shop || !assigningProvider) return;
+
+    setSavingServices(true);
+    setError('');
+
+    try {
+      const result = await updateProviderServices(
+        shop.id,
+        assigningProvider.user_id,
+        selectedServiceIds
+      );
+
+      if (result.success) {
+        setSuccess('Service assignments updated!');
+        setShowServicesModal(false);
+        setAssigningProvider(null);
+        loadData();
+      } else {
+        setError(result.error || 'Failed to update assignments');
+      }
+    } catch (err) {
+      setError('Failed to update assignments');
+    } finally {
+      setSavingServices(false);
+    }
+  };
+
+  const getAssignedServiceCount = (providerId: string): number => {
+    return serviceAssignments.filter(a => a.provider_id === providerId).length;
   };
 
   const maxLicenses = subscription?.max_licenses || 0;
@@ -443,6 +523,16 @@ export default function ProvidersPage() {
                   }`}>
                     {provider.is_available ? 'Available' : 'Unavailable'}
                   </div>
+
+                  {/* Assign Services */}
+                  <button
+                    onClick={() => handleOpenServicesModal(provider)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 rounded-lg transition-colors text-sm"
+                    title="Assign Services"
+                  >
+                    <Scissors className="w-4 h-4" />
+                    <span>{getAssignedServiceCount(provider.user_id)}</span>
+                  </button>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
@@ -803,6 +893,124 @@ export default function ProvidersPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Services Modal */}
+      {showServicesModal && assigningProvider && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-md border border-white/20 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold text-white">Assign Services</h3>
+                <p className="text-[#0393d5] text-sm mt-1">{assigningProvider.user?.name}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowServicesModal(false);
+                  setAssigningProvider(null);
+                }}
+                className="text-[#0393d5] hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {services.length === 0 ? (
+                <div className="text-center py-8">
+                  <Scissors className="w-12 h-12 text-[#0393d5]/50 mx-auto mb-3" />
+                  <p className="text-white mb-2">No services yet</p>
+                  <p className="text-[#0393d5] text-sm">
+                    Add services in the Services section first
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-white/70 text-sm mb-4">
+                    Select which services this provider can perform:
+                  </p>
+                  {services.filter(s => s.is_active).map(service => {
+                    const isSelected = selectedServiceIds.includes(service.id);
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => handleToggleServiceAssignment(service.id)}
+                        className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${
+                          isSelected
+                            ? 'bg-purple-500/20 border-purple-500/50'
+                            : 'bg-white/5 border-white/10 hover:border-white/30'
+                        }`}
+                      >
+                        {/* Service Icon */}
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          isSelected ? 'bg-purple-500/30' : 'bg-white/10'
+                        }`}>
+                          <Scissors className={`w-6 h-6 ${
+                            isSelected ? 'text-purple-300' : 'text-white/70'
+                          }`} />
+                        </div>
+
+                        {/* Service Info */}
+                        <div className="flex-1 text-left">
+                          <p className={`font-medium ${isSelected ? 'text-white' : 'text-white/80'}`}>
+                            {service.name}
+                          </p>
+                          <p className="text-[#0393d5] text-sm">
+                            {service.duration} min • ${service.price.toFixed(2)}
+                          </p>
+                        </div>
+
+                        {/* Selection Indicator */}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          isSelected
+                            ? 'bg-purple-500 border-purple-500'
+                            : 'border-white/30'
+                        }`}>
+                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {services.filter(s => s.is_active).length > 0 && (
+              <div className="p-6 border-t border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-white/70 text-sm">
+                    {selectedServiceIds.length} service{selectedServiceIds.length !== 1 ? 's' : ''} selected
+                  </span>
+                  {selectedServiceIds.length > 0 && (
+                    <button
+                      onClick={() => setSelectedServiceIds([])}
+                      className="text-red-400 text-sm hover:text-red-300"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={handleSaveServiceAssignments}
+                  disabled={savingServices}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {savingServices ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      Save Assignments
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

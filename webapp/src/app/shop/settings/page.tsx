@@ -138,16 +138,17 @@ export default function ShopSettingsPage() {
         setGoogleCalendarConnected(profile.google_calendar_connected || false);
       }
 
-      // Check for calendar connection result in URL
+      // Check for calendar connection result in URL (supports both old and new format)
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('calendar_connected') === 'true') {
+      const calendarStatus = urlParams.get('calendar') || (urlParams.get('calendar_connected') === 'true' ? 'connected' : null);
+      if (calendarStatus === 'connected') {
         setGoogleCalendarConnected(true);
         setSuccess('Google Calendar connected successfully! New bookings will now sync to your calendar.');
         setTimeout(() => setSuccess(''), 5000);
         // Clean up URL
         window.history.replaceState({}, '', '/shop/settings');
       }
-      if (urlParams.get('calendar_error')) {
+      if (calendarStatus === 'error' || urlParams.get('calendar_error')) {
         setError('Failed to connect Google Calendar. Please try again.');
         window.history.replaceState({}, '', '/shop/settings');
       }

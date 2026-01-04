@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const userId = searchParams.get('userId');
+    const redirect = searchParams.get('redirect'); // Optional redirect path after connection
 
     if (!userId) {
       return NextResponse.json(
@@ -15,8 +16,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Generate auth URL
-    const authUrl = getAuthUrl(userId);
+    // Generate auth URL with optional redirect
+    const authUrl = getAuthUrl(userId, redirect || undefined);
 
     return NextResponse.json({ authUrl });
   } catch (error: any) {

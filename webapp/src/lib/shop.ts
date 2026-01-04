@@ -1323,3 +1323,52 @@ export const getProvidersForServices = async (shopId: string, serviceIds: string
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Update all service assignments for a provider (bulk update)
+ * This is the inverse of updateServiceProviders - assigns services to a provider
+ */
+export const updateProviderServices = async (
+  shopId: string,
+  providerId: string,
+  serviceIds: string[]
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // Delete existing assignments for this provider in this shop
+    const { error: deleteError } = await supabase
+      .from('service_providers')
+      .delete()
+      .eq('provider_id', providerId)
+      .eq('shop_id', shopId);
+
+    if (deleteError) {
+      console.error('Error clearing provider services:', deleteError);
+      return { success: false, error: deleteError.message };
+    }
+
+    // Insert new assignments (if any)
+    if (serviceIds.length > 0) {
+      const assignments = serviceIds.map(serviceId => ({
+        shop_id: shopId,
+        shop_service_id: serviceId,
+        provider_id: providerId
+      }));
+
+      const { error: insertError } = await supabase
+        .from('service_providers')
+        .insert(assignments);
+
+      if (insertError) {
+        console.error('Error inserting provider services:', insertError);
+        return { success: false, error: insertError.message };
+      }
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};

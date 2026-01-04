@@ -2,24 +2,46 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokensFromCode } from '@/lib/google-calendar';
 import { createAdminClient } from '@/lib/supabase-admin';
 
+// Parse state parameter which can be either plain userId (legacy) or JSON encoded
+function parseState(state: string): { userId: string; redirectPath: string } {
+  try {
+    // Try to decode as base64 JSON first (new format)
+    const decoded = Buffer.from(state, 'base64').toString('utf-8');
+    const parsed = JSON.parse(decoded);
+    return {
+      userId: parsed.userId,
+      redirectPath: parsed.redirectPath || '/shop/settings'
+    };
+  } catch {
+    // Fall back to treating state as plain userId (legacy format)
+    return {
+      userId: state,
+      redirectPath: '/shop/settings'
+    };
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
-    const state = searchParams.get('state'); // This is the userId
+    const state = searchParams.get('state');
     const error = searchParams.get('error');
+
+    // Parse state to get userId and redirect path
+    const { userId, redirectPath } = state ? parseState(state) : { userId: '', redirectPath: '/shop/settings' };
 
     // Handle errors from Google
     if (error) {
       console.error('Google OAuth error:', error);
       return NextResponse.redirect(
-        new URL('/shop/settings?calendar_error=access_denied', request.url)
+        new URL(`${redirectPath}?calendar=error`, request.url)
       );
     }
 
-    if (!code || !state) {
+    if (!code || !userId) {
       return NextResponse.redirect(
-        new URL('/shop/settings?calendar_error=missing_params', request.url)
+        new URL(`${redirectPath}?calendar=error`, request.url)
       );
     }
 
@@ -28,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokens.access_token) {
       return NextResponse.redirect(
-        new URL('/shop/settings?calendar_error=token_exchange_failed', request.url)
+        new URL(`${redirectPath}?calendar=error`, request.url)
       );
     }
 
@@ -45,23 +67,23 @@ export async function GET(request: NextRequest) {
           : null,
         google_calendar_connected: true
       })
-      .eq('id', state);
+      .eq('id', userId);
 
     if (updateError) {
       console.error('Error storing tokens:', updateError);
       return NextResponse.redirect(
-        new URL('/shop/settings?calendar_error=storage_failed', request.url)
+        new URL(`${redirectPath}?calendar=error`, request.url)
       );
     }
 
-    // Success - redirect back to settings
+    // Success - redirect back to the appropriate page
     return NextResponse.redirect(
-      new URL('/shop/settings?calendar_connected=true', request.url)
+      new URL(`${redirectPath}?calendar=connected`, request.url)
     );
   } catch (error: any) {
     console.error('Error in Google OAuth callback:', error);
     return NextResponse.redirect(
-      new URL('/shop/settings?calendar_error=unknown', request.url)
+      new URL('/shop/settings?calendar=error', request.url)
     );
   }
 }

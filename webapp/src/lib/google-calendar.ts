@@ -23,15 +23,21 @@ export function createOAuth2Client() {
 
 /**
  * Generate OAuth authorization URL
+ * @param userId - The user ID to associate with this connection
+ * @param redirectPath - Optional path to redirect to after connection (defaults to /shop/settings)
  */
-export function getAuthUrl(userId: string): string {
+export function getAuthUrl(userId: string, redirectPath?: string): string {
   const oauth2Client = createOAuth2Client();
+
+  // Encode both userId and redirectPath in the state parameter
+  const stateData = JSON.stringify({ userId, redirectPath: redirectPath || '/shop/settings' });
+  const state = Buffer.from(stateData).toString('base64');
 
   return oauth2Client.generateAuthUrl({
     access_type: 'offline', // Get refresh token
     scope: SCOPES,
     prompt: 'consent', // Force consent screen to get refresh token
-    state: userId // Pass userId to identify the user in callback
+    state // Encoded state containing userId and redirect info
   });
 }
 

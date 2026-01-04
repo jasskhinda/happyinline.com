@@ -234,12 +234,19 @@ export async function POST(request: NextRequest) {
       .eq('id', ownerId);
 
     // 8. Return success with generated password (only for new users)
+    console.log('Provider creation success:', {
+      userId,
+      isNewUser,
+      hasPassword: !!generatedPassword,
+      email: normalizedEmail
+    });
+
     return NextResponse.json({
       success: true,
       userId,
-      generatedPassword: isNewUser ? generatedPassword : null,
+      generatedPassword: generatedPassword, // Return password if we have one
       isNewUser,
-      message: isNewUser && generatedPassword
+      message: generatedPassword
         ? `Provider account created successfully!`
         : 'Existing user added as provider'
     });

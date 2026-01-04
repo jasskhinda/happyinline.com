@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCurrentUser, getProfile } from '@/lib/auth';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getCurrentUser, getProfile, Profile } from '@/lib/auth';
 import { getProviderBookings, updateBookingStatus, rescheduleBooking, Shop, Booking } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -21,18 +21,26 @@ import {
   CheckCircle,
   XCircle,
   Filter,
-  CalendarClock
+  CalendarClock,
+  Link,
+  Unlink
 } from 'lucide-react';
 
-export default function ProviderDashboard() {
+function ProviderDashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Calendar sync state
+  const [calendarConnecting, setCalendarConnecting] = useState(false);
+  const [calendarDisconnecting, setCalendarDisconnecting] = useState(false);
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -50,7 +58,18 @@ export default function ProviderDashboard() {
 
   useEffect(() => {
     loadData();
-  }, [statusFilter, dateFilter]);
+
+    // Check for calendar connection status from URL
+    const calendarStatus = searchParams.get('calendar');
+    if (calendarStatus === 'connected') {
+      setSuccess('Google Calendar connected successfully! Your bookings will now sync automatically.');
+      // Clear the URL param
+      window.history.replaceState({}, '', '/provider');
+    } else if (calendarStatus === 'error') {
+      setError('Failed to connect Google Calendar. Please try again.');
+      window.history.replaceState({}, '', '/provider');
+    }
+  }, [statusFilter, dateFilter, searchParams]);
 
   const loadData = async () => {
     try {
@@ -71,6 +90,7 @@ export default function ProviderDashboard() {
       }
 
       setUserName(profile.name || 'Provider');
+      setProfile(profile);
 
       // If user is an owner, redirect to dashboard
       if (profile.role === 'owner') {
@@ -133,6 +153,51 @@ export default function ProviderDashboard() {
     setNewDate(booking.appointment_date);
     setNewTime(booking.appointment_time);
     setRescheduleModalOpen(true);
+  };
+
+  const handleConnectCalendar = async () => {
+    if (!userId) return;
+
+    setCalendarConnecting(true);
+    try {
+      const response = await fetch(`/api/calendar?userId=${userId}&redirect=/provider`);
+      const data = await response.json();
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        setError('Failed to get calendar authorization URL');
+        setCalendarConnecting(false);
+      }
+    } catch (err) {
+      setError('Failed to connect calendar');
+      setCalendarConnecting(false);
+    }
+  };
+
+  const handleDisconnectCalendar = async () => {
+    if (!userId) return;
+
+    setCalendarDisconnecting(true);
+    try {
+      const response = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'disconnect', userId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSuccess('Google Calendar disconnected');
+        // Refresh profile data
+        const updatedProfile = await getProfile(userId);
+        if (updatedProfile) setProfile(updatedProfile);
+      } else {
+        setError('Failed to disconnect calendar');
+      }
+    } catch (err) {
+      setError('Failed to disconnect calendar');
+    } finally {
+      setCalendarDisconnecting(false);
+    }
   };
 
   const handleReschedule = async () => {
@@ -262,7 +327,7 @@ export default function ProviderDashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
@@ -296,6 +361,64 @@ export default function ProviderDashboard() {
                 <p className="text-white/60 text-sm">Upcoming</p>
                 <p className="text-2xl font-bold text-white">{upcomingBookings.length}</p>
               </div>
+            </div>
+          </div>
+
+          {/* Google Calendar Sync Card */}
+          <div className={`backdrop-blur-lg rounded-xl p-6 border ${
+            profile?.google_calendar_connected
+              ? 'bg-green-500/10 border-green-500/30'
+              : 'bg-white/10 border-white/20'
+          }`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                profile?.google_calendar_connected
+                  ? 'bg-green-500/20'
+                  : 'bg-purple-500/20'
+              }`}>
+                {profile?.google_calendar_connected ? (
+                  <Check className="w-6 h-6 text-green-400" />
+                ) : (
+                  <Link className="w-6 h-6 text-purple-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="text-white/60 text-sm">Google Calendar</p>
+                <p className={`text-sm font-medium ${
+                  profile?.google_calendar_connected ? 'text-green-400' : 'text-white'
+                }`}>
+                  {profile?.google_calendar_connected ? 'Connected' : 'Not Connected'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              {profile?.google_calendar_connected ? (
+                <button
+                  onClick={handleDisconnectCalendar}
+                  disabled={calendarDisconnecting}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm disabled:opacity-50"
+                >
+                  {calendarDisconnecting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Unlink className="w-4 h-4" />
+                  )}
+                  Disconnect
+                </button>
+              ) : (
+                <button
+                  onClick={handleConnectCalendar}
+                  disabled={calendarConnecting}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg transition-colors text-sm disabled:opacity-50"
+                >
+                  {calendarConnecting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Link className="w-4 h-4" />
+                  )}
+                  Connect Calendar
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -606,5 +729,20 @@ export default function ProviderDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProviderDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-[#0393d5] animate-spin mx-auto mb-4" />
+          <p className="text-[#0393d5]">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ProviderDashboardContent />
+    </Suspense>
   );
 }

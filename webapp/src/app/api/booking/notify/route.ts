@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
       console.error('Error fetching owner:', ownerError);
     }
 
-    // Fetch provider details if assigned
+    // Fetch provider details with Google Calendar tokens if assigned
     let provider = null;
     if (booking.barber_id) {
       // barber_id is the user_id of the provider
       const { data: providerData, error: providerError } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, google_calendar_connected, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expiry')
         .eq('id', booking.barber_id)
         .single();
 
@@ -132,19 +132,28 @@ export async function POST(request: NextRequest) {
 
     console.log('📧 Email results:', results);
 
-    // Sync to Google Calendar if owner has it connected
+    // Sync to Google Calendar - prioritize provider's calendar, fall back to owner's
     let calendarSynced = false;
     let calendarEventId = null;
+    let calendarSyncedTo: string | null = null;
 
-    if (owner?.google_calendar_connected && owner?.google_calendar_access_token) {
-      console.log('📅 Attempting to sync to Google Calendar...');
+    // Determine who to sync to: provider first (if assigned and has calendar), then owner
+    const calendarUser = (provider?.google_calendar_connected && provider?.google_calendar_access_token)
+      ? provider
+      : (owner?.google_calendar_connected && owner?.google_calendar_access_token)
+        ? owner
+        : null;
 
-      let accessToken = owner.google_calendar_access_token;
-      const refreshToken = owner.google_calendar_refresh_token;
+    if (calendarUser) {
+      const isProvider = calendarUser.id === provider?.id;
+      console.log(`📅 Attempting to sync to ${isProvider ? 'provider' : 'owner'}'s Google Calendar...`);
+
+      let accessToken = calendarUser.google_calendar_access_token;
+      const refreshToken = calendarUser.google_calendar_refresh_token;
 
       // Check if token is expired and refresh if needed
-      if (owner.google_calendar_token_expiry) {
-        const expiryDate = new Date(owner.google_calendar_token_expiry);
+      if (calendarUser.google_calendar_token_expiry) {
+        const expiryDate = new Date(calendarUser.google_calendar_token_expiry);
         if (expiryDate < new Date()) {
           console.log('📅 Access token expired, refreshing...');
           if (refreshToken) {
@@ -160,7 +169,7 @@ export async function POST(request: NextRequest) {
                     ? new Date(newTokens.expiry_date).toISOString()
                     : null
                 })
-                .eq('id', owner.id);
+                .eq('id', calendarUser.id);
             }
           }
         }
@@ -188,7 +197,8 @@ export async function POST(request: NextRequest) {
       if (calendarResult.success) {
         calendarSynced = true;
         calendarEventId = calendarResult.eventId;
-        console.log('📅 Calendar event created:', calendarResult.eventLink);
+        calendarSyncedTo = isProvider ? 'provider' : 'owner';
+        console.log(`📅 Calendar event created for ${calendarSyncedTo}:`, calendarResult.eventLink);
 
         // Store event ID in booking for future reference (e.g., cancellation)
         if (calendarEventId) {
@@ -209,7 +219,8 @@ export async function POST(request: NextRequest) {
         ownerEmailSent: results.ownerSent,
         providerEmailSent: results.providerSent,
         calendarSynced,
-        calendarEventId
+        calendarEventId,
+        calendarSyncedTo
       },
     });
   } catch (error: any) {
