@@ -17,8 +17,12 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  Video,
+  MapPin
 } from 'lucide-react';
+
+type ServiceType = 'in_person' | 'online' | 'both';
 
 interface Service {
   id: string;
@@ -26,6 +30,7 @@ interface Service {
   description: string | null;
   duration: number;
   price: number;
+  service_type?: ServiceType;
 }
 
 interface Provider {
@@ -446,14 +451,35 @@ export default function BookingPage() {
                       }`}
                     >
                       <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-white">{service.name}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium text-white">{service.name}</p>
+                            {/* Service Type Badge */}
+                            {service.service_type === 'in_person' && (
+                              <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                In-Person
+                              </span>
+                            )}
+                            {service.service_type === 'online' && (
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                Online
+                              </span>
+                            )}
+                            {service.service_type === 'both' && (
+                              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                In-Person / Online
+                              </span>
+                            )}
+                          </div>
                           {service.description && (
                             <p className="text-sm text-white/60 mt-1">{service.description}</p>
                           )}
                           <p className="text-sm text-white/60 mt-1">{service.duration} min</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right ml-3">
                           <p className="font-semibold text-[var(--brand)]">${service.price}</p>
                           {selectedServices.find(s => s.id === service.id) && (
                             <CheckCircle className="w-5 h-5 text-[var(--brand)] mt-1 ml-auto" />
@@ -641,9 +667,29 @@ export default function BookingPage() {
                 <div className="bg-white/5 rounded-xl p-4">
                   <p className="text-sm text-white/60 mb-2">Services</p>
                   {selectedServices.map(s => (
-                    <div key={s.id} className="flex justify-between text-white">
-                      <span>{s.name}</span>
-                      <span>${s.price}</span>
+                    <div key={s.id} className="flex justify-between items-center text-white py-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{s.name}</span>
+                        {s.service_type === 'in_person' && (
+                          <span className="text-xs bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <MapPin className="w-2.5 h-2.5" />
+                            In-Person
+                          </span>
+                        )}
+                        {s.service_type === 'online' && (
+                          <span className="text-xs bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Video className="w-2.5 h-2.5" />
+                            Online
+                          </span>
+                        )}
+                        {s.service_type === 'both' && (
+                          <span className="text-xs bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Video className="w-2.5 h-2.5" />
+                            In-Person / Online
+                          </span>
+                        )}
+                      </div>
+                      <span className="ml-2">${s.price}</span>
                     </div>
                   ))}
                   <div className="border-t border-white/20 mt-2 pt-2 flex justify-between font-semibold text-white">
