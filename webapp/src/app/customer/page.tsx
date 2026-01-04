@@ -206,11 +206,9 @@ export default function CustomerDashboard() {
                     className="w-full h-full object-cover"
                   />
                 )}
-                {/* Status Badge */}
-                <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium ${
-                  isShopOpen(shop) ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-                }`}>
-                  {isShopOpen(shop) ? 'Open Now' : 'Closed'}
+                {/* Status Badge - Always show Available */}
+                <div className="absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium bg-green-500 text-white">
+                  Available Now
                 </div>
                 {/* Logo */}
                 <div className="absolute -bottom-8 left-6">

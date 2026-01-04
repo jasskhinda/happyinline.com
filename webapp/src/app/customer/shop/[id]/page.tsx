@@ -270,10 +270,8 @@ export default function ShopDetailsPage() {
             {shop.cover_image_url && (
               <img src={shop.cover_image_url} alt={shop.name} className="w-full h-full object-cover" />
             )}
-            <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-              isShopOpen() ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`}>
-              {isShopOpen() ? 'Open Now' : 'Closed'}
+            <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium bg-green-500 text-white">
+              Available Now
             </div>
           </div>
 
