@@ -382,12 +382,18 @@ export const updateProfile = async (
 /**
  * Update user email (requires re-authentication)
  */
-export const updateEmail = async (newEmail: string): Promise<{ success: boolean; error?: string }> => {
+export const updateEmail = async (newEmail: string, redirectPath: string = '/customer/settings'): Promise<{ success: boolean; error?: string }> => {
   try {
     const supabase = getSupabaseClient();
 
+    // Build the redirect URL for email confirmation
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://www.happyinline.com';
+    const redirectUrl = `${baseUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`;
+
     const { error } = await supabase.auth.updateUser({
       email: newEmail.toLowerCase().trim()
+    }, {
+      emailRedirectTo: redirectUrl
     });
 
     if (error) {

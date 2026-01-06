@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getProfile, updateProfile, updateEmail, updatePassword, signOut } from '@/lib/auth';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -20,8 +20,9 @@ import {
   EyeOff
 } from 'lucide-react';
 
-export default function CustomerSettingsPage() {
+function CustomerSettingsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingEmail, setSavingEmail] = useState(false);
@@ -41,6 +42,21 @@ export default function CustomerSettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Check for email change callback
+  useEffect(() => {
+    const emailChanged = searchParams.get('email_changed');
+    const emailError = searchParams.get('email_error');
+
+    if (emailChanged === 'true') {
+      setSuccess('Email changed successfully!');
+      // Clean up URL
+      router.replace('/customer/settings');
+    } else if (emailError === 'true') {
+      setError('Failed to change email. The link may have expired.');
+      router.replace('/customer/settings');
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     loadProfile();
@@ -414,5 +430,17 @@ export default function CustomerSettingsPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function CustomerSettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-[var(--primary-dark)] via-[var(--primary)] to-[var(--primary-dark)] flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[var(--brand)] animate-spin" />
+      </div>
+    }>
+      <CustomerSettingsContent />
+    </Suspense>
   );
 }
