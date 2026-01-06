@@ -214,8 +214,8 @@ const generateBookingEmailHTML = (
       </div>
       ` : ''}
 
-      ${hasOnlineServices && recipientType === 'customer' ? `
-      <!-- Online Meeting Section - JOIN NOW -->
+      ${hasOnlineServices ? `
+      <!-- Online Meeting Section - JOIN NOW (shown to all recipients) -->
       <div style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
         <h3 style="color: #ffffff; margin: 0 0 20px 0; font-size: 20px; text-align: center;">
           📹 Your Online Session
@@ -266,8 +266,8 @@ const generateBookingEmailHTML = (
       </div>
       ` : ''}
 
-      ${hasInPersonServices && recipientType === 'customer' ? `
-      <!-- In-Person Section - BE READY -->
+      ${hasInPersonServices ? `
+      <!-- In-Person Section - shown to all recipients -->
       <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; padding: 25px; margin-bottom: 20px;">
         <h3 style="color: #ffffff; margin: 0 0 15px 0; font-size: 20px; text-align: center;">
           📍 In-Person Appointment
