@@ -56,39 +56,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Update the customer's profile with exclusive_shop_id
-    const updateData: any = {
+    // 2. First check if profile exists
+    console.log('Checking if profile exists for userId:', userId);
+    const { data: existingProfile, error: checkError } = await adminClient
+      .from('profiles')
+      .select('id, email')
+      .eq('id', userId)
+      .single();
+
+    console.log('Existing profile check:', { existingProfile, error: checkError?.message });
+
+    // 3. Get user email from auth if profile doesn't exist
+    let userEmail = existingProfile?.email;
+    if (!existingProfile) {
+      console.log('Profile not found, fetching from auth...');
+      const { data: authUser, error: authError } = await adminClient.auth.admin.getUserById(userId);
+      if (authError) {
+        console.error('Error fetching auth user:', authError);
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+      userEmail = authUser?.user?.email;
+      console.log('Got email from auth:', userEmail);
+    }
+
+    // 4. Upsert the profile (create if doesn't exist, update if it does)
+    const profileData: any = {
+      id: userId,
       role: 'customer',
       exclusive_shop_id: shopId,
+      email: userEmail,
     };
 
     // Include name and phone if provided
     if (name) {
-      updateData.name = name;
+      profileData.name = name;
     }
     if (phone) {
-      updateData.phone = phone;
+      profileData.phone = phone;
     }
 
-    console.log('Updating profile with:', updateData);
+    console.log('Upserting profile with:', profileData);
 
-    const { error: profileError, data: updateResult } = await adminClient
+    const { error: profileError, data: upsertResult } = await adminClient
       .from('profiles')
-      .update(updateData)
-      .eq('id', userId)
+      .upsert(profileData, {
+        onConflict: 'id',
+        ignoreDuplicates: false
+      })
       .select();
 
-    console.log('Profile update result:', { updateResult, error: profileError?.message });
+    console.log('Profile upsert result:', { upsertResult, error: profileError?.message });
 
     if (profileError) {
-      console.error('Error updating profile:', profileError);
+      console.error('Error upserting profile:', profileError);
       return NextResponse.json(
         { error: 'Failed to link customer to shop: ' + profileError.message },
         { status: 500 }
       );
     }
 
-    // 3. Verify the update was successful
+    // 5. Verify the update was successful
     const { data: updatedProfile, error: verifyError } = await adminClient
       .from('profiles')
       .select('exclusive_shop_id, role, name')
