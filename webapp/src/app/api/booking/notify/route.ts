@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendBookingNotifications } from '@/lib/email';
 import { createAdminClient } from '@/lib/supabase-admin';
-import { createBookingEvent, formatBookingForCalendar, refreshAccessToken } from '@/lib/google-calendar';
+import { createBookingEvent, formatBookingForCalendar, refreshAccessToken, DEFAULT_SHOP_TIMEZONE } from '@/lib/google-calendar';
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,10 +83,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch shop details
+    // Fetch shop details including timezone for calendar integration
     const { data: shop, error: shopError } = await supabase
       .from('shops')
-      .select('id, name, address, city, state, zip_code, phone, created_by')
+      .select('id, name, address, city, state, zip_code, phone, created_by, timezone')
       .eq('id', booking.shop_id)
       .single();
 
@@ -201,7 +201,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Format booking data for calendar
+      // Format booking data for calendar (use shop's timezone for accurate calendar sync)
+      const shopTimezone = shop.timezone || DEFAULT_SHOP_TIMEZONE;
+      console.log(`📅 Using timezone for calendar event: ${shopTimezone}`);
+
       const calendarEventData = formatBookingForCalendar({
         customerName: customer.name || 'Customer',
         services: booking.services || [],
@@ -210,7 +213,8 @@ export async function POST(request: NextRequest) {
         shopName: shop.name,
         shopAddress: fullAddress || undefined,
         customerNotes: booking.customer_notes || undefined,
-        totalAmount: booking.total_amount
+        totalAmount: booking.total_amount,
+        timezone: shopTimezone
       });
 
       // Create calendar event

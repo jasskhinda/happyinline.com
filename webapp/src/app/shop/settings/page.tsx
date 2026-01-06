@@ -78,6 +78,9 @@ export default function ShopSettingsPage() {
   const [connectingCalendar, setConnectingCalendar] = useState(false);
   const [disconnectingCalendar, setDisconnectingCalendar] = useState(false);
 
+  // Timezone state
+  const [timezone, setTimezone] = useState('America/Indiana/Indianapolis');
+
   // Image upload state
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -170,6 +173,7 @@ export default function ShopSettingsPage() {
       setOpeningTime(userShop.opening_time || '09:00');
       setClosingTime(userShop.closing_time || '18:00');
       setAnnouncement(userShop.announcement || '');
+      setTimezone(userShop.timezone || 'America/Indiana/Indianapolis');
 
       // Check if per-day hours are set
       if (userShop.operating_hours && Object.keys(userShop.operating_hours).length > 0) {
@@ -321,7 +325,8 @@ export default function ShopSettingsPage() {
         opening_time: openingTime,
         closing_time: closingTime,
         operating_hours: usePerDayHours ? operatingHours : null,
-        announcement: announcement.trim() || null
+        announcement: announcement.trim() || null,
+        timezone
       });
 
       if (result.success) {
@@ -1097,6 +1102,43 @@ export default function ShopSettingsPage() {
             Connect your Google Calendar to automatically add new bookings as calendar events.
             When customers book appointments, they&apos;ll appear on your calendar with all the details.
           </p>
+
+          {/* Timezone Selector */}
+          <div className="mb-6 pb-6 border-b border-white/10">
+            <label className="block text-sm font-medium text-[#0393d5] mb-2">
+              Business Timezone
+            </label>
+            <p className="text-white/50 text-sm mb-3">
+              Select your business timezone for accurate calendar event times.
+            </p>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#0393d5] appearance-none cursor-pointer"
+              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230393d5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px' }}
+            >
+              <optgroup label="US Timezones">
+                <option value="America/New_York">Eastern Time (New York)</option>
+                <option value="America/Indiana/Indianapolis">Eastern Time (Indiana)</option>
+                <option value="America/Chicago">Central Time (Chicago)</option>
+                <option value="America/Denver">Mountain Time (Denver)</option>
+                <option value="America/Phoenix">Arizona (No DST)</option>
+                <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+                <option value="America/Anchorage">Alaska Time</option>
+                <option value="Pacific/Honolulu">Hawaii Time</option>
+              </optgroup>
+              <optgroup label="Other Timezones">
+                <option value="Europe/London">London (GMT/BST)</option>
+                <option value="Europe/Paris">Paris (CET)</option>
+                <option value="Europe/Berlin">Berlin (CET)</option>
+                <option value="Asia/Dubai">Dubai (GST)</option>
+                <option value="Asia/Kolkata">India (IST)</option>
+                <option value="Asia/Singapore">Singapore (SGT)</option>
+                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                <option value="Australia/Sydney">Sydney (AEST)</option>
+              </optgroup>
+            </select>
+          </div>
 
           {googleCalendarConnected ? (
             <div className="space-y-4">

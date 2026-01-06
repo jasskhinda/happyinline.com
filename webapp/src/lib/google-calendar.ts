@@ -71,6 +71,9 @@ export function createCalendarClient(accessToken: string, refreshToken?: string)
   return google.calendar({ version: 'v3', auth: oauth2Client });
 }
 
+// Default timezone for shops (Eastern Time - Indiana)
+export const DEFAULT_SHOP_TIMEZONE = 'America/Indiana/Indianapolis';
+
 interface BookingEventData {
   summary: string;
   description: string;
@@ -79,6 +82,7 @@ interface BookingEventData {
   location?: string;
   customerName?: string;
   customerEmail?: string;
+  timezone?: string; // IANA timezone identifier (e.g., 'America/New_York')
 }
 
 /**
@@ -92,16 +96,19 @@ export async function createBookingEvent(
   try {
     const calendar = createCalendarClient(accessToken, refreshToken);
 
+    // Use shop's timezone or fall back to default
+    const eventTimezone = eventData.timezone || DEFAULT_SHOP_TIMEZONE;
+
     const event = {
       summary: eventData.summary,
       description: eventData.description,
       start: {
         dateTime: eventData.startDateTime,
-        timeZone: 'America/Los_Angeles' // Default timezone, could be made configurable
+        timeZone: eventTimezone
       },
       end: {
         dateTime: eventData.endDateTime,
-        timeZone: 'America/Los_Angeles'
+        timeZone: eventTimezone
       },
       location: eventData.location,
       reminders: {
@@ -170,6 +177,7 @@ export function formatBookingForCalendar(booking: {
   shopAddress?: string;
   customerNotes?: string;
   totalAmount?: number;
+  timezone?: string; // IANA timezone identifier for the shop
 }): BookingEventData {
   // Calculate total duration
   const totalMinutes = booking.services.reduce((sum, s) => {
@@ -197,13 +205,21 @@ export function formatBookingForCalendar(booking: {
   }
   description += '\n\n---\nBooked via Happy InLine';
 
+  // Format datetime as ISO string without timezone conversion
+  // Google Calendar will interpret this with the timezone specified in the event
+  const formatLocalDateTime = (date: Date): string => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
+  };
+
   return {
     summary: `${booking.customerName} - ${booking.shopName}`,
     description,
-    startDateTime: startDate.toISOString(),
-    endDateTime: endDate.toISOString(),
+    startDateTime: formatLocalDateTime(startDate),
+    endDateTime: formatLocalDateTime(endDate),
     location: booking.shopAddress,
-    customerName: booking.customerName
+    customerName: booking.customerName,
+    timezone: booking.timezone
   };
 }
 

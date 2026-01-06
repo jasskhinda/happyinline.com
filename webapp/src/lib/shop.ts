@@ -42,6 +42,7 @@ export interface Shop {
   closing_time: string | null;
   operating_hours: OperatingHours | null;  // Per-day hours
   announcement: string | null;             // Shop announcement/banner
+  timezone: string | null;                 // IANA timezone identifier for Google Calendar sync
   is_manually_closed: boolean;
   status: 'draft' | 'pending_review' | 'approved' | 'rejected' | 'suspended' | 'active';
   is_active: boolean;
