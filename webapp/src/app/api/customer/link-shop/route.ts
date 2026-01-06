@@ -80,6 +80,24 @@ export async function POST(request: NextRequest) {
       }
       userEmail = authUser?.user?.email;
       console.log('Got email from auth:', userEmail);
+
+      // Check if this email already exists under a different user ID
+      if (userEmail) {
+        const { data: existingEmailProfile, error: emailCheckError } = await adminClient
+          .from('profiles')
+          .select('id, email')
+          .eq('email', userEmail.toLowerCase())
+          .single();
+
+        if (existingEmailProfile && existingEmailProfile.id !== userId) {
+          console.log('Email already exists under different user ID:', existingEmailProfile.id);
+          // This email is already registered - user should sign in with existing account
+          return NextResponse.json(
+            { error: 'This email is already registered. Please sign in with your existing account instead.' },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     // 4. Upsert the profile (create if doesn't exist, update if it does)
@@ -87,7 +105,7 @@ export async function POST(request: NextRequest) {
       id: userId,
       role: 'customer',
       exclusive_shop_id: shopId,
-      email: userEmail,
+      email: userEmail?.toLowerCase(),
     };
 
     // Include name and phone if provided

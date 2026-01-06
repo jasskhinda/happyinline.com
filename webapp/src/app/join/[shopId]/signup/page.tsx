@@ -145,7 +145,13 @@ export default function CustomerSignupPage() {
 
       if (!linkResponse.ok) {
         console.error('Failed to link customer to shop:', linkResult.error);
-        // Continue anyway - user account was created
+        // If this is a duplicate email error (409), show it to the user
+        if (linkResponse.status === 409) {
+          setError(linkResult.error || 'This email is already registered. Please sign in instead.');
+          setSubmitting(false);
+          return;
+        }
+        // For other errors, continue anyway - user account was created
       } else {
         console.log('Customer successfully linked to shop:', linkResult);
       }
