@@ -66,37 +66,45 @@ export async function POST(request: NextRequest) {
 
     console.log('Existing profile check:', { existingProfile, error: checkError?.message });
 
-    // 3. Get user email from auth if profile doesn't exist
+    // 3. Get user email from auth
     let userEmail = existingProfile?.email;
-    if (!existingProfile) {
-      console.log('Profile not found, fetching from auth...');
-      const { data: authUser, error: authError } = await adminClient.auth.admin.getUserById(userId);
-      if (authError) {
-        console.error('Error fetching auth user:', authError);
+
+    // Always fetch from auth to ensure we have the email
+    console.log('Fetching user from auth...');
+    const { data: authUser, error: authError } = await adminClient.auth.admin.getUserById(userId);
+    if (authError) {
+      console.error('Error fetching auth user:', authError);
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    // Use auth email if profile doesn't have one
+    if (!userEmail && authUser?.user?.email) {
+      userEmail = authUser.user.email;
+    }
+    console.log('User email:', userEmail);
+
+    // Check if this email already exists under a different user ID
+    // This catches the case where someone tries to sign up with an email that's already registered
+    if (userEmail) {
+      const { data: existingEmailProfiles, error: emailCheckError } = await adminClient
+        .from('profiles')
+        .select('id, email')
+        .eq('email', userEmail.toLowerCase());
+
+      console.log('Email check result:', { existingEmailProfiles, error: emailCheckError?.message });
+
+      // Check if any profile with this email belongs to a different user
+      const conflictingProfile = existingEmailProfiles?.find(p => p.id !== userId);
+      if (conflictingProfile) {
+        console.log('Email already exists under different user ID:', conflictingProfile.id);
+        // This email is already registered - user should sign in with existing account
         return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
+          { error: 'This email is already registered. Please sign in with your existing account instead.' },
+          { status: 409 }
         );
-      }
-      userEmail = authUser?.user?.email;
-      console.log('Got email from auth:', userEmail);
-
-      // Check if this email already exists under a different user ID
-      if (userEmail) {
-        const { data: existingEmailProfile, error: emailCheckError } = await adminClient
-          .from('profiles')
-          .select('id, email')
-          .eq('email', userEmail.toLowerCase())
-          .single();
-
-        if (existingEmailProfile && existingEmailProfile.id !== userId) {
-          console.log('Email already exists under different user ID:', existingEmailProfile.id);
-          // This email is already registered - user should sign in with existing account
-          return NextResponse.json(
-            { error: 'This email is already registered. Please sign in with your existing account instead.' },
-            { status: 409 }
-          );
-        }
       }
     }
 
