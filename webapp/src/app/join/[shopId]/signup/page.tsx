@@ -97,6 +97,19 @@ export default function CustomerSignupPage() {
     try {
       const supabase = getSupabaseClient();
 
+      // First check if email already exists in profiles
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('email', email.toLowerCase().trim())
+        .single();
+
+      if (existingProfile) {
+        setError('This email is already registered. Please sign in instead.');
+        setSubmitting(false);
+        return;
+      }
+
       // Sign up the user
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: email.toLowerCase().trim(),
@@ -145,16 +158,13 @@ export default function CustomerSignupPage() {
 
       if (!linkResponse.ok) {
         console.error('Failed to link customer to shop:', linkResult.error);
-        // If this is a duplicate email error (409), show it to the user
-        if (linkResponse.status === 409) {
-          setError(linkResult.error || 'This email is already registered. Please sign in instead.');
-          setSubmitting(false);
-          return;
-        }
-        // For other errors, continue anyway - user account was created
-      } else {
-        console.log('Customer successfully linked to shop:', linkResult);
+        // Show error to user - don't continue with broken profile
+        setError(linkResult.error || 'Failed to complete registration. Please try signing in or contact support.');
+        setSubmitting(false);
+        return;
       }
+
+      console.log('Customer successfully linked to shop:', linkResult);
 
       // Redirect to customer dashboard
       router.push('/customer?welcome=true');
