@@ -25,6 +25,7 @@ interface ServiceWithOnlineInfo {
 interface BookingEmailData {
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   ownerName?: string;
   ownerEmail?: string;
   providerName?: string;
@@ -190,6 +191,14 @@ const generateBookingEmailHTML = (
               ${data.customerName}
             </td>
           </tr>
+          ${data.customerPhone ? `
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Customer Phone</td>
+            <td style="padding: 8px 0; color: #09264b; font-weight: 600; font-size: 14px; text-align: right;">
+              <a href="tel:${data.customerPhone}" style="color: #0393d5; text-decoration: none;">📞 ${data.customerPhone}</a>
+            </td>
+          </tr>
+          ` : ''}
           ` : ''}
         </table>
       </div>

@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Fetch customer details
     const { data: customer, error: customerError } = await supabase
       .from('profiles')
-      .select('id, name, email')
+      .select('id, name, email, phone')
       .eq('id', booking.customer_id)
       .single();
 
@@ -133,6 +133,7 @@ export async function POST(request: NextRequest) {
     const emailData = {
       customerName: customer.name || 'Customer',
       customerEmail: customer.email,
+      customerPhone: customer.phone || undefined,
       ownerName: owner?.name,
       ownerEmail: owner?.email,
       providerName: provider?.name,
