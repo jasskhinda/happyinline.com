@@ -210,15 +210,8 @@ export default function BookingPage() {
     console.log('hasFormatConflict:', hasFormatConflict);
   }
 
-  // Auto-correct bookingFormat if current selection is invalid
-  // (e.g., user selected online but then added an in-person only service)
-  useEffect(() => {
-    if (bookingFormat === 'online' && !canDoOnline && canDoInPerson) {
-      setBookingFormat('in_person');
-    } else if (bookingFormat === 'in_person' && !canDoInPerson && canDoOnline) {
-      setBookingFormat('online');
-    }
-  }, [selectedServices, bookingFormat, canDoOnline, canDoInPerson]);
+  // Note: We intentionally do NOT auto-correct bookingFormat
+  // We want users to see the conflict and manually resolve it
 
   // Check if booking format is valid (prevents continuing with invalid selection)
   const isFormatValid = (bookingFormat === 'in_person' && canDoInPerson) ||
@@ -923,52 +916,31 @@ export default function BookingPage() {
                   </div>
                 )}
 
-                {/* Format Selection - Only show if there are "both" type services AND no impossible conflict */}
-                {hasBothTypeServices && !hasImpossibleConflict && (
+                {/* Format Selection - Show when there are "both" type services */}
+                {hasBothTypeServices && (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => canDoInPerson && setBookingFormat('in_person')}
-                      disabled={!canDoInPerson}
+                      onClick={() => setBookingFormat('in_person')}
                       className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        !canDoInPerson
-                          ? 'bg-white/5 text-white/30 cursor-not-allowed opacity-50'
-                          : bookingFormat === 'in_person'
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        bookingFormat === 'in_person'
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
-                      title={!canDoInPerson ? 'Not available with current selection' : ''}
                     >
                       <MapPin className="w-4 h-4" />
                       In-Person
                     </button>
                     <button
-                      onClick={() => canDoOnline && setBookingFormat('online')}
-                      disabled={!canDoOnline}
+                      onClick={() => setBookingFormat('online')}
                       className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        !canDoOnline
-                          ? 'bg-white/5 text-white/30 cursor-not-allowed opacity-50'
-                          : bookingFormat === 'online'
-                            ? 'bg-purple-500 text-white'
-                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        bookingFormat === 'online'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
-                      title={!canDoOnline ? 'Not available with current selection' : ''}
                     >
                       <Video className="w-4 h-4" />
                       Online
                     </button>
-                  </div>
-                )}
-
-                {/* Conflict hint when a format is disabled */}
-                {hasBothTypeServices && !hasImpossibleConflict && (!canDoInPerson || !canDoOnline) && (
-                  <div className="flex items-center gap-1.5 text-white/50 text-xs">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>
-                      {!canDoInPerson
-                        ? 'Online-only service selected'
-                        : 'In-person only service selected'
-                      }
-                    </span>
                   </div>
                 )}
 
