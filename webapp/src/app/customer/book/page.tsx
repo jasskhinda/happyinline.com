@@ -188,6 +188,21 @@ export default function BookingPage() {
   // Is there an impossible conflict? (has both in-person-only AND online-only)
   const hasImpossibleConflict = inPersonOnlyServices.length > 0 && onlineOnlyServices.length > 0;
 
+  // Auto-correct bookingFormat if current selection is invalid
+  // (e.g., user selected online but then added an in-person only service)
+  useEffect(() => {
+    if (bookingFormat === 'online' && !canDoOnline && canDoInPerson) {
+      setBookingFormat('in_person');
+    } else if (bookingFormat === 'in_person' && !canDoInPerson && canDoOnline) {
+      setBookingFormat('online');
+    }
+  }, [selectedServices, bookingFormat, canDoOnline, canDoInPerson]);
+
+  // Check if booking format is valid (prevents continuing with invalid selection)
+  const isFormatValid = (bookingFormat === 'in_person' && canDoInPerson) ||
+                        (bookingFormat === 'online' && canDoOnline) ||
+                        (!hasBothTypeServices && !hasImpossibleConflict);
+
   // Get the effective service type for display/booking
   const getEffectiveServiceType = (service: Service): 'in_person' | 'online' => {
     if (service.service_type === 'both') {
@@ -916,9 +931,9 @@ export default function BookingPage() {
                 {/* Continue Button */}
                 <button
                   onClick={handleNext}
-                  disabled={hasImpossibleConflict}
+                  disabled={hasImpossibleConflict || !isFormatValid}
                   className={`px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg ${
-                    hasImpossibleConflict
+                    hasImpossibleConflict || !isFormatValid
                       ? 'bg-gray-500 text-white/50 cursor-not-allowed'
                       : 'bg-[var(--brand)] text-white hover:bg-[var(--brand)]/80'
                   }`}
