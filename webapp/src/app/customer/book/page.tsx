@@ -191,6 +191,11 @@ export default function BookingPage() {
   // Is there an impossible conflict? (has both in-person-only AND online-only)
   const hasImpossibleConflict = inPersonOnlyServices.length > 0 && onlineOnlyServices.length > 0;
 
+  // Check if selected format conflicts with any selected service
+  // e.g., user chose "Online" but has in-person only services selected
+  const hasFormatConflict = (bookingFormat === 'online' && inPersonOnlyServices.length > 0) ||
+                            (bookingFormat === 'in_person' && onlineOnlyServices.length > 0);
+
   // DEBUG: Log conflict detection info
   if (selectedServices.length > 0) {
     console.log('=== SERVICE FORMAT DEBUG ===');
@@ -201,7 +206,8 @@ export default function BookingPage() {
     console.log('In-person only:', inPersonOnlyServices.map(s => s.name));
     console.log('Online only:', onlineOnlyServices.map(s => s.name));
     console.log('Both type (flexible):', selectedServices.filter(s => s.service_type === 'both').map(s => s.name));
-    console.log('hasImpossibleConflict:', hasImpossibleConflict);
+    console.log('Selected format:', bookingFormat);
+    console.log('hasFormatConflict:', hasFormatConflict);
   }
 
   // Auto-correct bookingFormat if current selection is invalid
@@ -524,11 +530,18 @@ export default function BookingPage() {
                   {services.map(service => {
                     const isSelected = selectedServices.find(s => s.id === service.id);
 
-                    // Check if this service is causing a conflict
-                    // A service conflicts if it's selected AND there's an impossible conflict AND it's one of the conflicting types
+                    // Check if this service conflicts with the selected booking format
                     const isInPersonOnly = service.service_type === 'in_person' || !service.service_type;
                     const isOnlineOnly = service.service_type === 'online';
-                    const isConflicting = isSelected && hasImpossibleConflict && (isInPersonOnly || isOnlineOnly);
+
+                    // Service conflicts if:
+                    // 1. It's selected AND
+                    // 2. User chose "Online" but service is in-person only, OR
+                    // 3. User chose "In-Person" but service is online only
+                    const isConflicting = isSelected && (
+                      (bookingFormat === 'online' && isInPersonOnly) ||
+                      (bookingFormat === 'in_person' && isOnlineOnly)
+                    );
 
                     return (
                       <div key={service.id} className="space-y-2">
@@ -898,12 +911,14 @@ export default function BookingPage() {
                   </p>
                 </div>
 
-                {/* Impossible Conflict Warning */}
-                {hasImpossibleConflict && (
+                {/* Format Conflict Warning */}
+                {hasFormatConflict && (
                   <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
                     <span className="text-red-200 text-sm">
-                      Service conflict detected. Remove the highlighted services or choose compatible options to continue.
+                      {bookingFormat === 'online'
+                        ? 'Some services are not available online. Remove the highlighted services or switch to In-Person.'
+                        : 'Some services are only available online. Remove the highlighted services or switch to Online.'}
                     </span>
                   </div>
                 )}
@@ -960,9 +975,9 @@ export default function BookingPage() {
                 {/* Continue Button */}
                 <button
                   onClick={handleNext}
-                  disabled={hasImpossibleConflict || !isFormatValid}
+                  disabled={hasFormatConflict || !isFormatValid}
                   className={`px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg ${
-                    hasImpossibleConflict || !isFormatValid
+                    hasFormatConflict || !isFormatValid
                       ? 'bg-gray-500 text-white/50 cursor-not-allowed'
                       : 'bg-[var(--brand)] text-white hover:bg-[var(--brand)]/80'
                   }`}
