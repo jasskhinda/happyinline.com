@@ -510,14 +510,23 @@ export default function BookingPage() {
                 <div className="space-y-3">
                   {services.map(service => {
                     const isSelected = selectedServices.find(s => s.id === service.id);
+
+                    // Check if this service is causing a conflict
+                    // A service conflicts if it's selected AND there's an impossible conflict AND it's one of the conflicting types
+                    const isInPersonOnly = service.service_type === 'in_person' || !service.service_type;
+                    const isOnlineOnly = service.service_type === 'online';
+                    const isConflicting = isSelected && hasImpossibleConflict && (isInPersonOnly || isOnlineOnly);
+
                     return (
                       <div key={service.id} className="space-y-2">
                         <button
                           onClick={() => toggleService(service)}
                           className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
-                            isSelected
-                              ? 'border-[var(--brand)] bg-[var(--brand)]/20'
-                              : 'border-white/20 hover:border-white/40 bg-white/5'
+                            isConflicting
+                              ? 'border-red-500 bg-red-500/20'
+                              : isSelected
+                                ? 'border-[var(--brand)] bg-[var(--brand)]/20'
+                                : 'border-white/20 hover:border-white/40 bg-white/5'
                           }`}
                         >
                           <div className="flex justify-between items-start">
@@ -552,8 +561,12 @@ export default function BookingPage() {
                               <p className="text-sm text-white/60 mt-1">{service.duration} min</p>
                             </div>
                             <div className="text-right ml-3">
-                              <p className="font-semibold text-[var(--brand)]">${service.price}</p>
-                              {isSelected && (
+                              <p className={`font-semibold ${isConflicting ? 'text-red-400' : 'text-[var(--brand)]'}`}>${service.price}</p>
+                              {isConflicting ? (
+                                <div className="flex items-center gap-1 mt-1 justify-end">
+                                  <AlertCircle className="w-5 h-5 text-red-400" />
+                                </div>
+                              ) : isSelected && (
                                 <CheckCircle className="w-5 h-5 text-[var(--brand)] mt-1 ml-auto" />
                               )}
                             </div>
@@ -874,10 +887,10 @@ export default function BookingPage() {
 
                 {/* Impossible Conflict Warning */}
                 {hasImpossibleConflict && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/20 border border-amber-500/30 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                    <span className="text-amber-200 text-sm">
-                      These services require different formats. Please select services with compatible availability.
+                  <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    <span className="text-red-200 text-sm">
+                      Service conflict detected. Remove the highlighted services or choose compatible options to continue.
                     </span>
                   </div>
                 )}
