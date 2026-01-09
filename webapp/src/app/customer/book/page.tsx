@@ -886,11 +886,11 @@ export default function BookingPage() {
                 {hasBothTypeServices && !hasImpossibleConflict && (
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setBookingFormat('in_person')}
+                      onClick={() => canDoInPerson && setBookingFormat('in_person')}
                       disabled={!canDoInPerson}
                       className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                         !canDoInPerson
-                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed opacity-50'
                           : bookingFormat === 'in_person'
                             ? 'bg-emerald-500 text-white'
                             : 'bg-white/10 text-white/70 hover:bg-white/20'
@@ -901,11 +901,11 @@ export default function BookingPage() {
                       In-Person
                     </button>
                     <button
-                      onClick={() => setBookingFormat('online')}
+                      onClick={() => canDoOnline && setBookingFormat('online')}
                       disabled={!canDoOnline}
                       className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                         !canDoOnline
-                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed opacity-50'
                           : bookingFormat === 'online'
                             ? 'bg-purple-500 text-white'
                             : 'bg-white/10 text-white/70 hover:bg-white/20'
