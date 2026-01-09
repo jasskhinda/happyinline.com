@@ -856,10 +856,10 @@ export default function BookingPage() {
 
                 {/* Impossible Conflict Warning */}
                 {hasImpossibleConflict && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                    <span className="text-red-300 text-sm">
-                      Can't book together - remove {onlineOnlyServices.map(s => s.name).join(', ')} (online only) or {inPersonOnlyServices.map(s => s.name).join(', ')} (in-person only)
+                  <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/20 border border-amber-500/30 rounded-lg">
+                    <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                    <span className="text-amber-200 text-sm">
+                      These services require different formats. Please select services with compatible availability.
                     </span>
                   </div>
                 )}
@@ -877,7 +877,7 @@ export default function BookingPage() {
                             ? 'bg-emerald-500 text-white'
                             : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
-                      title={!canDoInPerson ? `Remove ${onlineOnlyServices.map(s => s.name).join(', ')} to select In-Person` : ''}
+                      title={!canDoInPerson ? 'Not available with current selection' : ''}
                     >
                       <MapPin className="w-4 h-4" />
                       In-Person
@@ -892,7 +892,7 @@ export default function BookingPage() {
                             ? 'bg-purple-500 text-white'
                             : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
-                      title={!canDoOnline ? `Remove ${inPersonOnlyServices.map(s => s.name).join(', ')} to select Online` : ''}
+                      title={!canDoOnline ? 'Not available with current selection' : ''}
                     >
                       <Video className="w-4 h-4" />
                       Online
@@ -902,12 +902,12 @@ export default function BookingPage() {
 
                 {/* Conflict hint when a format is disabled */}
                 {hasBothTypeServices && !hasImpossibleConflict && (!canDoInPerson || !canDoOnline) && (
-                  <div className="flex items-center gap-1.5 text-amber-400 text-xs">
+                  <div className="flex items-center gap-1.5 text-white/50 text-xs">
                     <AlertCircle className="w-3.5 h-3.5" />
                     <span>
                       {!canDoInPerson
-                        ? `Remove "${onlineOnlyServices[0]?.name}" for in-person`
-                        : `Remove "${inPersonOnlyServices[0]?.name}" for online`
+                        ? 'Online-only service selected'
+                        : 'In-person only service selected'
                       }
                     </span>
                   </div>
