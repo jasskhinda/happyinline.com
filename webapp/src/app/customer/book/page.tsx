@@ -191,6 +191,13 @@ export default function BookingPage() {
   // Is there an impossible conflict? (has both in-person-only AND online-only)
   const hasImpossibleConflict = inPersonOnlyServices.length > 0 && onlineOnlyServices.length > 0;
 
+  // DEBUG: Log conflict detection info
+  console.log('=== SERVICE FORMAT DEBUG ===');
+  console.log('Selected services:', selectedServices.map(s => ({ name: s.name, service_type: s.service_type })));
+  console.log('In-person only:', inPersonOnlyServices.map(s => s.name));
+  console.log('Online only:', onlineOnlyServices.map(s => s.name));
+  console.log('hasImpossibleConflict:', hasImpossibleConflict);
+
   // Auto-correct bookingFormat if current selection is invalid
   // (e.g., user selected online but then added an in-person only service)
   useEffect(() => {
