@@ -177,7 +177,10 @@ export default function BookingPage() {
   const hasBothTypeServices = selectedServices.some(s => s.service_type === 'both');
 
   // Check for format conflicts
-  const inPersonOnlyServices = selectedServices.filter(s => s.service_type === 'in_person');
+  // Note: services with null/undefined service_type are treated as in_person only
+  const inPersonOnlyServices = selectedServices.filter(s =>
+    s.service_type === 'in_person' || !s.service_type
+  );
   const onlineOnlyServices = selectedServices.filter(s => s.service_type === 'online');
 
   // Can we do in-person? Only if there are no online-only services
