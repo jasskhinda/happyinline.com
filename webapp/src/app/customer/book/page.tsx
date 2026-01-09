@@ -99,8 +99,8 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
 
-  // Track customer's format choice for services with "both" type
-  const [serviceFormatChoices, setServiceFormatChoices] = useState<Record<string, ServiceFormatChoice>>({});
+  // Single booking-wide format choice (applies to all services with "both" type)
+  const [bookingFormat, setBookingFormat] = useState<ServiceFormatChoice>('in_person');
 
   // Available time slots
   const [availableSlots, setAvailableSlots] = useState<{ value: string; display: string }[]>([]);
@@ -167,35 +167,19 @@ export default function BookingPage() {
     setSelectedServices(prev => {
       const exists = prev.find(s => s.id === service.id);
       if (exists) {
-        // Remove format choice when deselecting
-        setServiceFormatChoices(choices => {
-          const newChoices = { ...choices };
-          delete newChoices[service.id];
-          return newChoices;
-        });
         return prev.filter(s => s.id !== service.id);
       }
       return [...prev, service];
     });
   };
 
-  const setServiceFormat = (serviceId: string, format: ServiceFormatChoice) => {
-    setServiceFormatChoices(prev => ({
-      ...prev,
-      [serviceId]: format
-    }));
-  };
-
-  // Check if all "both" type services have a format selected
-  const allFormatsSelected = () => {
-    const bothServices = selectedServices.filter(s => s.service_type === 'both');
-    return bothServices.every(s => serviceFormatChoices[s.id]);
-  };
+  // Check if any service has "both" type (needs format selection)
+  const hasBothTypeServices = selectedServices.some(s => s.service_type === 'both');
 
   // Get the effective service type for display/booking
   const getEffectiveServiceType = (service: Service): 'in_person' | 'online' => {
     if (service.service_type === 'both') {
-      return serviceFormatChoices[service.id] || 'in_person';
+      return bookingFormat;
     }
     return service.service_type === 'online' ? 'online' : 'in_person';
   };
@@ -204,7 +188,7 @@ export default function BookingPage() {
   const hasOnlineService = () => {
     return selectedServices.some(s => {
       if (s.service_type === 'online') return true;
-      if (s.service_type === 'both' && serviceFormatChoices[s.id] === 'online') return true;
+      if (s.service_type === 'both' && bookingFormat === 'online') return true;
       return false;
     });
   };
@@ -314,7 +298,7 @@ export default function BookingPage() {
   };
 
   const handleNext = async () => {
-    if (step === 'services' && selectedServices.length > 0 && allFormatsSelected()) {
+    if (step === 'services' && selectedServices.length > 0) {
       // Fetch providers who can perform the selected services
       setLoadingProviders(true);
       setNoQualifiedProviders(false);
@@ -375,7 +359,7 @@ export default function BookingPage() {
           // Determine the chosen format for each service
           let chosen_format: 'in_person' | 'online';
           if (s.service_type === 'both') {
-            chosen_format = serviceFormatChoices[s.id] || 'in_person';
+            chosen_format = bookingFormat;
           } else if (s.service_type === 'online') {
             chosen_format = 'online';
           } else {
@@ -546,55 +530,47 @@ export default function BookingPage() {
                           </div>
                         </button>
 
-                        {/* Format Selection for "both" type services when selected */}
-                        {isSelected && service.service_type === 'both' && (
-                          <div className="ml-4 p-3 bg-white/5 rounded-lg border border-white/10">
-                            <p className="text-sm text-white/80 mb-2">How would you like this service?</p>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setServiceFormat(service.id, 'in_person');
-                                }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                                  serviceFormatChoices[service.id] === 'in_person'
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                                }`}
-                              >
-                                <MapPin className="w-4 h-4" />
-                                In-Person
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setServiceFormat(service.id, 'online');
-                                }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                                  serviceFormatChoices[service.id] === 'online'
-                                    ? 'bg-purple-500 text-white'
-                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                                }`}
-                              >
-                                <Video className="w-4 h-4" />
-                                Online
-                              </button>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     );
                   })}
                 </div>
               )}
 
-              {/* Show format warning inline if needed */}
-              {selectedServices.length > 0 && !allFormatsSelected() && (
-                <div className="mt-4 bg-amber-500/20 border border-amber-500/30 rounded-lg p-3 flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-amber-200 text-sm">
-                    Please select In-Person or Online for the highlighted services above.
-                  </p>
+              {/* Single Format Selection for all "both" type services */}
+              {hasBothTypeServices && (
+                <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/20">
+                  <p className="text-white font-medium mb-2">How would you like your appointment?</p>
+                  <p className="text-sm text-white/60 mb-4">This applies to all services in your booking.</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setBookingFormat('in_person')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                        bookingFormat === 'in_person'
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
+                      }`}
+                    >
+                      <MapPin className="w-5 h-5" />
+                      In-Person
+                    </button>
+                    <button
+                      onClick={() => setBookingFormat('online')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-medium transition-all ${
+                        bookingFormat === 'online'
+                          ? 'bg-purple-500 text-white'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
+                      }`}
+                    >
+                      <Video className="w-5 h-5" />
+                      Online
+                    </button>
+                  </div>
+                  {bookingFormat === 'online' && (
+                    <div className="mt-3 p-3 bg-purple-500/20 rounded-lg border border-purple-500/30 flex items-start gap-2">
+                      <Video className="w-4 h-4 text-purple-300 flex-shrink-0 mt-0.5" />
+                      <p className="text-purple-200 text-sm">You'll receive meeting details via email after booking.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -906,8 +882,7 @@ export default function BookingPage() {
                 {/* Continue Button */}
                 <button
                   onClick={handleNext}
-                  disabled={!allFormatsSelected()}
-                  className="px-6 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                  className="px-6 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors flex items-center gap-2 shadow-lg"
                 >
                   Continue
                   <ArrowRight className="w-5 h-5" />
