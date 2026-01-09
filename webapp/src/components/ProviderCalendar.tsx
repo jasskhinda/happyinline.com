@@ -23,16 +23,20 @@ import { Booking } from '@/lib/shop';
 
 interface ProviderCalendarProps {
   bookings: Booking[];
-  onUpdateStatus: (bookingId: string, status: 'confirmed' | 'completed' | 'cancelled') => Promise<void>;
-  onReschedule: (booking: Booking) => void;
+  onUpdateStatus?: (bookingId: string, status: 'confirmed' | 'completed' | 'cancelled') => Promise<void>;
+  onReschedule?: (booking: Booking) => void;
   processingBookingId: string | null;
+  readOnly?: boolean;
+  showProviderName?: boolean;
 }
 
 export default function ProviderCalendar({
   bookings,
   onUpdateStatus,
   onReschedule,
-  processingBookingId
+  processingBookingId,
+  readOnly = false,
+  showProviderName = false
 }: ProviderCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -287,6 +291,18 @@ export default function ProviderCalendar({
                       </span>
                     </div>
 
+                    {/* Provider Name (for Shop Schedule view) */}
+                    {showProviderName && booking.barber?.name && (
+                      <div className="bg-[#0393d5]/20 rounded-lg px-3 py-2 mb-3 border border-[#0393d5]/30">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#0393d5] flex items-center justify-center text-white text-xs font-medium">
+                            {booking.barber.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-[#0393d5] font-medium text-sm">{booking.barber.name}</span>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Customer Info */}
                     <div className="space-y-2 mb-3">
                       <div className="flex items-center gap-2">
@@ -368,8 +384,8 @@ export default function ProviderCalendar({
                       <span className="text-white font-bold">${booking.total_amount}</span>
                     </div>
 
-                    {/* Actions */}
-                    {booking.status === 'pending' && (
+                    {/* Actions (only shown when not read-only) */}
+                    {!readOnly && booking.status === 'pending' && onUpdateStatus && (
                       <div className="flex gap-2">
                         <button
                           onClick={() => onUpdateStatus(booking.id, 'confirmed')}
@@ -394,7 +410,7 @@ export default function ProviderCalendar({
                       </div>
                     )}
 
-                    {booking.status === 'confirmed' && (
+                    {!readOnly && booking.status === 'confirmed' && onUpdateStatus && onReschedule && (
                       <div className="flex gap-2">
                         <button
                           onClick={() => onReschedule(booking)}

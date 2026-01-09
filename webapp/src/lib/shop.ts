@@ -984,6 +984,111 @@ export const getProviderBookings = async (
 };
 
 /**
+ * Get ALL shop bookings for a provider's shop (all providers, all customers)
+ * Used for the "Shop Schedule" view
+ */
+export const getAllShopBookingsForProvider = async (
+  providerId: string,
+  filters?: { status?: string; date?: string }
+): Promise<{ success: boolean; bookings?: Booking[]; shop?: Shop; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // First, get the shop this provider belongs to
+    const { data: staffRecord, error: staffError } = await supabase
+      .from('shop_staff')
+      .select('shop_id')
+      .eq('user_id', providerId)
+      .eq('is_active', true)
+      .single();
+
+    if (staffError || !staffRecord) {
+      return { success: false, error: 'Provider not assigned to any shop' };
+    }
+
+    // Get shop details
+    const { data: shop, error: shopError } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('id', staffRecord.shop_id)
+      .single();
+
+    if (shopError) {
+      return { success: false, error: 'Failed to fetch shop details' };
+    }
+
+    // Get ALL bookings for the shop (not filtered by provider)
+    let query = supabase
+      .from('bookings')
+      .select(`
+        *,
+        customer:profiles!bookings_customer_id_fkey(id, name, email, phone, profile_image),
+        barber:profiles!bookings_barber_id_fkey(id, name, profile_image)
+      `)
+      .eq('shop_id', staffRecord.shop_id);
+
+    if (filters?.status) {
+      query = query.eq('status', filters.status);
+    }
+    if (filters?.date) {
+      query = query.eq('appointment_date', filters.date);
+    }
+
+    query = query
+      .order('appointment_date', { ascending: true })
+      .order('appointment_time', { ascending: true });
+
+    const { data: bookings, error } = await query;
+
+    if (error) {
+      console.error('Error fetching all shop bookings:', error);
+      return { success: false, error: error.message };
+    }
+
+    // Enrich bookings with full service details (including online meeting info)
+    if (bookings && bookings.length > 0) {
+      const serviceIds = new Set<string>();
+      bookings.forEach((booking: any) => {
+        (booking.services || []).forEach((s: any) => {
+          if (s.id) serviceIds.add(s.id);
+        });
+      });
+
+      if (serviceIds.size > 0) {
+        const { data: fullServices } = await supabase
+          .from('shop_services')
+          .select('id, service_type, online_meeting_link, online_meeting_password, online_instructions')
+          .in('id', Array.from(serviceIds));
+
+        if (fullServices && fullServices.length > 0) {
+          const serviceMap = new Map(fullServices.map((s: any) => [s.id, s]));
+
+          bookings.forEach((booking: any) => {
+            if (booking.services) {
+              booking.services = booking.services.map((s: any) => {
+                const fullService = serviceMap.get(s.id) as any;
+                return {
+                  ...s,
+                  service_type: fullService?.service_type || 'in_person',
+                  online_meeting_link: fullService?.online_meeting_link || null,
+                  online_meeting_password: fullService?.online_meeting_password || null,
+                  online_instructions: fullService?.online_instructions || null
+                };
+              });
+            }
+          });
+        }
+      }
+    }
+
+    return { success: true, bookings: bookings || [], shop };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Get shop that a provider belongs to
  */
 export const getProviderShop = async (providerId: string): Promise<{ success: boolean; shop?: Shop; error?: string }> => {

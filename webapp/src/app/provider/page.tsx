@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getProfile, Profile } from '@/lib/auth';
-import { getProviderBookings, updateBookingStatus, rescheduleBooking, Shop, Booking } from '@/lib/shop';
+import { getProviderBookings, getAllShopBookingsForProvider, updateBookingStatus, rescheduleBooking, Shop, Booking } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProviderCalendar from '@/components/ProviderCalendar';
@@ -18,7 +18,8 @@ import {
   CalendarDays,
   CalendarClock,
   Link as LinkIcon,
-  Unlink
+  Unlink,
+  Users
 } from 'lucide-react';
 
 function ProviderDashboardContent() {
@@ -30,6 +31,8 @@ function ProviderDashboardContent() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [allShopBookings, setAllShopBookings] = useState<Booking[]>([]);
+  const [activeTab, setActiveTab] = useState<'my' | 'shop'>('my');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -106,6 +109,12 @@ function ProviderDashboardContent() {
 
       setShop(result.shop || null);
       setBookings(result.bookings || []);
+
+      // Also fetch all shop bookings for the "Shop Schedule" tab
+      const allShopResult = await getAllShopBookingsForProvider(user.id);
+      if (allShopResult.success) {
+        setAllShopBookings(allShopResult.bookings || []);
+      }
     } catch (err) {
       console.error('Failed to load data:', err);
       setError('Failed to load data');
@@ -410,12 +419,52 @@ function ProviderDashboardContent() {
           </div>
         </div>
 
+        {/* Calendar Tabs */}
+        <div className="mb-6">
+          <div className="flex gap-2 p-1 bg-white/5 rounded-xl w-fit">
+            <button
+              onClick={() => setActiveTab('my')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === 'my'
+                  ? 'bg-[#0393d5] text-white shadow-lg'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Calendar className="w-5 h-5" />
+              My Schedule
+            </button>
+            <button
+              onClick={() => setActiveTab('shop')}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                activeTab === 'shop'
+                  ? 'bg-[#0393d5] text-white shadow-lg'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              Shop Schedule
+              {allShopBookings.length > bookings.length && (
+                <span className="ml-1 px-2 py-0.5 text-xs bg-white/20 rounded-full">
+                  {allShopBookings.length}
+                </span>
+              )}
+            </button>
+          </div>
+          {activeTab === 'shop' && (
+            <p className="text-white/60 text-sm mt-2">
+              Viewing all appointments across the shop (read-only)
+            </p>
+          )}
+        </div>
+
         {/* Calendar View */}
         <ProviderCalendar
-          bookings={bookings}
-          onUpdateStatus={handleUpdateStatus}
-          onReschedule={openRescheduleModal}
+          bookings={activeTab === 'my' ? bookings : allShopBookings}
+          onUpdateStatus={activeTab === 'my' ? handleUpdateStatus : undefined}
+          onReschedule={activeTab === 'my' ? openRescheduleModal : undefined}
           processingBookingId={processingBookingId}
+          readOnly={activeTab === 'shop'}
+          showProviderName={activeTab === 'shop'}
         />
       </main>
 
