@@ -183,11 +183,6 @@ export default function BookingPage() {
   );
   const onlineOnlyServices = selectedServices.filter(s => s.service_type === 'online');
 
-  // Can we do in-person? Only if there are no online-only services
-  const canDoInPerson = onlineOnlyServices.length === 0;
-  // Can we do online? Only if there are no in-person-only services
-  const canDoOnline = inPersonOnlyServices.length === 0;
-
   // Is there an impossible conflict? (has both in-person-only AND online-only)
   const hasImpossibleConflict = inPersonOnlyServices.length > 0 && onlineOnlyServices.length > 0;
 
@@ -196,27 +191,12 @@ export default function BookingPage() {
   const hasFormatConflict = (bookingFormat === 'online' && inPersonOnlyServices.length > 0) ||
                             (bookingFormat === 'in_person' && onlineOnlyServices.length > 0);
 
-  // DEBUG: Log conflict detection info
-  if (selectedServices.length > 0) {
-    console.log('=== SERVICE FORMAT DEBUG ===');
-    console.log('All selected services with types:');
-    selectedServices.forEach(s => {
-      console.log(`  - ${s.name}: service_type="${s.service_type}" (type: ${typeof s.service_type})`);
-    });
-    console.log('In-person only:', inPersonOnlyServices.map(s => s.name));
-    console.log('Online only:', onlineOnlyServices.map(s => s.name));
-    console.log('Both type (flexible):', selectedServices.filter(s => s.service_type === 'both').map(s => s.name));
-    console.log('Selected format:', bookingFormat);
-    console.log('hasFormatConflict:', hasFormatConflict);
-  }
-
   // Note: We intentionally do NOT auto-correct bookingFormat
   // We want users to see the conflict and manually resolve it
 
-  // Check if booking format is valid (prevents continuing with invalid selection)
-  const isFormatValid = (bookingFormat === 'in_person' && canDoInPerson) ||
-                        (bookingFormat === 'online' && canDoOnline) ||
-                        (!hasBothTypeServices && !hasImpossibleConflict);
+  // Continue button should be disabled if there's any format conflict
+  // hasFormatConflict already covers all cases where selected format doesn't match selected services
+  const canContinue = !hasFormatConflict && !hasImpossibleConflict;
 
   // Get the effective service type for display/booking
   const getEffectiveServiceType = (service: Service): 'in_person' | 'online' => {
@@ -947,9 +927,9 @@ export default function BookingPage() {
                 {/* Continue Button */}
                 <button
                   onClick={handleNext}
-                  disabled={hasFormatConflict || !isFormatValid}
+                  disabled={!canContinue}
                   className={`px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg ${
-                    hasFormatConflict || !isFormatValid
+                    !canContinue
                       ? 'bg-gray-500 text-white/50 cursor-not-allowed'
                       : 'bg-[var(--brand)] text-white hover:bg-[var(--brand)]/80'
                   }`}
