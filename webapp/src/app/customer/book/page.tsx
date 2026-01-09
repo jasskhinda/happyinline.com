@@ -176,6 +176,18 @@ export default function BookingPage() {
   // Check if any service has "both" type (needs format selection)
   const hasBothTypeServices = selectedServices.some(s => s.service_type === 'both');
 
+  // Check for format conflicts
+  const inPersonOnlyServices = selectedServices.filter(s => s.service_type === 'in_person');
+  const onlineOnlyServices = selectedServices.filter(s => s.service_type === 'online');
+
+  // Can we do in-person? Only if there are no online-only services
+  const canDoInPerson = onlineOnlyServices.length === 0;
+  // Can we do online? Only if there are no in-person-only services
+  const canDoOnline = inPersonOnlyServices.length === 0;
+
+  // Is there an impossible conflict? (has both in-person-only AND online-only)
+  const hasImpossibleConflict = inPersonOnlyServices.length > 0 && onlineOnlyServices.length > 0;
+
   // Get the effective service type for display/booking
   const getEffectiveServiceType = (service: Service): 'in_person' | 'online' => {
     if (service.service_type === 'both') {
@@ -842,27 +854,45 @@ export default function BookingPage() {
                   </p>
                 </div>
 
-                {/* Format Selection - Only show if any selected service supports both formats */}
-                {hasBothTypeServices && (
+                {/* Impossible Conflict Warning */}
+                {hasImpossibleConflict && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg">
+                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    <span className="text-red-300 text-sm">
+                      Can't book together - remove {onlineOnlyServices.map(s => s.name).join(', ')} (online only) or {inPersonOnlyServices.map(s => s.name).join(', ')} (in-person only)
+                    </span>
+                  </div>
+                )}
+
+                {/* Format Selection - Only show if there are "both" type services AND no impossible conflict */}
+                {hasBothTypeServices && !hasImpossibleConflict && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setBookingFormat('in_person')}
+                      disabled={!canDoInPerson}
                       className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        bookingFormat === 'in_person'
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        !canDoInPerson
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          : bookingFormat === 'in_person'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
+                      title={!canDoInPerson ? `Remove ${onlineOnlyServices.map(s => s.name).join(', ')} to select In-Person` : ''}
                     >
                       <MapPin className="w-4 h-4" />
                       In-Person
                     </button>
                     <button
                       onClick={() => setBookingFormat('online')}
+                      disabled={!canDoOnline}
                       className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        bookingFormat === 'online'
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        !canDoOnline
+                          ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                          : bookingFormat === 'online'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
                       }`}
+                      title={!canDoOnline ? `Remove ${inPersonOnlyServices.map(s => s.name).join(', ')} to select Online` : ''}
                     >
                       <Video className="w-4 h-4" />
                       Online
@@ -870,10 +900,28 @@ export default function BookingPage() {
                   </div>
                 )}
 
+                {/* Conflict hint when a format is disabled */}
+                {hasBothTypeServices && !hasImpossibleConflict && (!canDoInPerson || !canDoOnline) && (
+                  <div className="flex items-center gap-1.5 text-amber-400 text-xs">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>
+                      {!canDoInPerson
+                        ? `Remove "${onlineOnlyServices[0]?.name}" for in-person`
+                        : `Remove "${inPersonOnlyServices[0]?.name}" for online`
+                      }
+                    </span>
+                  </div>
+                )}
+
                 {/* Continue Button */}
                 <button
                   onClick={handleNext}
-                  className="px-6 py-3 bg-[var(--brand)] text-white rounded-xl font-medium hover:bg-[var(--brand)]/80 transition-colors flex items-center gap-2 shadow-lg"
+                  disabled={hasImpossibleConflict}
+                  className={`px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg ${
+                    hasImpossibleConflict
+                      ? 'bg-gray-500 text-white/50 cursor-not-allowed'
+                      : 'bg-[var(--brand)] text-white hover:bg-[var(--brand)]/80'
+                  }`}
                 >
                   Continue
                   <ArrowRight className="w-5 h-5" />
