@@ -36,10 +36,12 @@ export async function POST(request: NextRequest) {
     if (bookingError || !booking) {
       console.error('Error fetching booking:', bookingError);
       return NextResponse.json(
-        { error: 'Booking not found' },
+        { error: 'Booking not found', details: bookingError?.message },
         { status: 404 }
       );
     }
+
+    console.log('📧 Booking found:', { id: booking.id, shop_id: booking.shop_id, customer_id: booking.customer_id });
 
     // Fetch shop details
     const { data: shop, error: shopError } = await supabase
@@ -49,9 +51,9 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (shopError || !shop) {
-      console.error('Error fetching shop:', shopError);
+      console.error('Error fetching shop:', shopError, 'shop_id:', booking.shop_id);
       return NextResponse.json(
-        { error: 'Shop not found' },
+        { error: 'Shop not found', shop_id: booking.shop_id, details: shopError?.message },
         { status: 404 }
       );
     }
