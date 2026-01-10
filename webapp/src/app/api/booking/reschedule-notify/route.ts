@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Fetch shop details
     const { data: shop, error: shopError } = await supabase
       .from('shops')
-      .select('id, name, owner_id, address, city, state, zip_code')
+      .select('id, name, created_by, address, city, state, zip_code')
       .eq('id', booking.shop_id)
       .single();
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const { data: owner } = await supabase
       .from('profiles')
       .select('id, name, email')
-      .eq('id', shop.owner_id)
+      .eq('id', shop.created_by)
       .single();
 
     // Fetch provider details if assigned
