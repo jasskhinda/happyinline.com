@@ -411,6 +411,493 @@ export const sendBookingNotifications = async (data: BookingEmailData): Promise<
   };
 };
 
+// ============================================
+// CANCELLATION EMAIL FUNCTIONS
+// ============================================
+
+interface CancellationEmailData {
+  customerName: string;
+  customerEmail: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  providerName?: string;
+  providerEmail?: string;
+  shopName: string;
+  services: { name: string; price: number; duration: number }[];
+  appointmentDate: string;
+  appointmentTime: string;
+  totalAmount: number;
+  cancelledBy: 'customer' | 'business';
+  bookingId: string;
+}
+
+// Generate cancellation email HTML
+const generateCancellationEmailHTML = (
+  data: CancellationEmailData,
+  recipientType: 'customer' | 'owner' | 'provider'
+): string => {
+  const servicesHTML = data.services
+    .map(s => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee;">
+        <div>
+          <span style="color: #09264b; font-weight: 500;">${s.name}</span>
+          <div style="color: #888; font-size: 12px; margin-top: 4px;">${s.duration} min</div>
+        </div>
+        <span style="color: #09264b; font-weight: 600;">$${s.price.toFixed(2)}</span>
+      </div>
+    `)
+    .join('');
+
+  const greeting = recipientType === 'customer'
+    ? `Hi ${data.customerName},`
+    : recipientType === 'owner'
+    ? `Hi ${data.ownerName || 'Business Owner'},`
+    : `Hi ${data.providerName || 'Provider'},`;
+
+  const cancelMessage = data.cancelledBy === 'customer'
+    ? recipientType === 'customer'
+      ? 'Your appointment has been cancelled as requested.'
+      : `${data.customerName} has cancelled their appointment.`
+    : recipientType === 'customer'
+      ? 'Your appointment has been cancelled by the business.'
+      : 'The following appointment has been cancelled.';
+
+  const logoUrl = 'https://www.happyinline.com/logo.png';
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Cancelled - Happy InLine</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header with Logo -->
+    <div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
+      <img src="${logoUrl}" alt="Happy InLine" style="max-width: 180px; height: auto; margin-bottom: 10px;" />
+    </div>
+
+    <!-- Content -->
+    <div style="background: #ffffff; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #dc2626; margin: 0 0 10px 0; font-size: 22px;">
+        ❌ Appointment Cancelled
+      </h2>
+
+      <p style="color: #666; margin: 0 0 25px 0; font-size: 16px;">
+        ${greeting}<br><br>
+        ${cancelMessage}
+      </p>
+
+      <!-- Cancelled Appointment Details -->
+      <div style="background: #fef2f2; border-radius: 12px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #dc2626;">
+        <h3 style="color: #991b1b; margin: 0 0 15px 0; font-size: 18px;">
+          📋 Cancelled Appointment Details
+        </h3>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Date</td>
+            <td style="padding: 8px 0; color: #991b1b; font-weight: 600; font-size: 14px; text-align: right; text-decoration: line-through;">
+              ${formatDate(data.appointmentDate)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Time</td>
+            <td style="padding: 8px 0; color: #991b1b; font-weight: 600; font-size: 14px; text-align: right; text-decoration: line-through;">
+              ${formatTime(data.appointmentTime)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Business</td>
+            <td style="padding: 8px 0; color: #09264b; font-weight: 600; font-size: 14px; text-align: right;">
+              ${data.shopName}
+            </td>
+          </tr>
+          ${recipientType !== 'customer' ? `
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Customer</td>
+            <td style="padding: 8px 0; color: #09264b; font-weight: 600; font-size: 14px; text-align: right;">
+              ${data.customerName}
+            </td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      <!-- Services -->
+      <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #09264b; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #dc2626; padding-bottom: 10px;">
+          Services
+        </h3>
+        ${servicesHTML}
+        <div style="margin-top: 15px; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: #09264b; font-size: 18px;">Total</strong>
+          <strong style="color: #888; font-size: 20px; text-decoration: line-through;">$${data.totalAmount.toFixed(2)}</strong>
+        </div>
+      </div>
+
+      <!-- Footer Message -->
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #888; font-size: 14px; margin: 0;">
+          ${recipientType === 'customer'
+            ? 'We hope to see you again soon! Book a new appointment anytime.'
+            : 'This booking slot is now available for new appointments.'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Happy InLine. All rights reserved.</p>
+      <p style="margin: 5px 0 0 0; color: #0393d5;">Skip the wait. Join the line.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
+
+// Send cancellation notification to customer
+export const sendCustomerCancellationEmail = async (data: CancellationEmailData): Promise<{ success: boolean; error?: string }> => {
+  try {
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: data.customerEmail,
+      subject: `Appointment Cancelled - ${data.shopName}`,
+      html: generateCancellationEmailHTML(data, 'customer'),
+    });
+    console.log(`✅ Cancellation email sent to customer ${data.customerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send customer cancellation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send cancellation notification to owner
+export const sendOwnerCancellationEmail = async (data: CancellationEmailData): Promise<{ success: boolean; error?: string }> => {
+  if (!data.ownerEmail) {
+    return { success: false, error: 'No owner email provided' };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: data.ownerEmail,
+      subject: `Booking Cancelled - ${data.customerName} on ${formatDate(data.appointmentDate)}`,
+      html: generateCancellationEmailHTML(data, 'owner'),
+    });
+    console.log(`✅ Cancellation email sent to owner ${data.ownerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send owner cancellation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send cancellation notification to provider
+export const sendProviderCancellationEmail = async (data: CancellationEmailData): Promise<{ success: boolean; error?: string }> => {
+  if (!data.providerEmail) {
+    return { success: false, error: 'No provider email provided' };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: data.providerEmail,
+      subject: `Booking Cancelled - ${data.customerName} on ${formatDate(data.appointmentDate)}`,
+      html: generateCancellationEmailHTML(data, 'provider'),
+    });
+    console.log(`✅ Cancellation email sent to provider ${data.providerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send provider cancellation email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send all cancellation notification emails
+export const sendCancellationNotifications = async (data: CancellationEmailData): Promise<{
+  customerSent: boolean;
+  ownerSent: boolean;
+  providerSent: boolean;
+}> => {
+  const results = await Promise.all([
+    sendCustomerCancellationEmail(data),
+    sendOwnerCancellationEmail(data),
+    data.providerEmail ? sendProviderCancellationEmail(data) : Promise.resolve({ success: false }),
+  ]);
+
+  return {
+    customerSent: results[0].success,
+    ownerSent: results[1].success,
+    providerSent: results[2].success,
+  };
+};
+
+// ============================================
+// RESCHEDULE EMAIL FUNCTIONS
+// ============================================
+
+interface RescheduleEmailData {
+  customerName: string;
+  customerEmail: string;
+  ownerName?: string;
+  ownerEmail?: string;
+  providerName?: string;
+  providerEmail?: string;
+  shopName: string;
+  shopAddress?: string;
+  services: { name: string; price: number; duration: number }[];
+  oldDate: string;
+  oldTime: string;
+  newDate: string;
+  newTime: string;
+  totalAmount: number;
+  rescheduledBy: 'customer' | 'business';
+  bookingId: string;
+}
+
+// Generate reschedule email HTML
+const generateRescheduleEmailHTML = (
+  data: RescheduleEmailData,
+  recipientType: 'customer' | 'owner' | 'provider'
+): string => {
+  const servicesHTML = data.services
+    .map(s => `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee;">
+        <div>
+          <span style="color: #09264b; font-weight: 500;">${s.name}</span>
+          <div style="color: #888; font-size: 12px; margin-top: 4px;">${s.duration} min</div>
+        </div>
+        <span style="color: #09264b; font-weight: 600;">$${s.price.toFixed(2)}</span>
+      </div>
+    `)
+    .join('');
+
+  const greeting = recipientType === 'customer'
+    ? `Hi ${data.customerName},`
+    : recipientType === 'owner'
+    ? `Hi ${data.ownerName || 'Business Owner'},`
+    : `Hi ${data.providerName || 'Provider'},`;
+
+  const rescheduleMessage = data.rescheduledBy === 'business'
+    ? recipientType === 'customer'
+      ? 'Your appointment has been rescheduled by the business. Please see the new details below.'
+      : 'The following appointment has been rescheduled.'
+    : recipientType === 'customer'
+      ? 'Your appointment has been rescheduled as requested.'
+      : `${data.customerName} has rescheduled their appointment.`;
+
+  const logoUrl = 'https://www.happyinline.com/logo.png';
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Rescheduled - Happy InLine</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <!-- Header with Logo -->
+    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
+      <img src="${logoUrl}" alt="Happy InLine" style="max-width: 180px; height: auto; margin-bottom: 10px;" />
+    </div>
+
+    <!-- Content -->
+    <div style="background: #ffffff; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #d97706; margin: 0 0 10px 0; font-size: 22px;">
+        🔄 Appointment Rescheduled
+      </h2>
+
+      <p style="color: #666; margin: 0 0 25px 0; font-size: 16px;">
+        ${greeting}<br><br>
+        ${rescheduleMessage}
+      </p>
+
+      <!-- Date Change Highlight -->
+      <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 2px solid #f59e0b;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+          <!-- Old Date -->
+          <div style="text-align: center; flex: 1; min-width: 150px;">
+            <p style="color: #92400e; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase;">Previous</p>
+            <p style="color: #78350f; font-size: 14px; margin: 0; text-decoration: line-through; opacity: 0.7;">
+              ${formatDate(data.oldDate)}<br>${formatTime(data.oldTime)}
+            </p>
+          </div>
+
+          <!-- Arrow -->
+          <div style="color: #d97706; font-size: 24px;">→</div>
+
+          <!-- New Date -->
+          <div style="text-align: center; flex: 1; min-width: 150px;">
+            <p style="color: #15803d; font-size: 12px; margin: 0 0 5px 0; text-transform: uppercase; font-weight: 600;">New Date</p>
+            <p style="color: #166534; font-size: 16px; margin: 0; font-weight: 700;">
+              ${formatDate(data.newDate)}<br>${formatTime(data.newTime)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Appointment Details -->
+      <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #09264b; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #f59e0b; padding-bottom: 10px;">
+          📋 Appointment Details
+        </h3>
+
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">New Date</td>
+            <td style="padding: 8px 0; color: #15803d; font-weight: 600; font-size: 14px; text-align: right;">
+              ${formatDate(data.newDate)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">New Time</td>
+            <td style="padding: 8px 0; color: #15803d; font-weight: 600; font-size: 14px; text-align: right;">
+              ${formatTime(data.newTime)}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Business</td>
+            <td style="padding: 8px 0; color: #09264b; font-weight: 600; font-size: 14px; text-align: right;">
+              ${data.shopName}
+            </td>
+          </tr>
+          ${recipientType !== 'customer' ? `
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Customer</td>
+            <td style="padding: 8px 0; color: #09264b; font-weight: 600; font-size: 14px; text-align: right;">
+              ${data.customerName}
+            </td>
+          </tr>
+          ` : ''}
+        </table>
+      </div>
+
+      <!-- Services -->
+      <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #09264b; margin: 0 0 15px 0; font-size: 18px; border-bottom: 2px solid #0393d5; padding-bottom: 10px;">
+          ✨ Services
+        </h3>
+        ${servicesHTML}
+        <div style="margin-top: 15px; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+          <strong style="color: #09264b; font-size: 18px;">Total</strong>
+          <strong style="color: #0393d5; font-size: 20px;">$${data.totalAmount.toFixed(2)}</strong>
+        </div>
+      </div>
+
+      ${data.shopAddress ? `
+      <!-- Location -->
+      <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #09264b; margin: 0 0 10px 0; font-size: 18px;">📍 Location</h3>
+        <p style="color: #666; margin: 0;">${data.shopAddress}</p>
+      </div>
+      ` : ''}
+
+      <!-- Footer Message -->
+      <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+        <p style="color: #888; font-size: 14px; margin: 0;">
+          ${recipientType === 'customer'
+            ? 'Please update your calendar with the new date and time.'
+            : 'The booking has been updated in your dashboard.'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
+      <p style="margin: 0;">&copy; ${new Date().getFullYear()} Happy InLine. All rights reserved.</p>
+      <p style="margin: 5px 0 0 0; color: #0393d5;">Skip the wait. Join the line.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+};
+
+// Send reschedule notification to customer
+export const sendCustomerRescheduleEmail = async (data: RescheduleEmailData): Promise<{ success: boolean; error?: string }> => {
+  try {
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: data.customerEmail,
+      subject: `Appointment Rescheduled - ${data.shopName} - ${formatDate(data.newDate)}`,
+      html: generateRescheduleEmailHTML(data, 'customer'),
+    });
+    console.log(`✅ Reschedule email sent to customer ${data.customerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send customer reschedule email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send reschedule notification to owner
+export const sendOwnerRescheduleEmail = async (data: RescheduleEmailData): Promise<{ success: boolean; error?: string }> => {
+  if (!data.ownerEmail) {
+    return { success: false, error: 'No owner email provided' };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: data.ownerEmail,
+      subject: `Booking Rescheduled - ${data.customerName} - New: ${formatDate(data.newDate)}`,
+      html: generateRescheduleEmailHTML(data, 'owner'),
+    });
+    console.log(`✅ Reschedule email sent to owner ${data.ownerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send owner reschedule email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send reschedule notification to provider
+export const sendProviderRescheduleEmail = async (data: RescheduleEmailData): Promise<{ success: boolean; error?: string }> => {
+  if (!data.providerEmail) {
+    return { success: false, error: 'No provider email provided' };
+  }
+
+  try {
+    await transporter.sendMail({
+      from: '"Happy InLine" <noreply@happyinline.com>',
+      to: data.providerEmail,
+      subject: `Booking Rescheduled - ${data.customerName} - New: ${formatDate(data.newDate)}`,
+      html: generateRescheduleEmailHTML(data, 'provider'),
+    });
+    console.log(`✅ Reschedule email sent to provider ${data.providerEmail}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Failed to send provider reschedule email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Send all reschedule notification emails
+export const sendRescheduleNotifications = async (data: RescheduleEmailData): Promise<{
+  customerSent: boolean;
+  ownerSent: boolean;
+  providerSent: boolean;
+}> => {
+  const results = await Promise.all([
+    sendCustomerRescheduleEmail(data),
+    sendOwnerRescheduleEmail(data),
+    data.providerEmail ? sendProviderRescheduleEmail(data) : Promise.resolve({ success: false }),
+  ]);
+
+  return {
+    customerSent: results[0].success,
+    ownerSent: results[1].success,
+    providerSent: results[2].success,
+  };
+};
+
 // Generate OTP email HTML
 const generateOTPEmailHTML = (otp: string, purpose: 'email_change' | 'verification'): string => {
   const title = purpose === 'email_change' ? 'Email Change Verification' : 'Email Verification';

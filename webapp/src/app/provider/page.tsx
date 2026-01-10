@@ -199,6 +199,10 @@ function ProviderDashboardContent() {
   const handleReschedule = async () => {
     if (!rescheduleBookingData || !newDate || !newTime) return;
 
+    // Store old date/time before rescheduling
+    const oldDate = rescheduleBookingData.appointment_date;
+    const oldTime = rescheduleBookingData.appointment_time;
+
     setRescheduling(true);
     setError('');
 
@@ -206,6 +210,18 @@ function ProviderDashboardContent() {
       const result = await rescheduleBooking(rescheduleBookingData.id, newDate, newTime);
 
       if (result.success) {
+        // Send reschedule email notifications (non-blocking)
+        fetch('/api/booking/reschedule-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId: rescheduleBookingData.id,
+            oldDate,
+            oldTime,
+            rescheduledBy: 'business'
+          }),
+        }).catch(err => console.error('Failed to send reschedule notifications:', err));
+
         setSuccess('Appointment rescheduled successfully!');
         setRescheduleModalOpen(false);
         setRescheduleBookingData(null);

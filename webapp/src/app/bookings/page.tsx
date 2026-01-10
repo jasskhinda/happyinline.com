@@ -145,6 +145,18 @@ export default function BookingsPage() {
       );
 
       if (result.success) {
+        // Send cancellation email if the action was cancel
+        if (actionType === 'cancel') {
+          fetch('/api/booking/cancel-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              cancelledBy: 'business'
+            }),
+          }).catch(err => console.error('Failed to send cancellation notifications:', err));
+        }
+
         const actionLabels: Record<string, string> = {
           approve: 'confirmed',
           reject: 'marked as no-show',
