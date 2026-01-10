@@ -102,15 +102,24 @@ function CustomerBookingsContent() {
     try {
       const result = await cancelCustomerBooking(selectedBooking.id, userId);
       if (result.success) {
-        // Send cancellation email notifications (non-blocking)
-        fetch('/api/booking/cancel-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId: selectedBooking.id,
-            cancelledBy: 'customer'
-          }),
-        }).catch(err => console.error('Failed to send cancellation notifications:', err));
+        // Send cancellation email notifications
+        try {
+          const emailResponse = await fetch('/api/booking/cancel-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              cancelledBy: 'customer'
+            }),
+          });
+          const emailResult = await emailResponse.json();
+          console.log('📧 Cancellation email result:', emailResult);
+          if (!emailResponse.ok) {
+            console.error('Email notification failed:', emailResult);
+          }
+        } catch (emailErr) {
+          console.error('Failed to send cancellation notifications:', emailErr);
+        }
 
         setSuccess('Booking cancelled successfully');
         setShowCancelModal(false);
