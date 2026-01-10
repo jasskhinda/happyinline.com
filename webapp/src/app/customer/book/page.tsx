@@ -864,78 +864,81 @@ export default function BookingPage() {
 
         {/* Sticky Footer Bar - Only on services step when services are selected */}
         {step === 'services' && selectedServices.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 bg-[#0a2540]/95 backdrop-blur-lg border-t border-white/20 p-4 z-50">
-            <div className="w-full px-4 md:px-8 lg:px-12 mx-auto">
-              <div className="flex items-center justify-between gap-4">
-                {/* Summary */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center gap-1.5 text-white/70">
-                      <Clock className="w-4 h-4" />
-                      <span>{getTotalDuration()} min</span>
+          <div className="fixed bottom-0 left-0 right-0 bg-[#0a2540]/95 backdrop-blur-lg border-t border-white/20 p-3 sm:p-4 z-50">
+            <div className="w-full px-2 sm:px-4 md:px-8 lg:px-12 mx-auto">
+              {/* Format Conflict Warning - Full width on top when present */}
+              {hasFormatConflict && (
+                <div className="flex items-start gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg mb-3">
+                  <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-red-200 text-xs sm:text-sm">
+                    {bookingFormat === 'online'
+                      ? 'Some services are not available online. Remove the highlighted services or switch to In-Person.'
+                      : 'Some services are only available online. Remove the highlighted services or switch to Online.'}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                {/* Top row on mobile: Summary + Format buttons */}
+                <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-4">
+                  {/* Summary */}
+                  <div className="flex-shrink-0">
+                    <div className="flex items-center gap-3 sm:gap-4 text-sm">
+                      <div className="flex items-center gap-1 text-white/70">
+                        <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="text-xs sm:text-sm">{getTotalDuration()} min</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-white font-semibold">
+                        <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--brand)]" />
+                        <span className="text-xs sm:text-sm">${getTotalPrice().toFixed(2)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-white font-semibold">
-                      <DollarSign className="w-4 h-4 text-[var(--brand)]" />
-                      <span>${getTotalPrice().toFixed(2)}</span>
-                    </div>
+                    <p className="text-[10px] sm:text-xs text-white/50 mt-0.5 sm:mt-1">
+                      {selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected
+                    </p>
                   </div>
-                  <p className="text-xs text-white/50 mt-1">
-                    {selectedServices.length} service{selectedServices.length > 1 ? 's' : ''} selected
-                  </p>
+
+                  {/* Format Selection - Show when there are "both" type services */}
+                  {hasBothTypeServices && (
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      <button
+                        onClick={() => setBookingFormat('in_person')}
+                        className={`flex items-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                          bookingFormat === 'in_person'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                      >
+                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        In-Person
+                      </button>
+                      <button
+                        onClick={() => setBookingFormat('online')}
+                        className={`flex items-center gap-1 sm:gap-1.5 py-1.5 sm:py-2 px-2 sm:px-3 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+                          bookingFormat === 'online'
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                      >
+                        <Video className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        Online
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Format Conflict Warning */}
-                {hasFormatConflict && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-red-500/20 border border-red-500/30 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                    <span className="text-red-200 text-sm">
-                      {bookingFormat === 'online'
-                        ? 'Some services are not available online. Remove the highlighted services or switch to In-Person.'
-                        : 'Some services are only available online. Remove the highlighted services or switch to Online.'}
-                    </span>
-                  </div>
-                )}
-
-                {/* Format Selection - Show when there are "both" type services */}
-                {hasBothTypeServices && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setBookingFormat('in_person')}
-                      className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        bookingFormat === 'in_person'
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-white/10 text-white/70 hover:bg-white/20'
-                      }`}
-                    >
-                      <MapPin className="w-4 h-4" />
-                      In-Person
-                    </button>
-                    <button
-                      onClick={() => setBookingFormat('online')}
-                      className={`flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        bookingFormat === 'online'
-                          ? 'bg-purple-500 text-white'
-                          : 'bg-white/10 text-white/70 hover:bg-white/20'
-                      }`}
-                    >
-                      <Video className="w-4 h-4" />
-                      Online
-                    </button>
-                  </div>
-                )}
-
-                {/* Continue Button */}
+                {/* Continue Button - Full width on mobile */}
                 <button
                   onClick={handleNext}
                   disabled={!canContinue}
-                  className={`px-6 py-3 rounded-xl font-medium transition-colors flex items-center gap-2 shadow-lg ${
+                  className={`w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-lg ${
                     !canContinue
                       ? 'bg-gray-500 text-white/50 cursor-not-allowed'
                       : 'bg-[var(--brand)] text-white hover:bg-[var(--brand)]/80'
                   }`}
                 >
                   Continue
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
