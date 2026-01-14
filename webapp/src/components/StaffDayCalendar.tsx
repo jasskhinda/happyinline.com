@@ -54,12 +54,32 @@ export default function StaffDayCalendar({
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showStaffResources, setShowStaffResources] = useState(true);
   const [showHighlight, setShowHighlight] = useState(true);
+  const [showViewDropdown, setShowViewDropdown] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const viewDropdownRef = useRef<HTMLDivElement>(null);
+  const datePickerRef = useRef<HTMLDivElement>(null);
 
   // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (viewDropdownRef.current && !viewDropdownRef.current.contains(event.target as Node)) {
+        setShowViewDropdown(false);
+      }
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target as Node)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // Auto-scroll to current time on load
@@ -390,13 +410,37 @@ export default function StaffDayCalendar({
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
           {/* Left side - View selector */}
           <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center">
               <ChevronLeft className="w-4 h-4 text-gray-400" />
-              <ChevronRight className="w-4 h-4 text-gray-400 -ml-2" />
+              <ChevronRight className="w-4 h-4 text-gray-400 -ml-1" />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
-              <span className="text-sm font-medium text-gray-700">Day</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+            {/* View Mode Dropdown */}
+            <div className="relative" ref={viewDropdownRef}>
+              <button
+                onClick={() => setShowViewDropdown(!showViewDropdown)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <span className="text-sm font-medium text-gray-700 capitalize">{viewMode}</span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showViewDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              {showViewDropdown && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px] py-1">
+                  {(['day', 'week', 'month'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => {
+                        setViewMode(mode);
+                        setShowViewDropdown(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors capitalize ${
+                        viewMode === mode ? 'text-red-500 font-medium bg-red-50' : 'text-gray-700'
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -408,9 +452,82 @@ export default function StaffDayCalendar({
             >
               <ChevronLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg min-w-[180px] justify-center">
-              <span className="text-sm font-semibold text-gray-900">{formatHeaderDate()}</span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+            {/* Date Picker Dropdown */}
+            <div className="relative" ref={datePickerRef}>
+              <button
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg min-w-[180px] justify-center hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                <span className="text-sm font-semibold text-gray-900">{formatHeaderDate()}</span>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDatePicker ? 'rotate-180' : ''}`} />
+              </button>
+              {showDatePicker && (
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-4 min-w-[280px]">
+                  {/* Mini Calendar in Dropdown */}
+                  <div className="flex items-center justify-between mb-3">
+                    <button
+                      onClick={goToPreviousMonth}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-gray-600" />
+                    </button>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button
+                      onClick={goToNextMonth}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4 text-gray-600" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 text-center">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <div key={day} className="text-[10px] font-medium text-gray-400 py-1">
+                        {day}
+                      </div>
+                    ))}
+                    {monthCalendar.map((date, idx) => {
+                      if (!date) return <div key={idx} />;
+                      const dateStr = formatDateStr(date);
+                      const isSelected = dateStr === selectedDateStr;
+                      const isTodayDate = dateStr === formatDateStr(new Date());
+                      const isCurrentMonth = date.getMonth() === selectedDate.getMonth();
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedDate(date);
+                            setShowDatePicker(false);
+                          }}
+                          className={`text-xs py-2 rounded-md transition-colors ${
+                            isSelected
+                              ? 'bg-red-500 text-white font-semibold'
+                              : isTodayDate
+                              ? 'bg-red-100 text-red-600 font-semibold'
+                              : isCurrentMonth
+                              ? 'text-gray-700 hover:bg-gray-100'
+                              : 'text-gray-300'
+                          }`}
+                        >
+                          {date.getDate()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Today button */}
+                  <button
+                    onClick={() => {
+                      setSelectedDate(new Date());
+                      setShowDatePicker(false);
+                    }}
+                    className="w-full mt-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    Today
+                  </button>
+                </div>
+              )}
             </div>
             <button
               onClick={goToNextDay}

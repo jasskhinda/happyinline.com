@@ -16,7 +16,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import {
   Loader2,
-  Calendar,
   X,
   AlertCircle,
   Check,
@@ -24,33 +23,18 @@ import {
   User,
   Phone,
   Mail,
-  MessageSquare,
   CheckCircle,
   XCircle,
-  Filter,
-  ChevronDown,
-  DollarSign,
   CalendarDays,
   Scissors,
   Video,
   MapPin,
   ExternalLink,
-  Lock,
-  Users,
-  Grid3X3
+  Lock
 } from 'lucide-react';
-import BookingCalendar from '@/components/BookingCalendar';
 import StaffDayCalendar from '@/components/StaffDayCalendar';
 
 type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
-
-const STATUS_TABS: { key: BookingStatus | 'all'; label: string; color: string }[] = [
-  { key: 'all', label: 'All', color: 'white' },
-  { key: 'pending', label: 'Pending', color: 'yellow' },
-  { key: 'confirmed', label: 'Confirmed', color: 'blue' },
-  { key: 'completed', label: 'Completed', color: 'green' },
-  { key: 'cancelled', label: 'Cancelled', color: 'red' },
-];
 
 export default function BookingsPage() {
   const router = useRouter();
@@ -59,10 +43,6 @@ export default function BookingsPage() {
   const [shop, setShop] = useState<Shop | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [providers, setProviders] = useState<ShopStaff[]>([]);
-  const [activeTab, setActiveTab] = useState<BookingStatus | 'all'>('pending');
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -71,7 +51,6 @@ export default function BookingsPage() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [calendarView, setCalendarView] = useState<'month' | 'staff'>('staff');
 
   useEffect(() => {
     loadData();
@@ -307,144 +286,13 @@ export default function BookingsPage() {
           </div>
         </div>
 
-        {/* Tabs and Filters */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 mb-6">
-          {/* Status Tabs */}
-          <div className="flex border-b border-white/10 overflow-x-auto">
-            {STATUS_TABS.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex-shrink-0 px-6 py-4 text-sm font-medium transition-colors relative ${
-                  activeTab === tab.key
-                    ? 'text-[#0393d5]'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                {tab.label}
-                {tab.key !== 'all' && bookingCounts[tab.key] > 0 && (
-                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                    activeTab === tab.key
-                      ? 'bg-[#0393d5] text-white'
-                      : 'bg-white/10 text-white/70'
-                  }`}>
-                    {bookingCounts[tab.key]}
-                  </span>
-                )}
-                {activeTab === tab.key && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#0393d5]" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Filters */}
-          <div className="p-4 flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-4 flex-wrap">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  showFilters || selectedDate || selectedProvider
-                    ? 'bg-[#0393d5]/20 text-[#0393d5]'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                <Filter className="w-4 h-4" />
-                Filters
-                {(selectedDate || selectedProvider) && (
-                  <span className="bg-[#0393d5] text-white text-xs px-2 py-0.5 rounded-full">
-                    {(selectedDate ? 1 : 0) + (selectedProvider ? 1 : 0)}
-                  </span>
-                )}
-              </button>
-
-              {showFilters && (
-                <>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#0393d5]"
-                    />
-                  </div>
-
-                  {providers.length > 0 && (
-                    <select
-                      value={selectedProvider}
-                      onChange={(e) => setSelectedProvider(e.target.value)}
-                      className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-[#0393d5]"
-                    >
-                      <option value="">All Providers</option>
-                      {providers.map(provider => (
-                        <option key={provider.id} value={provider.user_id}>
-                          {provider.user?.name || 'Unknown'}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-
-                  {(selectedDate || selectedProvider) && (
-                    <button
-                      onClick={() => {
-                        setSelectedDate('');
-                        setSelectedProvider('');
-                      }}
-                      className="text-[#0393d5] hover:text-white text-sm"
-                    >
-                      Clear filters
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-
-            {/* Calendar View Toggle */}
-            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
-              <button
-                onClick={() => setCalendarView('month')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  calendarView === 'month'
-                    ? 'bg-[#0393d5] text-white'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-                <span className="text-sm font-medium">Month</span>
-              </button>
-              <button
-                onClick={() => setCalendarView('staff')}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                  calendarView === 'staff'
-                    ? 'bg-[#0393d5] text-white'
-                    : 'text-white/70 hover:text-white'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                <span className="text-sm font-medium">Staff Day</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Calendar Views */}
-        {calendarView === 'month' ? (
-          <BookingCalendar
-            bookings={bookings}
-            providers={providers}
-            onViewBooking={viewBookingDetails}
-            selectedProvider={selectedProvider}
-            onProviderChange={setSelectedProvider}
-          />
-        ) : (
-          <StaffDayCalendar
-            bookings={bookings}
-            providers={providers}
-            onViewBooking={viewBookingDetails}
-            onRefresh={loadData}
-          />
-        )}
+        {/* Staff Day Calendar */}
+        <StaffDayCalendar
+          bookings={bookings}
+          providers={providers}
+          onViewBooking={viewBookingDetails}
+          onRefresh={loadData}
+        />
       </main>
 
       <Footer />
