@@ -3,10 +3,10 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getCurrentUser, getProfile, Profile } from '@/lib/auth';
-import { getProviderBookings, getAllShopBookingsForProvider, updateBookingStatus, rescheduleBooking, Shop, Booking } from '@/lib/shop';
+import { getProviderBookings, getAllShopBookingsForProvider, getShopProviders, updateBookingStatus, rescheduleBooking, Shop, Booking, ShopStaff } from '@/lib/shop';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import ProviderCalendar from '@/components/ProviderCalendar';
+import StaffDayCalendar from '@/components/StaffDayCalendar';
 import {
   Loader2,
   Calendar,
@@ -19,7 +19,17 @@ import {
   CalendarClock,
   Link as LinkIcon,
   Unlink,
-  Users
+  Users,
+  User,
+  Phone,
+  Mail,
+  CheckCircle,
+  XCircle,
+  Scissors,
+  Video,
+  MapPin,
+  ExternalLink,
+  Lock
 } from 'lucide-react';
 
 function ProviderDashboardContent() {
@@ -32,9 +42,18 @@ function ProviderDashboardContent() {
   const [shop, setShop] = useState<Shop | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [allShopBookings, setAllShopBookings] = useState<Booking[]>([]);
+  const [providers, setProviders] = useState<ShopStaff[]>([]);
   const [activeTab, setActiveTab] = useState<'my' | 'shop'>('my');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Booking detail modal state
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'complete' | 'cancel' | null>(null);
+  const [actionNotes, setActionNotes] = useState('');
+  const [processing, setProcessing] = useState(false);
 
   // Calendar sync state
   const [calendarConnecting, setCalendarConnecting] = useState(false);
@@ -114,6 +133,14 @@ function ProviderDashboardContent() {
       const allShopResult = await getAllShopBookingsForProvider(user.id);
       if (allShopResult.success) {
         setAllShopBookings(allShopResult.bookings || []);
+      }
+
+      // Load providers for the calendar
+      if (result.shop?.id) {
+        const providersResult = await getShopProviders(result.shop.id);
+        if (providersResult.success && providersResult.providers) {
+          setProviders(providersResult.providers);
+        }
       }
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -259,16 +286,82 @@ function ProviderDashboardContent() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-500/20 text-yellow-400';
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       case 'confirmed':
-        return 'bg-blue-500/20 text-blue-400';
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'completed':
-        return 'bg-green-500/20 text-green-400';
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
       case 'cancelled':
       case 'no_show':
-        return 'bg-red-500/20 text-red-400';
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-white/10 text-white/70';
+        return 'bg-white/20 text-white border-white/30';
+    }
+  };
+
+  const viewBookingDetails = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setShowDetailModal(true);
+  };
+
+  const handleAction = (booking: Booking, action: 'approve' | 'reject' | 'complete' | 'cancel') => {
+    setSelectedBooking(booking);
+    setActionType(action);
+    setActionNotes('');
+    setShowActionModal(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!selectedBooking || !actionType) return;
+
+    setProcessing(true);
+    setError('');
+
+    try {
+      const statusMap: Record<string, 'confirmed' | 'no_show' | 'completed' | 'cancelled'> = {
+        approve: 'confirmed',
+        reject: 'no_show',
+        complete: 'completed',
+        cancel: 'cancelled'
+      };
+
+      const result = await updateBookingStatus(
+        selectedBooking.id,
+        statusMap[actionType],
+        actionNotes || undefined
+      );
+
+      if (result.success) {
+        // Send cancellation email if the action was cancel
+        if (actionType === 'cancel') {
+          fetch('/api/booking/cancel-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: selectedBooking.id,
+              cancelledBy: 'business'
+            }),
+          }).catch(err => console.error('Failed to send cancellation notifications:', err));
+        }
+
+        const actionLabels: Record<string, string> = {
+          approve: 'confirmed',
+          reject: 'marked as no-show',
+          complete: 'marked as complete',
+          cancel: 'cancelled'
+        };
+        setSuccess(`Booking ${actionLabels[actionType]} successfully!`);
+        setShowActionModal(false);
+        setSelectedBooking(null);
+        setActionType(null);
+        loadData();
+      } else {
+        setError(result.error || 'Failed to update booking');
+      }
+    } catch (err) {
+      setError('Failed to update booking');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -435,56 +528,306 @@ function ProviderDashboardContent() {
           </div>
         </div>
 
-        {/* Calendar Tabs */}
-        <div className="mb-6">
-          <div className="flex gap-2 p-1 bg-white/5 rounded-xl w-fit">
-            <button
-              onClick={() => setActiveTab('my')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                activeTab === 'my'
-                  ? 'bg-[#0393d5] text-white shadow-lg'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <Calendar className="w-5 h-5" />
-              My Schedule
-            </button>
-            <button
-              onClick={() => setActiveTab('shop')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
-                activeTab === 'shop'
-                  ? 'bg-[#0393d5] text-white shadow-lg'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              Shop Schedule
-              {allShopBookings.length > bookings.length && (
-                <span className="ml-1 px-2 py-0.5 text-xs bg-white/20 rounded-full">
-                  {allShopBookings.length}
-                </span>
-              )}
-            </button>
-          </div>
-          {activeTab === 'shop' && (
-            <p className="text-white/60 text-sm mt-2">
-              Viewing all appointments across the shop (read-only)
-            </p>
-          )}
-        </div>
-
-        {/* Calendar View */}
-        <ProviderCalendar
-          bookings={activeTab === 'my' ? bookings : allShopBookings}
-          onUpdateStatus={activeTab === 'my' ? handleUpdateStatus : undefined}
-          onReschedule={activeTab === 'my' ? openRescheduleModal : undefined}
-          processingBookingId={processingBookingId}
-          readOnly={activeTab === 'shop'}
-          showProviderName={activeTab === 'shop'}
+        {/* Staff Day Calendar - Same as owner bookings page */}
+        <StaffDayCalendar
+          bookings={allShopBookings}
+          providers={providers}
+          onViewBooking={viewBookingDetails}
+          onRefresh={loadData}
         />
       </main>
 
       <Footer />
+
+      {/* Booking Detail Modal */}
+      {showDetailModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-md border border-white/20 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[#0a3a6b]">
+              <h3 className="text-xl font-semibold text-white">Booking Details</h3>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedBooking(null);
+                }}
+                className="text-[#0393d5] hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Status */}
+              <div className="text-center">
+                <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(selectedBooking.status)}`}>
+                  {selectedBooking.status === 'completed' && <CheckCircle className="w-4 h-4" />}
+                  {selectedBooking.status === 'pending' && <Clock className="w-4 h-4" />}
+                  {(selectedBooking.status === 'cancelled' || selectedBooking.status === 'no_show') && <XCircle className="w-4 h-4" />}
+                  {selectedBooking.status.charAt(0).toUpperCase() + selectedBooking.status.slice(1)}
+                </span>
+              </div>
+
+              {/* Customer */}
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <h4 className="text-sm font-medium text-[#0393d5] mb-3">Customer</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-white/50" />
+                    <span className="text-white">{selectedBooking.customer?.name || 'Unknown'}</span>
+                  </div>
+                  {selectedBooking.customer?.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-white/50" />
+                      <span className="text-white/80">{selectedBooking.customer.email}</span>
+                    </div>
+                  )}
+                  {selectedBooking.customer?.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-white/50" />
+                      <span className="text-white/80">{selectedBooking.customer.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Appointment */}
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <h4 className="text-sm font-medium text-[#0393d5] mb-3">Appointment</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4 text-white/50" />
+                    <span className="text-white">{formatDate(selectedBooking.appointment_date)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-white/50" />
+                    <span className="text-white">{formatTime(selectedBooking.appointment_time)}</span>
+                  </div>
+                  {selectedBooking.barber && (
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-white/50" />
+                      <span className="text-white/80">Provider: {selectedBooking.barber.name}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Services */}
+              {selectedBooking.services && selectedBooking.services.length > 0 && (
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-sm font-medium text-[#0393d5] mb-3">Services</h4>
+                  <div className="space-y-3">
+                    {selectedBooking.services.map((service: any, idx: number) => (
+                      <div key={idx} className="bg-white/5 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Scissors className="w-4 h-4 text-white/50" />
+                            <span className="text-white font-medium">{service.name || service}</span>
+                            {/* Service Type Badge */}
+                            {service.service_type === 'in_person' && (
+                              <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                In-Person
+                              </span>
+                            )}
+                            {service.service_type === 'online' && (
+                              <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                Online
+                              </span>
+                            )}
+                            {service.service_type === 'both' && (
+                              <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <Video className="w-3 h-3" />
+                                In-Person / Online
+                              </span>
+                            )}
+                          </div>
+                          {service.price && (
+                            <span className="text-white/80">${service.price}</span>
+                          )}
+                        </div>
+                        {/* Online Meeting Link */}
+                        {(service.service_type === 'online' || service.service_type === 'both') && service.online_meeting_link && (
+                          <div className="mt-2 bg-purple-500/10 rounded-lg p-2 border border-purple-500/20">
+                            <a
+                              href={service.online_meeting_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-purple-300 hover:text-purple-200 text-sm transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              <span className="font-medium">Join Meeting</span>
+                            </a>
+                            {service.online_meeting_password && (
+                              <div className="flex items-center gap-2 mt-1 text-xs text-purple-300/70">
+                                <Lock className="w-3 h-3" />
+                                <span>Password: <span className="font-mono font-medium text-purple-300">{service.online_meeting_password}</span></span>
+                              </div>
+                            )}
+                            {service.online_instructions && (
+                              <p className="mt-1 text-xs text-purple-300/70">{service.online_instructions}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <div className="pt-2 mt-2 border-t border-white/10 flex items-center justify-between">
+                      <span className="text-white font-medium">Total</span>
+                      <span className="text-white font-semibold">${selectedBooking.total_amount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {(selectedBooking.customer_notes || selectedBooking.shop_notes) && (
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <h4 className="text-sm font-medium text-[#0393d5] mb-3">Notes</h4>
+                  {selectedBooking.customer_notes && (
+                    <div className="mb-3">
+                      <p className="text-xs text-white/50 mb-1">Customer note:</p>
+                      <p className="text-white/80">{selectedBooking.customer_notes}</p>
+                    </div>
+                  )}
+                  {selectedBooking.shop_notes && (
+                    <div>
+                      <p className="text-xs text-white/50 mb-1">Shop note:</p>
+                      <p className="text-white/80">{selectedBooking.shop_notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
+              {selectedBooking.status === 'pending' && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handleAction(selectedBooking, 'reject');
+                    }}
+                    className="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handleAction(selectedBooking, 'approve');
+                    }}
+                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle className="w-5 h-5" />
+                    Approve
+                  </button>
+                </div>
+              )}
+
+              {selectedBooking.status === 'confirmed' && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handleAction(selectedBooking, 'cancel');
+                    }}
+                    className="flex-1 px-4 py-3 bg-red-500/80 hover:bg-red-600 text-white rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      handleAction(selectedBooking, 'complete');
+                    }}
+                    className="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                  >
+                    Mark Complete
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action Confirmation Modal */}
+      {showActionModal && selectedBooking && actionType && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#0a3a6b] rounded-2xl w-full max-w-md border border-white/20">
+            <div className="p-6 border-b border-white/10">
+              <h3 className="text-xl font-semibold text-white">
+                {actionType === 'approve' && 'Approve Booking'}
+                {actionType === 'reject' && 'Reject Booking'}
+                {actionType === 'complete' && 'Complete Booking'}
+                {actionType === 'cancel' && 'Cancel Booking'}
+              </h3>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-white/80">
+                {actionType === 'approve' && 'Are you sure you want to approve this booking?'}
+                {actionType === 'reject' && 'Are you sure you want to reject this booking? The customer will be notified.'}
+                {actionType === 'complete' && 'Mark this booking as completed?'}
+                {actionType === 'cancel' && 'Are you sure you want to cancel this booking? The customer will be notified.'}
+              </p>
+
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="text-white font-medium">{selectedBooking.customer?.name}</p>
+                <p className="text-[#0393d5] text-sm">
+                  {formatDate(selectedBooking.appointment_date)} at {formatTime(selectedBooking.appointment_time)}
+                </p>
+              </div>
+
+              {(actionType === 'reject' || actionType === 'cancel') && (
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Reason (optional)
+                  </label>
+                  <textarea
+                    value={actionNotes}
+                    onChange={(e) => setActionNotes(e.target.value)}
+                    placeholder="Add a note for the customer..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-[#0393d5] resize-none"
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    setShowActionModal(false);
+                    setSelectedBooking(null);
+                    setActionType(null);
+                  }}
+                  className="flex-1 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmAction}
+                  disabled={processing}
+                  className={`flex-1 px-4 py-3 text-white rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 ${
+                    actionType === 'approve' || actionType === 'complete'
+                      ? 'bg-green-500 hover:bg-green-600'
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  {processing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Confirm'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Reschedule Modal */}
       {rescheduleModalOpen && rescheduleBookingData && (
