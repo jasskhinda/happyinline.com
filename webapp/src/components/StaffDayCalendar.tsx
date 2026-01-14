@@ -281,7 +281,7 @@ export default function StaffDayCalendar({
   const columnWidth = Math.max(PROVIDER_COLUMN_MIN_WIDTH, 280);
 
   // Get week dates for week view
-  const getWeekDates = () => {
+  const weekDates = useMemo(() => {
     const dates: Date[] = [];
     const startOfWeek = new Date(selectedDate);
     startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
@@ -291,9 +291,7 @@ export default function StaffDayCalendar({
       dates.push(date);
     }
     return dates;
-  };
-
-  const weekDates = getWeekDates();
+  }, [selectedDate]);
 
   // Get bookings for the week
   const weekBookings = useMemo(() => {
