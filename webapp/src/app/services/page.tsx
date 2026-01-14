@@ -10,6 +10,7 @@ import {
   addShopService,
   updateShopService,
   removeShopService,
+  reorderShopServices,
   getShopProviders,
   getShopServiceProviders,
   updateServiceProviders,
@@ -41,7 +42,8 @@ import {
   Video,
   Link as LinkIcon,
   Lock,
-  FileText
+  FileText,
+  GripVertical
 } from 'lucide-react';
 import { ServiceType } from '@/lib/shop';
 
@@ -95,6 +97,11 @@ export default function ServicesPage() {
   const [assigningService, setAssigningService] = useState<ShopService | null>(null);
   const [selectedProviderIds, setSelectedProviderIds] = useState<string[]>([]);
   const [savingAssignments, setSavingAssignments] = useState(false);
+
+  // Drag and drop state
+  const [draggedService, setDraggedService] = useState<ShopService | null>(null);
+  const [dragOverService, setDragOverService] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -389,6 +396,98 @@ export default function ServicesPage() {
     return serviceAssignments.filter(a => a.service_id === serviceId).length;
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, service: ShopService) => {
+    setDraggedService(service);
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', service.id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedService(null);
+    setDragOverService(null);
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent, serviceId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverService !== serviceId) {
+      setDragOverService(serviceId);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear if leaving the service item completely
+    const relatedTarget = e.relatedTarget as HTMLElement;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setDragOverService(null);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetService: ShopService) => {
+    e.preventDefault();
+
+    if (!draggedService || draggedService.id === targetService.id) {
+      handleDragEnd();
+      return;
+    }
+
+    // Only allow reordering within the same category
+    if ((draggedService.category || 'General') !== (targetService.category || 'General')) {
+      setError('Services can only be reordered within the same category');
+      handleDragEnd();
+      return;
+    }
+
+    const category = draggedService.category || 'General';
+    const categoryServices = services.filter(s => (s.category || 'General') === category);
+
+    // Find indices
+    const draggedIndex = categoryServices.findIndex(s => s.id === draggedService.id);
+    const targetIndex = categoryServices.findIndex(s => s.id === targetService.id);
+
+    if (draggedIndex === -1 || targetIndex === -1) {
+      handleDragEnd();
+      return;
+    }
+
+    // Reorder the category services
+    const newCategoryServices = [...categoryServices];
+    const [removed] = newCategoryServices.splice(draggedIndex, 1);
+    newCategoryServices.splice(targetIndex, 0, removed);
+
+    // Create new order with updated display_order values
+    const serviceOrders = newCategoryServices.map((service, index) => ({
+      id: service.id,
+      display_order: index + 1
+    }));
+
+    // Optimistically update UI
+    const newServices = services.map(s => {
+      const orderInfo = serviceOrders.find(o => o.id === s.id);
+      if (orderInfo) {
+        return { ...s, display_order: orderInfo.display_order };
+      }
+      return s;
+    });
+    setServices(newServices);
+
+    handleDragEnd();
+
+    // Save to database
+    const result = await reorderShopServices(serviceOrders);
+    if (!result.success) {
+      setError(result.error || 'Failed to save order');
+      // Reload data to restore correct order
+      loadData();
+    } else {
+      setSuccess('Service order updated');
+      setTimeout(() => setSuccess(''), 2000);
+    }
+  };
+
   const filteredCatalog = catalog.filter(service =>
     service.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
     (service.category && service.category.toLowerCase().includes(catalogSearch.toLowerCase()))
@@ -486,8 +585,32 @@ export default function ServicesPage() {
                   </div>
                   {services
                     .filter(s => (s.category || 'General') === category)
+                    .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
                     .map(service => (
-                      <div key={service.id} className="p-6 flex items-center gap-4">
+                      <div
+                        key={service.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, service)}
+                        onDragEnd={handleDragEnd}
+                        onDragOver={(e) => handleDragOver(e, service.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, service)}
+                        className={`p-6 flex items-center gap-4 transition-all ${
+                          draggedService?.id === service.id
+                            ? 'opacity-50 bg-white/5'
+                            : dragOverService === service.id
+                            ? 'bg-[#0393d5]/10 border-t-2 border-[#0393d5]'
+                            : 'hover:bg-white/5'
+                        }`}
+                      >
+                        {/* Drag Handle */}
+                        <div
+                          className="cursor-grab active:cursor-grabbing p-1 -ml-2 text-white/30 hover:text-white/70 transition-colors"
+                          title="Drag to reorder"
+                        >
+                          <GripVertical className="w-5 h-5" />
+                        </div>
+
                         {/* Icon */}
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                           service.is_active ? 'bg-[#0393d5]/20' : 'bg-white/10'

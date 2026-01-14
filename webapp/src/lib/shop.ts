@@ -90,6 +90,7 @@ export interface ShopService {
   online_meeting_link: string | null;
   online_meeting_password: string | null;
   online_instructions: string | null;
+  display_order: number;
 }
 
 export interface Booking {
@@ -580,6 +581,7 @@ export const getShopServices = async (shopId: string): Promise<{ success: boolea
       .from('shop_services')
       .select('*')
       .eq('shop_id', shopId)
+      .order('display_order', { ascending: true })
       .order('name', { ascending: true });
 
     if (error) {
@@ -710,6 +712,40 @@ export const removeShopService = async (serviceId: string): Promise<{ success: b
     if (error) {
       console.error('Error removing service:', error);
       return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Unexpected error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Reorder shop services (bulk update display_order)
+ * @param serviceOrders Array of { id, display_order } objects
+ */
+export const reorderShopServices = async (
+  serviceOrders: { id: string; display_order: number }[]
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const supabase = getSupabaseClient();
+
+    // Update each service's display_order
+    const updates = serviceOrders.map(({ id, display_order }) =>
+      supabase
+        .from('shop_services')
+        .update({ display_order })
+        .eq('id', id)
+    );
+
+    const results = await Promise.all(updates);
+
+    // Check for any errors
+    const firstError = results.find(r => r.error);
+    if (firstError?.error) {
+      console.error('Error reordering services:', firstError.error);
+      return { success: false, error: firstError.error.message };
     }
 
     return { success: true };
