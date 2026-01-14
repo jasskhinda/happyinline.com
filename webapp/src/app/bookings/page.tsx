@@ -71,7 +71,7 @@ export default function BookingsPage() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [calendarView, setCalendarView] = useState<'month' | 'staff'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'staff'>('staff');
 
   useEffect(() => {
     loadData();

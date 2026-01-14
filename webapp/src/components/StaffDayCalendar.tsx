@@ -4,10 +4,15 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
-  Clock,
+  ChevronDown,
+  ChevronUp,
   User,
   Calendar,
-  RefreshCw
+  Heart,
+  Settings,
+  Bell,
+  Search,
+  Plus
 } from 'lucide-react';
 import { Booking, ShopStaff } from '@/lib/shop';
 
@@ -19,23 +24,12 @@ interface StaffDayCalendarProps {
 }
 
 // Constants for calendar layout
-const TIME_COLUMN_WIDTH = 55;
-const PROVIDER_COLUMN_MIN_WIDTH = 160;
-const HOUR_HEIGHT = 60;
+const SIDEBAR_WIDTH = 260;
+const TIME_COLUMN_WIDTH = 65;
+const PROVIDER_COLUMN_MIN_WIDTH = 280;
+const HOUR_HEIGHT = 80;
 const START_HOUR = 7;
-const END_HOUR = 20;
-
-// Booksy-style appointment colors (vibrant, professional)
-const APPOINTMENT_COLORS = [
-  { bg: '#7C5CFC', text: '#FFFFFF' }, // Purple
-  { bg: '#3B82F6', text: '#FFFFFF' }, // Blue
-  { bg: '#10B981', text: '#FFFFFF' }, // Green
-  { bg: '#EC4899', text: '#FFFFFF' }, // Pink
-  { bg: '#F59E0B', text: '#FFFFFF' }, // Amber
-  { bg: '#06B6D4', text: '#FFFFFF' }, // Cyan
-  { bg: '#8B5CF6', text: '#FFFFFF' }, // Violet
-  { bg: '#EF4444', text: '#FFFFFF' }, // Red
-];
+const END_HOUR = 21;
 
 // Generate time slots
 const generateTimeSlots = () => {
@@ -43,7 +37,7 @@ const generateTimeSlots = () => {
   for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
     const displayHour = hour > 12 ? hour - 12 : hour;
     const ampm = hour >= 12 ? 'PM' : 'AM';
-    slots.push({ hour, label: `${displayHour}${ampm}` });
+    slots.push({ hour, label: `${displayHour} ${ampm}` });
   }
   return slots;
 };
@@ -58,13 +52,17 @@ export default function StaffDayCalendar({
 }: StaffDayCalendarProps) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [showStaffResources, setShowStaffResources] = useState(true);
+  const [showHighlight, setShowHighlight] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-scroll to current time on load
   useEffect(() => {
     if (scrollContainerRef.current) {
       const now = new Date();
@@ -100,6 +98,7 @@ export default function StaffDayCalendar({
     return grouped;
   }, [dayBookings, providers]);
 
+  // Calendar navigation
   const goToPreviousDay = () => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() - 1);
@@ -112,21 +111,56 @@ export default function StaffDayCalendar({
     setSelectedDate(newDate);
   };
 
-  const goToToday = () => setSelectedDate(new Date());
+  const jumpByWeeks = (weeks: number) => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + (weeks * 7));
+    setSelectedDate(newDate);
+  };
 
-  const getWeekDays = () => {
-    const days = [];
-    const startOfWeek = new Date(selectedDate);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek);
-      date.setDate(date.getDate() + i);
-      days.push(date);
+  // Get mini calendar month data
+  const getMonthCalendar = () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startPadding = firstDay.getDay();
+
+    const days: (Date | null)[] = [];
+
+    // Previous month padding
+    const prevMonth = new Date(year, month, 0);
+    for (let i = startPadding - 1; i >= 0; i--) {
+      const d = new Date(year, month - 1, prevMonth.getDate() - i);
+      days.push(d);
     }
+
+    // Current month
+    for (let i = 1; i <= lastDay.getDate(); i++) {
+      days.push(new Date(year, month, i));
+    }
+
+    // Next month padding
+    const remaining = 42 - days.length;
+    for (let i = 1; i <= remaining; i++) {
+      days.push(new Date(year, month + 1, i));
+    }
+
     return days;
   };
 
-  const weekDays = getWeekDays();
+  const monthCalendar = getMonthCalendar();
+
+  const goToPreviousMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(newDate.getMonth() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const goToNextMonth = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setMonth(newDate.getMonth() + 1);
+    setSelectedDate(newDate);
+  };
 
   const getCurrentTimePosition = () => {
     if (!isToday) return null;
@@ -138,6 +172,14 @@ export default function StaffDayCalendar({
 
   const timePosition = getCurrentTimePosition();
 
+  const formatCurrentTime = () => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const displayHour = hours % 12 || 12;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    return `${displayHour}:${String(minutes).padStart(2, '0')} ${ampm}`;
+  };
+
   const getBookingPosition = (booking: Booking) => {
     if (!booking.appointment_time) return { top: 0, height: 30 };
     const [hours, minutes] = booking.appointment_time.split(':').map(Number);
@@ -146,7 +188,7 @@ export default function StaffDayCalendar({
     if (booking.services && Array.isArray(booking.services)) {
       duration = booking.services.reduce((sum: number, s: any) => sum + (s.duration || 30), 0);
     }
-    return { top, height: Math.max((duration / 60) * HOUR_HEIGHT, 30) };
+    return { top, height: Math.max((duration / 60) * HOUR_HEIGHT, 40) };
   };
 
   const isBookingPast = (booking: Booking) => {
@@ -162,14 +204,6 @@ export default function StaffDayCalendar({
     const bookingTime = new Date();
     bookingTime.setHours(hours, minutes, 0, 0);
     return bookingTime < currentTime;
-  };
-
-  const formatTime = (timeStr: string) => {
-    if (!timeStr) return '';
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const displayHour = hours % 12 || 12;
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    return `${displayHour}:${String(minutes).padStart(2, '0')} ${ampm}`;
   };
 
   const formatTimeRange = (booking: Booking) => {
@@ -189,217 +223,373 @@ export default function StaffDayCalendar({
 
   const getServiceNames = (booking: Booking) => {
     if (!booking.services || !Array.isArray(booking.services)) return 'Service';
-    return booking.services.map((s: any) => s.name).join(', ');
+    return booking.services.map((s: any) => s.name).join(' • ');
   };
 
-  const getProviderColor = (index: number) => APPOINTMENT_COLORS[index % APPOINTMENT_COLORS.length];
-
-  const formatDateHeader = () => {
-    if (isToday) return 'Today';
-    return selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const getInitials = (name: string) => {
+    if (!name) return 'ST';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  const columnWidth = Math.max(PROVIDER_COLUMN_MIN_WIDTH, 200);
+  const columnWidth = Math.max(PROVIDER_COLUMN_MIN_WIDTH, 280);
+
+  // Format header date
+  const formatHeaderDate = () => {
+    const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const day = selectedDate.getDate();
+    const month = selectedDate.toLocaleDateString('en-US', { month: 'short' });
+    return `${dayName}, ${day} ${month}`;
+  };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-      {/* Header - Dark themed like Booksy */}
-      <div className="bg-gray-900 p-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <button onClick={goToPreviousDay} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <ChevronLeft className="w-5 h-5 text-white" />
-            </button>
-            <h2 className="text-lg font-semibold text-white min-w-[120px] text-center">
-              {formatDateHeader()}
-            </h2>
-            <button onClick={goToNextDay} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <ChevronRight className="w-5 h-5 text-white" />
-            </button>
-            {!isToday && (
-              <button onClick={goToToday} className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-medium transition-colors">
-                Today
+    <div className="flex bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm" style={{ minHeight: '700px' }}>
+      {/* Left Sidebar - Booksy style */}
+      <div className="flex-shrink-0 border-r border-gray-200 bg-white" style={{ width: SIDEBAR_WIDTH }}>
+        {/* Month/Year Header */}
+        <div className="p-4 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900">
+              {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </h3>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={goToPreviousMonth}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-gray-600" />
               </button>
-            )}
+              <button
+                onClick={goToNextMonth}
+                className="p-1 hover:bg-gray-100 rounded transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
           </div>
-          {onRefresh && (
-            <button onClick={onRefresh} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-              <RefreshCw className="w-5 h-5 text-white" />
-            </button>
+
+          {/* Mini Calendar */}
+          <div className="grid grid-cols-7 gap-0.5 text-center">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="text-[10px] font-medium text-gray-400 py-1">
+                {day}
+              </div>
+            ))}
+            {monthCalendar.map((date, idx) => {
+              if (!date) return <div key={idx} />;
+              const dateStr = formatDateStr(date);
+              const isSelected = dateStr === selectedDateStr;
+              const isTodayDate = dateStr === formatDateStr(new Date());
+              const isCurrentMonth = date.getMonth() === selectedDate.getMonth();
+
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDate(date)}
+                  className={`text-xs py-1.5 rounded-md transition-colors ${
+                    isSelected
+                      ? 'bg-red-500 text-white font-semibold'
+                      : isTodayDate
+                      ? 'bg-red-100 text-red-600 font-semibold'
+                      : isCurrentMonth
+                      ? 'text-gray-700 hover:bg-gray-100'
+                      : 'text-gray-300'
+                  }`}
+                >
+                  {date.getDate()}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Jump By Week */}
+        <div className="p-4 border-b border-gray-100">
+          <h4 className="text-xs font-semibold text-gray-500 mb-3">Jump By Week</h4>
+          <div className="grid grid-cols-6 gap-1.5 mb-2">
+            {[1, 2, 3, 4, 5, 6].map(n => (
+              <button
+                key={`+${n}`}
+                onClick={() => jumpByWeeks(n)}
+                className="px-2 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 transition-colors"
+              >
+                +{n}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-6 gap-1.5">
+            {[-1, -2, -3, -4, -5, -6].map(n => (
+              <button
+                key={n}
+                onClick={() => jumpByWeeks(n)}
+                className="px-2 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 transition-colors"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Staff and Resources */}
+        <div className="border-b border-gray-100">
+          <button
+            onClick={() => setShowStaffResources(!showStaffResources)}
+            className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-sm font-semibold text-gray-900">Staff and Resources</span>
+            {showStaffResources ? (
+              <ChevronUp className="w-4 h-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
+          {showStaffResources && (
+            <div className="px-4 pb-4 space-y-2">
+              {providers.map(provider => (
+                <div key={provider.id} className="flex items-center gap-2 text-sm text-gray-700">
+                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">
+                    {getInitials(provider.user?.name || '')}
+                  </div>
+                  <span>{provider.user?.name || 'Staff'}</span>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Week day picker */}
-        <div className="flex justify-center gap-1">
-          {weekDays.map((date, idx) => {
-            const dateStr = formatDateStr(date);
-            const isSelected = dateStr === selectedDateStr;
-            const isTodayDate = dateStr === formatDateStr(new Date());
+        {/* Highlight Section */}
+        <div className="border-b border-gray-100">
+          <button
+            onClick={() => setShowHighlight(!showHighlight)}
+            className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-sm font-semibold text-gray-900">Highlight</span>
+            {showHighlight ? (
+              <ChevronUp className="w-4 h-4 text-gray-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
+        </div>
 
-            return (
-              <button
-                key={idx}
-                onClick={() => setSelectedDate(date)}
-                className={`flex flex-col items-center px-3 py-2 rounded-lg transition-colors min-w-[46px] ${
-                  isSelected
-                    ? 'bg-white text-gray-900'
-                    : isTodayDate
-                    ? 'bg-blue-500/30 text-blue-300'
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <span className="text-[10px] font-medium uppercase">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]}
-                </span>
-                <span className="text-base font-bold">{date.getDate()}</span>
-              </button>
-            );
-          })}
+        {/* Bottom Actions */}
+        <div className="p-4 space-y-2">
+          <button className="w-full py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            CLEAR
+          </button>
+          <button className="w-full py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">
+            APPLY
+          </button>
         </div>
       </div>
 
-      {/* Provider headers - Light background */}
-      <div className="flex border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
-        <div className="flex-shrink-0 border-r border-gray-200 bg-white" style={{ width: TIME_COLUMN_WIDTH }} />
-        <div className="flex overflow-x-auto">
-          {providers.map((provider, index) => {
-            const color = getProviderColor(index);
-            return (
+      {/* Main Calendar Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
+          {/* Left side - View selector */}
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <ChevronRight className="w-4 h-4 text-gray-400 -ml-2" />
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">Day</span>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+
+          {/* Center - Date Navigator */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={goToPreviousDay}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg min-w-[180px] justify-center">
+              <span className="text-sm font-semibold text-gray-900">{formatHeaderDate()}</span>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </div>
+            <button
+              onClick={goToNextDay}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+
+          {/* Right side - Actions */}
+          <div className="flex items-center gap-2">
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Settings className="w-5 h-5 text-gray-500" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Bell className="w-5 h-5 text-gray-500" />
+            </button>
+            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Search className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        {/* Provider Headers */}
+        <div className="flex border-b border-gray-200 bg-white sticky top-0 z-10">
+          <div className="flex-shrink-0 border-r border-gray-100" style={{ width: TIME_COLUMN_WIDTH }} />
+          <div className="flex overflow-x-auto">
+            {providers.map((provider, index) => (
               <div
                 key={provider.id}
-                className="flex-shrink-0 py-3 px-2 text-center border-r border-gray-200 bg-white"
+                className="flex-shrink-0 py-4 px-4 border-r border-gray-100 bg-white"
                 style={{ width: columnWidth }}
               >
-                <div className="flex flex-col items-center">
+                <div className="flex items-center gap-3">
                   {provider.user?.profile_image ? (
                     <img
                       src={provider.user.profile_image}
                       alt={provider.user?.name || 'Provider'}
-                      className="w-10 h-10 rounded-full object-cover mb-1.5 border-2 border-gray-200"
+                      className="w-10 h-10 rounded-full object-cover"
                     />
                   ) : (
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center mb-1.5 border-2"
-                      style={{ backgroundColor: color.bg + '20', borderColor: color.bg }}
-                    >
-                      <User className="w-5 h-5" style={{ color: color.bg }} />
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold text-gray-600">
+                      {getInitials(provider.user?.name || '')}
                     </div>
                   )}
-                  <span className="text-gray-900 font-semibold text-sm truncate max-w-full">
-                    {provider.user?.name || 'Staff'}
-                  </span>
-                  <span className="text-gray-400 text-xs">8:30 AM - 6:00 PM</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-gray-900 truncate">
+                        {provider.user?.name || 'Staff'}
+                      </span>
+                      <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    </div>
+                    <span className="text-xs text-gray-400">10:00 AM-7:00 PM</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Calendar grid - Light background with hatched pattern for off-hours */}
-      <div ref={scrollContainerRef} className="overflow-auto" style={{ maxHeight: '600px' }}>
-        <div className="flex relative">
-          {/* Time column */}
-          <div className="flex-shrink-0 bg-white border-r border-gray-200 sticky left-0 z-10" style={{ width: TIME_COLUMN_WIDTH }}>
-            {TIME_SLOTS.map((slot) => (
-              <div
-                key={slot.hour}
-                className="border-b border-gray-100 flex items-start justify-end pr-2 pt-0"
-                style={{ height: HOUR_HEIGHT }}
-              >
-                <span className="text-[11px] text-gray-400 font-medium -mt-2">{slot.label}</span>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Provider columns */}
+        {/* Calendar Grid */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-auto">
           <div className="flex relative">
-            {providers.map((provider, providerIndex) => {
-              const color = getProviderColor(providerIndex);
-              const providerBookings = bookingsByProvider[provider.user_id] || [];
-
-              return (
+            {/* Time column */}
+            <div className="flex-shrink-0 bg-white border-r border-gray-100 sticky left-0 z-10" style={{ width: TIME_COLUMN_WIDTH }}>
+              {TIME_SLOTS.map((slot) => (
                 <div
-                  key={provider.id}
-                  className="flex-shrink-0 relative border-r border-gray-200"
-                  style={{ width: columnWidth }}
+                  key={slot.hour}
+                  className="border-b border-gray-50 flex items-start justify-end pr-3 pt-0"
+                  style={{ height: HOUR_HEIGHT }}
                 >
-                  {/* Grid lines with hatched pattern for visual interest */}
-                  {TIME_SLOTS.map((slot, slotIdx) => (
-                    <div
-                      key={slot.hour}
-                      className="border-b border-gray-100"
-                      style={{
-                        height: HOUR_HEIGHT,
-                        background: slotIdx < 1 || slotIdx > 11
-                          ? 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.03) 4px, rgba(0,0,0,0.03) 8px)'
-                          : providerIndex % 2 === 1 ? '#FAFAFA' : '#FFFFFF'
-                      }}
-                    />
-                  ))}
-
-                  {/* Bookings */}
-                  {providerBookings.map((booking) => {
-                    const { top, height } = getBookingPosition(booking);
-                    const isPast = isBookingPast(booking);
-
-                    return (
-                      <div
-                        key={booking.id}
-                        onClick={() => onViewBooking(booking)}
-                        className={`absolute left-1 right-1 rounded-lg cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg overflow-hidden ${
-                          isPast ? 'opacity-50' : 'shadow-md'
-                        }`}
-                        style={{
-                          top: `${top}px`,
-                          height: `${height}px`,
-                          backgroundColor: color.bg,
-                        }}
-                      >
-                        <div className="p-2 h-full overflow-hidden relative">
-                          <div className="text-[11px] font-bold text-white/90">
-                            {formatTimeRange(booking)}
-                          </div>
-                          <div className="text-sm font-semibold text-white truncate">
-                            {booking.customer?.name || 'Walk-in'}
-                          </div>
-                          {height > 50 && (
-                            <div className="text-xs text-white/80 truncate">
-                              {getServiceNames(booking)}
-                            </div>
-                          )}
-                          {/* Red dot for confirmed bookings */}
-                          {booking.status === 'confirmed' && (
-                            <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-red-500 border border-white" />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  <span className="text-xs text-gray-400 font-medium -mt-2">{slot.label}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
 
-            {/* Current time indicator (Red line) */}
-            {timePosition !== null && (
-              <div
-                className="absolute left-0 right-0 flex items-center z-20 pointer-events-none"
-                style={{ top: `${timePosition}px` }}
-              >
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500 -ml-1" />
-                <div className="flex-1 h-0.5 bg-red-500" />
-              </div>
-            )}
+            {/* Provider columns */}
+            <div className="flex relative">
+              {providers.map((provider, providerIndex) => {
+                const providerBookings = bookingsByProvider[provider.user_id] || [];
+
+                return (
+                  <div
+                    key={provider.id}
+                    className="flex-shrink-0 relative border-r border-gray-100"
+                    style={{ width: columnWidth }}
+                  >
+                    {/* Grid lines with hatched pattern for unavailable hours */}
+                    {TIME_SLOTS.map((slot, slotIdx) => {
+                      // Before 10AM and after 7PM are unavailable (hatched)
+                      const isUnavailable = slot.hour < 10 || slot.hour >= 19;
+
+                      return (
+                        <div
+                          key={slot.hour}
+                          className="border-b border-gray-50"
+                          style={{
+                            height: HOUR_HEIGHT,
+                            background: isUnavailable
+                              ? 'repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 6px)'
+                              : providerIndex % 2 === 1 ? '#FAFAFA' : '#FFFFFF'
+                          }}
+                        />
+                      );
+                    })}
+
+                    {/* Bookings */}
+                    {providerBookings.map((booking) => {
+                      const { top, height } = getBookingPosition(booking);
+                      const isPast = isBookingPast(booking);
+
+                      return (
+                        <div
+                          key={booking.id}
+                          onClick={() => onViewBooking(booking)}
+                          className={`absolute left-2 right-2 rounded-lg cursor-pointer transition-all hover:shadow-lg overflow-hidden border-l-4 ${
+                            isPast ? 'opacity-60' : ''
+                          }`}
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            backgroundColor: '#F3E8FF',
+                            borderLeftColor: '#9333EA',
+                          }}
+                        >
+                          <div className="p-2 h-full overflow-hidden relative">
+                            <div className="text-[11px] font-semibold text-purple-900">
+                              {formatTimeRange(booking)}
+                            </div>
+                            <div className="text-sm font-semibold text-purple-900 truncate">
+                              {booking.customer?.name || 'Walk-in'} • {getServiceNames(booking)}
+                            </div>
+                            {/* Red heart for client-requested bookings */}
+                            <div className="absolute top-2 right-2">
+                              <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+
+              {/* Current time indicator */}
+              {timePosition !== null && (
+                <div
+                  className="absolute flex items-center z-20 pointer-events-none"
+                  style={{
+                    top: `${timePosition}px`,
+                    left: 0,
+                    right: 0
+                  }}
+                >
+                  <span className="text-xs font-semibold text-red-500 bg-white px-1 -ml-1">
+                    {formatCurrentTime()}
+                  </span>
+                  <div className="w-2 h-2 rounded-full bg-red-500 ml-1" />
+                  <div className="flex-1 h-0.5 bg-red-500" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Floating Add Button */}
+        <button className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-30">
+          <Plus className="w-6 h-6" />
+        </button>
       </div>
 
       {/* Empty state */}
       {providers.length === 0 && (
-        <div className="p-12 text-center bg-gray-50">
-          <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">No staff members found</p>
-          <p className="text-gray-400 text-sm mt-1">Add providers to see the staff calendar</p>
+        <div className="flex-1 flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600 font-medium">No staff members found</p>
+            <p className="text-gray-400 text-sm mt-1">Add providers to see the staff calendar</p>
+          </div>
         </div>
       )}
     </div>
