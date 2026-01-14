@@ -35,9 +35,12 @@ import {
   Video,
   MapPin,
   ExternalLink,
-  Lock
+  Lock,
+  Users,
+  Grid3X3
 } from 'lucide-react';
 import BookingCalendar from '@/components/BookingCalendar';
+import StaffDayCalendar from '@/components/StaffDayCalendar';
 
 type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
@@ -68,6 +71,7 @@ export default function BookingsPage() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [calendarView, setCalendarView] = useState<'month' | 'staff'>('month');
 
   useEffect(() => {
     loadData();
@@ -395,17 +399,52 @@ export default function BookingsPage() {
               )}
             </div>
 
+            {/* Calendar View Toggle */}
+            <div className="flex items-center gap-2 bg-white/10 rounded-lg p-1">
+              <button
+                onClick={() => setCalendarView('month')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  calendarView === 'month'
+                    ? 'bg-[#0393d5] text-white'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Grid3X3 className="w-4 h-4" />
+                <span className="text-sm font-medium">Month</span>
+              </button>
+              <button
+                onClick={() => setCalendarView('staff')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  calendarView === 'staff'
+                    ? 'bg-[#0393d5] text-white'
+                    : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-sm font-medium">Staff Day</span>
+              </button>
+            </div>
+
           </div>
         </div>
 
-        {/* Calendar View */}
-        <BookingCalendar
-          bookings={bookings}
-          providers={providers}
-          onViewBooking={viewBookingDetails}
-          selectedProvider={selectedProvider}
-          onProviderChange={setSelectedProvider}
-        />
+        {/* Calendar Views */}
+        {calendarView === 'month' ? (
+          <BookingCalendar
+            bookings={bookings}
+            providers={providers}
+            onViewBooking={viewBookingDetails}
+            selectedProvider={selectedProvider}
+            onProviderChange={setSelectedProvider}
+          />
+        ) : (
+          <StaffDayCalendar
+            bookings={bookings}
+            providers={providers}
+            onViewBooking={viewBookingDetails}
+            onRefresh={loadData}
+          />
+        )}
       </main>
 
       <Footer />
