@@ -166,23 +166,6 @@ export default function BookingsPage() {
     setShowDetailModal(true);
   };
 
-  // Filter bookings
-  const filteredBookings = bookings.filter(booking => {
-    if (activeTab !== 'all' && booking.status !== activeTab) return false;
-    if (selectedDate && booking.appointment_date !== selectedDate) return false;
-    if (selectedProvider && booking.barber_id !== selectedProvider) return false;
-    return true;
-  });
-
-  // Group bookings by date
-  const groupedBookings = filteredBookings.reduce((acc, booking) => {
-    const date = booking.appointment_date;
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(booking);
-    return acc;
-  }, {} as Record<string, Booking[]>);
-
-  const sortedDates = Object.keys(groupedBookings).sort((a, b) => a.localeCompare(b));
 
   const getStatusColor = (status: string) => {
     switch (status) {
