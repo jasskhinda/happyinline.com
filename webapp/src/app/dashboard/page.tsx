@@ -72,19 +72,11 @@ function DashboardContent() {
         router.push('/admin');
         return;
       }
-      if (profile?.role === 'barber') {
-        router.push('/bookings');
-        return;
-      }
       if (profile?.role === 'customer') {
         router.push('/customer');
         return;
       }
-      // Owner role - redirect to bookings
-      if (profile?.role === 'owner') {
-        router.push('/bookings');
-        return;
-      }
+      // Owners and providers can access dashboard directly
 
       const subStatus = await getSubscriptionStatus(user.id);
       setSubscription(subStatus);
