@@ -469,7 +469,7 @@ export default function StaffDayCalendar({
 
         {/* Bottom Actions */}
         <div className="p-4 space-y-2">
-          <button className="w-full py-2.5 text-sm font-medium text-white bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors">
+          <button className="w-full py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             CLEAR
           </button>
           <button className="w-full py-2.5 text-sm font-medium text-white bg-[#0393d5] hover:bg-[#027bb5] rounded-lg transition-colors">
