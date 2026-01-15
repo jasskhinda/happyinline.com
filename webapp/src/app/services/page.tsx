@@ -442,9 +442,12 @@ export default function ServicesPage() {
     }
 
     const category = draggedService.category || 'General';
-    const categoryServices = services.filter(s => (s.category || 'General') === category);
+    // Sort by display_order to ensure indices match the visual order
+    const categoryServices = services
+      .filter(s => (s.category || 'General') === category)
+      .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
 
-    // Find indices
+    // Find indices in the sorted array
     const draggedIndex = categoryServices.findIndex(s => s.id === draggedService.id);
     const targetIndex = categoryServices.findIndex(s => s.id === targetService.id);
 
@@ -456,6 +459,8 @@ export default function ServicesPage() {
     // Reorder the category services
     const newCategoryServices = [...categoryServices];
     const [removed] = newCategoryServices.splice(draggedIndex, 1);
+    // When dragging down, we want to place AFTER the target (so use targetIndex which is now shifted)
+    // When dragging up, we want to place BEFORE the target (so use targetIndex as-is)
     newCategoryServices.splice(targetIndex, 0, removed);
 
     // Create new order with updated display_order values
