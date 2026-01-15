@@ -225,7 +225,7 @@ export default function CustomerDashboard() {
 
                 {/* Join Our Team - Hiring Section - Overlapping Banner */}
                 {shop.is_hiring && shop.careers_form_url && (
-                  <div className="absolute -bottom-16 right-6 bg-gradient-to-r from-[#0393d5]/90 to-[#027bb5]/90 backdrop-blur-xl rounded-xl p-3 border border-[#0393d5]/50 shadow-2xl max-w-xs">
+                  <div className="absolute -bottom-16 right-6 bg-gradient-to-r from-[#0393d5]/30 to-[#027bb5]/30 backdrop-blur-md rounded-xl p-3 border border-white/40 shadow-2xl max-w-xs">
                     <div className="flex items-center gap-2 mb-2">
                       <Briefcase className="w-4 h-4 text-white" />
                       <h4 className="text-sm font-bold text-white">
