@@ -210,7 +210,12 @@ export const getShopById = async (shopId: string): Promise<{ success: boolean; s
         operating_hours,
         announcement,
         is_manually_closed,
-        status
+        status,
+        is_hiring,
+        careers_form_url,
+        hiring_title,
+        hiring_subtitle,
+        hiring_tagline
       `)
       .eq('id', shopId)
       .single();
