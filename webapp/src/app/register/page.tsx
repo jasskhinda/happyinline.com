@@ -159,6 +159,7 @@ export default function RegisterPage() {
       }
 
       // Navigate to subscribe page with selected plan to complete payment
+      // After subscription, user will be redirected to bookings page
       router.push(`/subscribe?plan=${selectedPlan}&registered=true`);
 
     } catch (err: any) {

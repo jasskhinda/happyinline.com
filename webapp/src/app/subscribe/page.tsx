@@ -205,7 +205,7 @@ function SubscribeContent() {
   };
 
   const handleSuccess = () => {
-    router.push('/dashboard?subscribed=true');
+    router.push('/bookings?subscribed=true');
   };
 
   if (loading) {

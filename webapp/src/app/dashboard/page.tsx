@@ -73,11 +73,16 @@ function DashboardContent() {
         return;
       }
       if (profile?.role === 'barber') {
-        router.push('/provider');
+        router.push('/bookings');
         return;
       }
       if (profile?.role === 'customer') {
         router.push('/customer');
+        return;
+      }
+      // Owner role - redirect to bookings
+      if (profile?.role === 'owner') {
+        router.push('/bookings');
         return;
       }
 

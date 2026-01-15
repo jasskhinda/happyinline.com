@@ -28,8 +28,8 @@ export default function LoginPage() {
         if (profile?.role === 'customer') {
           router.push('/customer');
         } else {
-          // Owner or other roles go to business dashboard
-          router.push('/dashboard');
+          // Owner or provider go to bookings page
+          router.push('/bookings');
         }
       } else {
         setError(result.error || 'Invalid email or password');
