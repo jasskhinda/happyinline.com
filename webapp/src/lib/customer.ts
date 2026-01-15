@@ -512,7 +512,12 @@ export const getCustomerLinkedShop = async (customerId: string): Promise<{
         operating_hours,
         announcement,
         is_manually_closed,
-        status
+        status,
+        is_hiring,
+        careers_form_url,
+        hiring_title,
+        hiring_subtitle,
+        hiring_tagline
       `)
       .eq('id', profile.exclusive_shop_id)
       .single();
