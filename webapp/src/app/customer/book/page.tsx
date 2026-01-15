@@ -19,7 +19,9 @@ import {
   AlertCircle,
   DollarSign,
   Video,
-  MapPin
+  MapPin,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 type ServiceType = 'in_person' | 'online' | 'both';
@@ -111,6 +113,9 @@ export default function BookingPage() {
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [noQualifiedProviders, setNoQualifiedProviders] = useState(false);
 
+  // Track which service descriptions are expanded
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     loadData();
   }, []);
@@ -170,6 +175,18 @@ export default function BookingPage() {
         return prev.filter(s => s.id !== service.id);
       }
       return [...prev, service];
+    });
+  };
+
+  const toggleDescription = (serviceId: string) => {
+    setExpandedDescriptions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(serviceId)) {
+        newSet.delete(serviceId);
+      } else {
+        newSet.add(serviceId);
+      }
+      return newSet;
     });
   };
 
@@ -516,11 +533,12 @@ export default function BookingPage() {
                       (bookingFormat === 'in_person' && isOnlineOnly)
                     );
 
+                    const isExpanded = expandedDescriptions.has(service.id);
+
                     return (
                       <div key={service.id} className="space-y-2">
-                        <button
-                          onClick={() => toggleService(service)}
-                          className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
+                        <div
+                          className={`w-full p-4 rounded-xl border-2 transition-all ${
                             isConflicting
                               ? 'border-red-500 bg-red-500/20'
                               : isSelected
@@ -528,50 +546,79 @@ export default function BookingPage() {
                                 : 'border-white/20 hover:border-white/40 bg-white/5'
                           }`}
                         >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-medium text-white">{service.name}</p>
-                                {/* Service Type Badge */}
-                                {service.service_type === 'in_person' && (
-                                  <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" />
-                                    In-Person
-                                  </span>
-                                )}
-                                {service.service_type === 'online' && (
-                                  <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <Video className="w-3 h-3" />
-                                    Online
-                                  </span>
-                                )}
-                                {service.service_type === 'both' && (
-                                  <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" />
-                                    <span className="mx-0.5">/</span>
-                                    <Video className="w-3 h-3" />
-                                    Choose Format
-                                  </span>
+                          <button
+                            onClick={() => toggleService(service)}
+                            className="w-full text-left"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-medium text-white">{service.name}</p>
+                                  {/* Service Type Badge */}
+                                  {service.service_type === 'in_person' && (
+                                    <span className="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      In-Person
+                                    </span>
+                                  )}
+                                  {service.service_type === 'online' && (
+                                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <Video className="w-3 h-3" />
+                                      Online
+                                    </span>
+                                  )}
+                                  {service.service_type === 'both' && (
+                                    <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      <span className="mx-0.5">/</span>
+                                      <Video className="w-3 h-3" />
+                                      Choose Format
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-sm text-white/60 mt-1">{service.duration} min</p>
+                              </div>
+                              <div className="text-right ml-3">
+                                <p className={`font-semibold ${isConflicting ? 'text-red-400' : 'text-[var(--brand)]'}`}>${service.price}</p>
+                                {isConflicting ? (
+                                  <div className="flex items-center gap-1 mt-1 justify-end">
+                                    <AlertCircle className="w-5 h-5 text-red-400" />
+                                  </div>
+                                ) : isSelected && (
+                                  <CheckCircle className="w-5 h-5 text-[var(--brand)] mt-1 ml-auto" />
                                 )}
                               </div>
-                              {service.description && (
-                                <p className="text-sm text-white/60 mt-1">{service.description}</p>
-                              )}
-                              <p className="text-sm text-white/60 mt-1">{service.duration} min</p>
                             </div>
-                            <div className="text-right ml-3">
-                              <p className={`font-semibold ${isConflicting ? 'text-red-400' : 'text-[var(--brand)]'}`}>${service.price}</p>
-                              {isConflicting ? (
-                                <div className="flex items-center gap-1 mt-1 justify-end">
-                                  <AlertCircle className="w-5 h-5 text-red-400" />
-                                </div>
-                              ) : isSelected && (
-                                <CheckCircle className="w-5 h-5 text-[var(--brand)] mt-1 ml-auto" />
-                              )}
-                            </div>
-                          </div>
-                        </button>
+                          </button>
 
+                          {/* Description with Read More toggle */}
+                          {service.description && (
+                            <div className="mt-2 pt-2 border-t border-white/10">
+                              {isExpanded && (
+                                <p className="text-sm text-white/70 mb-2">{service.description}</p>
+                              )}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleDescription(service.id);
+                                }}
+                                className="text-xs text-[var(--brand)] hover:text-[var(--brand)]/80 font-medium flex items-center gap-1 transition-colors"
+                              >
+                                {isExpanded ? (
+                                  <>
+                                    READ LESS
+                                    <ChevronUp className="w-3 h-3" />
+                                  </>
+                                ) : (
+                                  <>
+                                    READ MORE
+                                    <ChevronDown className="w-3 h-3" />
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
