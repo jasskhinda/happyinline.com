@@ -195,9 +195,9 @@ export default function StorePreviewPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Services */}
-          <div className="lg:col-span-2">
+          <div>
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <Scissors className="w-5 h-5 text-[#0393d5]" />
@@ -255,40 +255,41 @@ export default function StorePreviewPage() {
             </div>
           </div>
 
-          {/* Join Our Team - Hiring Section */}
-          {shop.is_hiring && shop.careers_form_url && (
-            <div className="bg-gradient-to-r from-[#0393d5]/20 to-[#027bb5]/20 backdrop-blur-lg rounded-2xl p-6 border border-[#0393d5]/30 mb-6">
-              <div className="flex items-start gap-3 mb-4">
-                <div className="bg-[#0393d5]/20 p-3 rounded-xl">
-                  <Briefcase className="w-6 h-6 text-[#0393d5]" />
+          {/* Right Column: Join Our Team, Our Team, Hours */}
+          <div className="space-y-6">
+            {/* Join Our Team - Hiring Section */}
+            {shop.is_hiring && shop.careers_form_url && (
+              <div className="bg-gradient-to-r from-[#0393d5]/20 to-[#027bb5]/20 backdrop-blur-lg rounded-2xl p-6 border border-[#0393d5]/30">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="bg-[#0393d5]/20 p-3 rounded-xl">
+                    <Briefcase className="w-6 h-6 text-[#0393d5]" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-white mb-2">
+                      {shop.hiring_title || 'JOIN OUR TEAM!'}
+                    </h2>
+                    <p className="text-white/90 mb-1">
+                      {shop.hiring_subtitle || 'Schedule your Zoom or In Person Interview here'}
+                    </p>
+                    <p className="text-[#0393d5] font-semibold text-lg">
+                      {shop.hiring_tagline || 'Your New Career, STARTS HERE!'}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-white mb-2">
-                    {shop.hiring_title || 'JOIN OUR TEAM!'}
-                  </h2>
-                  <p className="text-white/90 mb-1">
-                    {shop.hiring_subtitle || 'Schedule your Zoom or In Person Interview here'}
-                  </p>
-                  <p className="text-[#0393d5] font-semibold text-lg">
-                    {shop.hiring_tagline || 'Your New Career, STARTS HERE!'}
-                  </p>
-                </div>
+                <a
+                  href={shop.careers_form_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                >
+                  <Briefcase className="w-5 h-5" />
+                  APPLY NOW
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               </div>
-              <a
-                href={shop.careers_form_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl"
-              >
-                <Briefcase className="w-5 h-5" />
-                APPLY NOW
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-          )}
+            )}
 
-          {/* Team */}
-          <div>
+            {/* Team */}
             <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-[#0393d5]" />
@@ -335,7 +336,7 @@ export default function StorePreviewPage() {
 
             {/* Operating Hours */}
             {shop.operating_days && shop.operating_days.length > 0 && (
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mt-6">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
                 <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-[#0393d5]" />
                   Hours
