@@ -26,7 +26,8 @@ import {
   DollarSign,
   Calendar,
   ExternalLink,
-  Video
+  Video,
+  Briefcase
 } from 'lucide-react';
 
 export default function StorePreviewPage() {
@@ -253,6 +254,38 @@ export default function StorePreviewPage() {
               )}
             </div>
           </div>
+
+          {/* Join Our Team - Hiring Section */}
+          {shop.is_hiring && shop.careers_form_url && (
+            <div className="bg-gradient-to-r from-[#0393d5]/20 to-[#027bb5]/20 backdrop-blur-lg rounded-2xl p-6 border border-[#0393d5]/30 mb-6">
+              <div className="flex items-start gap-3 mb-4">
+                <div className="bg-[#0393d5]/20 p-3 rounded-xl">
+                  <Briefcase className="w-6 h-6 text-[#0393d5]" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    {shop.hiring_title || 'JOIN OUR TEAM!'}
+                  </h2>
+                  <p className="text-white/90 mb-1">
+                    {shop.hiring_subtitle || 'Schedule your Zoom or In Person Interview here'}
+                  </p>
+                  <p className="text-[#0393d5] font-semibold text-lg">
+                    {shop.hiring_tagline || 'Your New Career, STARTS HERE!'}
+                  </p>
+                </div>
+              </div>
+              <a
+                href={shop.careers_form_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-8 py-3 rounded-lg transition-all shadow-lg hover:shadow-xl"
+              >
+                <Briefcase className="w-5 h-5" />
+                APPLY NOW
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+          )}
 
           {/* Team */}
           <div>

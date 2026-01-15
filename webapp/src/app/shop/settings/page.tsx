@@ -34,7 +34,8 @@ import {
   LogOut,
   Calendar,
   Link2,
-  Unlink
+  Unlink,
+  Briefcase
 } from 'lucide-react';
 import { getProfile, updateProfile, updatePassword, signOut } from '@/lib/auth';
 
@@ -106,6 +107,13 @@ export default function ShopSettingsPage() {
   const [announcement, setAnnouncement] = useState('');
   const [usePerDayHours, setUsePerDayHours] = useState(false);
 
+  // Hiring settings state
+  const [isHiring, setIsHiring] = useState(false);
+  const [careersFormUrl, setCareersFormUrl] = useState('');
+  const [hiringTitle, setHiringTitle] = useState('JOIN OUR TEAM!');
+  const [hiringSubtitle, setHiringSubtitle] = useState('Schedule your Zoom or In Person Interview here');
+  const [hiringTagline, setHiringTagline] = useState('Your New Career, STARTS HERE!');
+
   useEffect(() => {
     loadShop();
   }, []);
@@ -174,6 +182,13 @@ export default function ShopSettingsPage() {
       setClosingTime(userShop.closing_time || '18:00');
       setAnnouncement(userShop.announcement || '');
       setTimezone(userShop.timezone || 'America/Indiana/Indianapolis');
+
+      // Load hiring settings
+      setIsHiring(userShop.is_hiring || false);
+      setCareersFormUrl(userShop.careers_form_url || '');
+      setHiringTitle(userShop.hiring_title || 'JOIN OUR TEAM!');
+      setHiringSubtitle(userShop.hiring_subtitle || 'Schedule your Zoom or In Person Interview here');
+      setHiringTagline(userShop.hiring_tagline || 'Your New Career, STARTS HERE!');
 
       // Check if per-day hours are set
       if (userShop.operating_hours && Object.keys(userShop.operating_hours).length > 0) {
@@ -326,7 +341,12 @@ export default function ShopSettingsPage() {
         closing_time: closingTime,
         operating_hours: usePerDayHours ? operatingHours : null,
         announcement: announcement.trim() || null,
-        timezone
+        timezone,
+        is_hiring: isHiring,
+        careers_form_url: careersFormUrl.trim() || null,
+        hiring_title: hiringTitle.trim() || 'JOIN OUR TEAM!',
+        hiring_subtitle: hiringSubtitle.trim() || 'Schedule your Zoom or In Person Interview here',
+        hiring_tagline: hiringTagline.trim() || 'Your New Career, STARTS HERE!'
       });
 
       if (result.success) {
@@ -931,6 +951,106 @@ export default function ShopSettingsPage() {
                 <p className="text-yellow-200 text-sm font-medium">Preview:</p>
                 <p className="text-white">{announcement}</p>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Hiring Settings */}
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mb-6">
+          <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+            <Briefcase className="w-6 h-6 text-[#0393d5]" />
+            Careers & Hiring
+          </h2>
+
+          <div className="space-y-5">
+            {/* Enable Hiring Toggle */}
+            <div className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10">
+              <div>
+                <p className="text-white font-medium">We're Hiring</p>
+                <p className="text-[#0393d5] text-sm">Show "Join Our Team" section to visitors</p>
+              </div>
+              <button
+                onClick={() => setIsHiring(!isHiring)}
+                className={`w-14 h-8 rounded-full transition-colors relative ${
+                  isHiring ? 'bg-[#0393d5]' : 'bg-white/20'
+                }`}
+              >
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-transform ${
+                  isHiring ? 'left-7' : 'left-1'
+                }`} />
+              </button>
+            </div>
+
+            {isHiring && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                    Application Form URL (Google Form, etc.) *
+                  </label>
+                  <input
+                    type="url"
+                    value={careersFormUrl}
+                    onChange={(e) => setCareersFormUrl(e.target.value)}
+                    placeholder="https://forms.google.com/..."
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                  />
+                  <p className="text-white/50 text-xs mt-1">
+                    Link to your job application form or careers page
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                    Heading
+                  </label>
+                  <input
+                    type="text"
+                    value={hiringTitle}
+                    onChange={(e) => setHiringTitle(e.target.value)}
+                    placeholder="JOIN OUR TEAM!"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                    Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={hiringSubtitle}
+                    onChange={(e) => setHiringSubtitle(e.target.value)}
+                    placeholder="Schedule your Zoom or In Person Interview here"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-[#0393d5] mb-2">
+                    Tagline
+                  </label>
+                  <input
+                    type="text"
+                    value={hiringTagline}
+                    onChange={(e) => setHiringTagline(e.target.value)}
+                    placeholder="Your New Career, STARTS HERE!"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#0393d5]"
+                  />
+                </div>
+
+                {/* Preview */}
+                <div className="mt-4 p-4 bg-[#0393d5]/10 border border-[#0393d5]/30 rounded-lg">
+                  <p className="text-[#0393d5] text-sm font-medium mb-3">Preview:</p>
+                  <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
+                    <h3 className="text-lg font-semibold text-white mb-2">{hiringTitle}</h3>
+                    <p className="text-white/80 text-sm mb-2">{hiringSubtitle}</p>
+                    <p className="text-[#0393d5] text-sm font-medium mb-3">{hiringTagline}</p>
+                    <button className="bg-[#0393d5] text-white px-6 py-2 rounded-lg text-sm font-medium">
+                      APPLY NOW
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>

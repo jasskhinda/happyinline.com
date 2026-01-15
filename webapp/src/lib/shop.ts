@@ -44,6 +44,11 @@ export interface Shop {
   announcement: string | null;             // Shop announcement/banner
   timezone: string | null;                 // IANA timezone identifier for Google Calendar sync
   is_manually_closed: boolean;
+  is_hiring: boolean;                      // Whether shop is currently hiring
+  careers_form_url: string | null;         // URL to job application form (Google Form, etc.)
+  hiring_title: string | null;             // Hiring section title
+  hiring_subtitle: string | null;          // Hiring section subtitle
+  hiring_tagline: string | null;           // Hiring section tagline
   status: 'draft' | 'pending_review' | 'approved' | 'rejected' | 'suspended' | 'active';
   is_active: boolean;
   created_by: string;

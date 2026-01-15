@@ -27,6 +27,11 @@ export interface ShopPublic {
   announcement: string | null;
   is_manually_closed: boolean;
   status: string;
+  is_hiring: boolean;
+  careers_form_url: string | null;
+  hiring_title: string | null;
+  hiring_subtitle: string | null;
+  hiring_tagline: string | null;
   category?: {
     id: string;
     name: string;
