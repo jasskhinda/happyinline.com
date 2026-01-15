@@ -226,39 +226,40 @@ export default function CustomerDashboard() {
 
               {/* Shop Info */}
               <div className="p-6 pt-12">
-                <h3 className="text-2xl font-bold text-white mb-4">{shop.name}</h3>
+                {/* Business Name & Hiring Section Row */}
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold text-white">{shop.name}</h3>
+                  </div>
 
-                {/* Join Our Team - Hiring Section */}
-                {shop.is_hiring && shop.careers_form_url && (
-                  <div className="bg-gradient-to-r from-[#0393d5]/20 to-[#027bb5]/20 backdrop-blur-lg rounded-xl p-4 border border-[#0393d5]/30 mb-4">
-                    <div className="flex items-start gap-3">
-                      <div className="bg-[#0393d5]/20 p-2 rounded-lg">
-                        <Briefcase className="w-5 h-5 text-[#0393d5]" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-lg font-bold text-white mb-1">
+                  {/* Join Our Team - Hiring Section */}
+                  {shop.is_hiring && shop.careers_form_url && (
+                    <div className="bg-gradient-to-r from-[#0393d5]/20 to-[#027bb5]/20 backdrop-blur-lg rounded-xl p-3 border border-[#0393d5]/30 md:max-w-xs">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Briefcase className="w-4 h-4 text-[#0393d5]" />
+                        <h4 className="text-sm font-bold text-white">
                           {shop.hiring_title || 'JOIN OUR TEAM!'}
                         </h4>
-                        <p className="text-white/90 text-sm mb-1">
-                          {shop.hiring_subtitle || 'Schedule your Zoom or In Person Interview here'}
-                        </p>
-                        <p className="text-[#0393d5] font-semibold text-sm mb-3">
-                          {shop.hiring_tagline || 'Your New Career, STARTS HERE!'}
-                        </p>
-                        <a
-                          href={shop.careers_form_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-6 py-2 rounded-lg transition-all shadow-lg hover:shadow-xl text-sm"
-                        >
-                          <Briefcase className="w-4 h-4" />
-                          APPLY NOW
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
                       </div>
+                      <p className="text-white/90 text-xs mb-1">
+                        {shop.hiring_subtitle || 'Schedule your Zoom or In Person Interview here'}
+                      </p>
+                      <p className="text-[#0393d5] font-semibold text-xs mb-2">
+                        {shop.hiring_tagline || 'Your New Career, STARTS HERE!'}
+                      </p>
+                      <a
+                        href={shop.careers_form_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold px-4 py-1.5 rounded-lg transition-all shadow-lg hover:shadow-xl text-xs w-full justify-center"
+                      >
+                        <Briefcase className="w-3 h-3" />
+                        APPLY NOW
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {shop.description && (
                   <p className="text-white/70 text-sm mb-4">{shop.description}</p>
