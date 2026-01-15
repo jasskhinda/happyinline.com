@@ -8,11 +8,7 @@ import {
   ChevronUp,
   User,
   Calendar,
-  Heart,
-  Settings,
-  Bell,
-  Search,
-  Plus
+  Heart
 } from 'lucide-react';
 import { Booking, ShopStaff } from '@/lib/shop';
 
@@ -473,10 +469,10 @@ export default function StaffDayCalendar({
 
         {/* Bottom Actions */}
         <div className="p-4 space-y-2">
-          <button className="w-full py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <button className="w-full py-2.5 text-sm font-medium text-white bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors">
             CLEAR
           </button>
-          <button className="w-full py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors">
+          <button className="w-full py-2.5 text-sm font-medium text-white bg-[#0393d5] hover:bg-[#027bb5] rounded-lg transition-colors">
             APPLY
           </button>
         </div>
@@ -624,15 +620,7 @@ export default function StaffDayCalendar({
 
           {/* Right side - Actions */}
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Settings className="w-5 h-5 text-gray-500" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell className="w-5 h-5 text-gray-500" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Search className="w-5 h-5 text-gray-500" />
-            </button>
+            {/* Icons removed as requested */}
           </div>
         </div>
 
@@ -1026,10 +1014,7 @@ export default function StaffDayCalendar({
           </div>
         )}
 
-        {/* Floating Add Button */}
-        <button className="fixed bottom-8 right-8 w-14 h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center transition-colors z-30">
-          <Plus className="w-6 h-6" />
-        </button>
+        {/* Floating Add Button - Removed as requested */}
       </div>
 
       {/* Empty state */}
