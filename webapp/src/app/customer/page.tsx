@@ -226,11 +226,7 @@ export default function CustomerDashboard() {
 
               {/* Shop Info */}
               <div className="p-6 pt-12">
-                <h3 className="text-2xl font-bold text-white mb-2">{shop.name}</h3>
-
-                {shop.description && (
-                  <p className="text-white/70 text-sm mb-4">{shop.description}</p>
-                )}
+                <h3 className="text-2xl font-bold text-white mb-4">{shop.name}</h3>
 
                 {/* Join Our Team - Hiring Section */}
                 {shop.is_hiring && shop.careers_form_url && (
@@ -262,6 +258,10 @@ export default function CustomerDashboard() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {shop.description && (
+                  <p className="text-white/70 text-sm mb-4">{shop.description}</p>
                 )}
 
                 {/* Announcement Banner */}
