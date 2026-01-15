@@ -50,6 +50,7 @@ export interface ShopServicePublic {
   online_meeting_link: string | null;
   online_meeting_password: string | null;
   online_instructions: string | null;
+  display_order: number;
 }
 
 export interface ProviderPublic {
@@ -230,9 +231,10 @@ export const getShopServicesPublic = async (shopId: string): Promise<{ success: 
 
     const { data: services, error } = await supabase
       .from('shop_services')
-      .select('id, name, description, duration, price, is_active, service_type')
+      .select('id, name, description, duration, price, is_active, service_type, display_order')
       .eq('shop_id', shopId)
       .eq('is_active', true)
+      .order('display_order', { ascending: true })
       .order('name', { ascending: true });
 
     if (error) {
