@@ -27,8 +27,11 @@ export default function LoginPage() {
 
         if (profile?.role === 'customer') {
           router.push('/customer');
+        } else if (profile?.role === 'barber' || profile?.role === 'provider') {
+          // Providers go to their provider dashboard
+          router.push('/provider');
         } else {
-          // Owner or provider go to bookings page
+          // Owners go to bookings page
           router.push('/bookings');
         }
       } else {
