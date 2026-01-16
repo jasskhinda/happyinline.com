@@ -4,12 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, signOut } from '@/lib/auth';
+import { getCurrentUser, signOut, getProfile } from '@/lib/auth';
 import { LogOut, User, Menu, X } from 'lucide-react';
 
 export default function Header() {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,11 +22,29 @@ export default function Header() {
     try {
       const user = await getCurrentUser();
       setIsLoggedIn(!!user);
+      if (user) {
+        const profile = await getProfile(user.id);
+        setUserRole(profile?.role || null);
+      }
     } catch (err) {
       setIsLoggedIn(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get the appropriate dashboard URL based on user role
+  const getDashboardUrl = () => {
+    if (userRole === 'customer') return '/customer';
+    if (userRole === 'barber' || userRole === 'provider') return '/provider';
+    return '/dashboard'; // owner
+  };
+
+  // Get the appropriate dashboard label based on user role
+  const getDashboardLabel = () => {
+    if (userRole === 'customer') return 'My Bookings';
+    if (userRole === 'barber' || userRole === 'provider') return 'My Schedule';
+    return 'Dashboard'; // owner
   };
 
   const handleSignOut = async () => {
@@ -58,11 +77,11 @@ export default function Header() {
           ) : isLoggedIn ? (
             <>
               <Link
-                href="/dashboard"
+                href={getDashboardUrl()}
                 className="bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white text-sm font-semibold px-6 py-2.5 rounded-full transition-all hover:shadow-brand flex items-center gap-2"
               >
                 <User className="w-4 h-4" />
-                Dashboard
+                {getDashboardLabel()}
               </Link>
               <button
                 onClick={handleSignOut}
@@ -108,12 +127,12 @@ export default function Header() {
           ) : isLoggedIn ? (
             <>
               <Link
-                href="/dashboard"
+                href={getDashboardUrl()}
                 onClick={() => setMobileMenuOpen(false)}
                 className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white text-sm font-semibold px-6 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 <User className="w-4 h-4" />
-                Dashboard
+                {getDashboardLabel()}
               </Link>
               <button
                 onClick={handleSignOut}
