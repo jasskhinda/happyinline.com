@@ -23,11 +23,16 @@ import {
   Plus,
   X,
   DollarSign,
-  Timer,
-  Camera
+  Camera,
+  Video,
+  Link as LinkIcon,
+  Lock,
+  Tag
 } from 'lucide-react';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+type ServiceType = 'in_person' | 'online' | 'both';
 
 interface Service {
   id: string;
@@ -35,6 +40,11 @@ interface Service {
   description: string;
   price: number;
   duration: number;
+  category: string;
+  service_type: ServiceType;
+  online_meeting_link: string;
+  online_meeting_password: string;
+  online_instructions: string;
 }
 
 export default function CreateShopPage() {
@@ -72,7 +82,17 @@ export default function CreateShopPage() {
   // Services
   const [services, setServices] = useState<Service[]>([]);
   const [showServiceModal, setShowServiceModal] = useState(false);
-  const [newService, setNewService] = useState({ name: '', description: '', price: '', duration: '30' });
+  const [newService, setNewService] = useState({
+    name: '',
+    description: '',
+    price: '',
+    duration: '30',
+    category: 'General',
+    service_type: 'in_person' as ServiceType,
+    online_meeting_link: '',
+    online_meeting_password: '',
+    online_instructions: ''
+  });
 
   useEffect(() => {
     checkAccess();
@@ -144,16 +164,36 @@ export default function CreateShopPage() {
   const handleAddService = () => {
     if (!newService.name || !newService.price) return;
 
+    // Validate online meeting link if service type requires it
+    if ((newService.service_type === 'online' || newService.service_type === 'both') && !newService.online_meeting_link) {
+      return;
+    }
+
     const service: Service = {
       id: Date.now().toString(),
       name: newService.name,
       description: newService.description,
       price: parseFloat(newService.price),
-      duration: parseInt(newService.duration) || 30
+      duration: parseInt(newService.duration) || 30,
+      category: newService.category,
+      service_type: newService.service_type,
+      online_meeting_link: newService.online_meeting_link,
+      online_meeting_password: newService.online_meeting_password,
+      online_instructions: newService.online_instructions
     };
 
     setServices([...services, service]);
-    setNewService({ name: '', description: '', price: '', duration: '30' });
+    setNewService({
+      name: '',
+      description: '',
+      price: '',
+      duration: '30',
+      category: 'General',
+      service_type: 'in_person',
+      online_meeting_link: '',
+      online_meeting_password: '',
+      online_instructions: ''
+    });
     setShowServiceModal(false);
   };
 
@@ -254,6 +294,11 @@ export default function CreateShopPage() {
             description: service.description,
             price: service.price,
             duration: service.duration,
+            category: service.category,
+            service_type: service.service_type,
+            online_meeting_link: service.online_meeting_link || null,
+            online_meeting_password: service.online_meeting_password || null,
+            online_instructions: service.online_instructions || null,
             is_active: true
           });
       }
@@ -784,7 +829,7 @@ export default function CreateShopPage() {
       {/* Add Service Modal */}
       {showServiceModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--primary)] rounded-2xl p-6 max-w-md w-full border border-white/20">
+          <div className="bg-[var(--primary)] rounded-2xl p-6 max-w-lg w-full border border-white/20 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold text-white">Add Service</h3>
               <button
@@ -804,7 +849,7 @@ export default function CreateShopPage() {
                   type="text"
                   value={newService.name}
                   onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                  placeholder="e.g., Haircut"
+                  placeholder="e.g., Premium Haircut"
                   className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
                 />
               </div>
@@ -813,16 +858,33 @@ export default function CreateShopPage() {
                 <label className="block text-sm font-medium text-[var(--brand)] mb-2">
                   Description
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={newService.description}
                   onChange={(e) => setNewService({ ...newService, description: e.target.value })}
-                  placeholder="Brief description"
-                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                  placeholder="Brief description of the service..."
+                  rows={2}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-[var(--brand)] mb-2">
+                    Duration (minutes) *
+                  </label>
+                  <select
+                    value={newService.duration}
+                    onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                  >
+                    <option value="15" className="bg-[var(--primary)]">15 min</option>
+                    <option value="30" className="bg-[var(--primary)]">30 min</option>
+                    <option value="45" className="bg-[var(--primary)]">45 min</option>
+                    <option value="60" className="bg-[var(--primary)]">60 min</option>
+                    <option value="90" className="bg-[var(--primary)]">90 min</option>
+                    <option value="120" className="bg-[var(--primary)]">120 min</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-[var(--brand)] mb-2">
                     Price ($) *
@@ -840,24 +902,124 @@ export default function CreateShopPage() {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-[var(--brand)] mb-2">
-                    Duration (min)
-                  </label>
-                  <div className="relative">
-                    <Timer className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--brand)]" />
-                    <input
-                      type="number"
-                      value={newService.duration}
-                      onChange={(e) => setNewService({ ...newService, duration: e.target.value })}
-                      placeholder="30"
-                      min="5"
-                      step="5"
-                      className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--brand)] mb-2">
+                  Category
+                </label>
+                <div className="relative">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--brand)]" />
+                  <input
+                    type="text"
+                    value={newService.category}
+                    onChange={(e) => setNewService({ ...newService, category: e.target.value })}
+                    placeholder="General"
+                    className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                  />
+                </div>
+              </div>
+
+              {/* Service Type */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--brand)] mb-2">
+                  Service Type *
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewService({ ...newService, service_type: 'in_person' })}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                      newService.service_type === 'in_person'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-white'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                    }`}
+                  >
+                    <MapPin className="w-5 h-5" />
+                    <span className="text-xs font-medium">In-Person</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewService({ ...newService, service_type: 'online' })}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                      newService.service_type === 'online'
+                        ? 'bg-purple-500/20 border-purple-500 text-white'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                    }`}
+                  >
+                    <Video className="w-5 h-5" />
+                    <span className="text-xs font-medium">Online</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewService({ ...newService, service_type: 'both' })}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                      newService.service_type === 'both'
+                        ? 'bg-blue-500/20 border-blue-500 text-white'
+                        : 'bg-white/5 border-white/20 text-white/70 hover:border-white/40'
+                    }`}
+                  >
+                    <Video className="w-5 h-5" />
+                    <span className="text-xs font-medium">Both</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Online Meeting Details - Show when service type is online or both */}
+              {(newService.service_type === 'online' || newService.service_type === 'both') && (
+                <div className="space-y-4 p-4 bg-purple-500/10 rounded-xl border border-purple-500/30">
+                  <h4 className="text-sm font-medium text-purple-300 flex items-center gap-2">
+                    <Video className="w-4 h-4" />
+                    Online Meeting Details
+                  </h4>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--brand)] mb-2">
+                      Meeting Link (Zoom, Google Meet, etc.) *
+                    </label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                      <input
+                        type="url"
+                        value={newService.online_meeting_link}
+                        onChange={(e) => setNewService({ ...newService, online_meeting_link: e.target.value })}
+                        placeholder="https://zoom.us/j/..."
+                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    <p className="text-purple-300/70 text-xs mt-1">Required for online services</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--brand)] mb-2">
+                      Meeting Password (optional)
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+                      <input
+                        type="text"
+                        value={newService.online_meeting_password}
+                        onChange={(e) => setNewService({ ...newService, online_meeting_password: e.target.value })}
+                        placeholder="Enter meeting password if required"
+                        className="w-full bg-white/10 border border-white/20 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[var(--brand)] mb-2">
+                      Additional Instructions
+                    </label>
+                    <textarea
+                      value={newService.online_instructions}
+                      onChange={(e) => setNewService({ ...newService, online_instructions: e.target.value })}
+                      placeholder="e.g., Please join 5 minutes early. If you prefer in-person, specify in the notes field."
+                      rows={2}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg py-3 px-4 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                     />
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -869,7 +1031,7 @@ export default function CreateShopPage() {
               </button>
               <button
                 onClick={handleAddService}
-                disabled={!newService.name || !newService.price}
+                disabled={!newService.name || !newService.price || ((newService.service_type === 'online' || newService.service_type === 'both') && !newService.online_meeting_link)}
                 className="flex-1 bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Plus className="w-5 h-5" />
