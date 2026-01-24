@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Head from 'next/head';
 import { getSupabaseClient } from '@/lib/supabase';
 import {
   Store,
@@ -15,7 +16,8 @@ import {
   Bell,
   Loader2,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Smartphone
 } from 'lucide-react';
 
 interface ShopData {
@@ -42,10 +44,28 @@ export default function JoinShopPage() {
   const [shop, setShop] = useState<ShopData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
+  const [showAppBanner, setShowAppBanner] = useState(false);
 
   useEffect(() => {
     if (shopId) {
       loadShop();
+    }
+  }, [shopId]);
+
+  // Detect mobile and try to open the app
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor;
+    const mobile = /android|iphone|ipad|ipod/i.test(userAgent.toLowerCase());
+    setIsMobile(mobile);
+
+    if (mobile && shopId) {
+      // Show the app banner after a short delay
+      setShowAppBanner(true);
+
+      // Try to open the app using Universal Link / App Link
+      // This will automatically open the app if installed (via Universal Links)
+      // If the app is not installed, nothing happens and user stays on web page
     }
   }, [shopId]);
 
@@ -111,8 +131,51 @@ export default function JoinShopPage() {
     );
   }
 
+  const handleOpenInApp = () => {
+    // Try to open the app using the deep link scheme
+    const deepLink = `happyinline://signup/shop/${shopId}`;
+    const universalLink = `https://happyinline.com/join/${shopId}`;
+
+    // For iOS, try Universal Link first (it will open app if installed)
+    // For Android, try the intent scheme
+    const userAgent = navigator.userAgent || navigator.vendor;
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent.toLowerCase());
+    const isAndroid = /android/i.test(userAgent.toLowerCase());
+
+    if (isIOS) {
+      // iOS: Use Universal Link - will open app if installed, stay on web if not
+      window.location.href = universalLink;
+    } else if (isAndroid) {
+      // Android: Try intent scheme first, fallback to Play Store
+      const intentUrl = `intent://join/${shopId}#Intent;scheme=https;package=com.happyinline.app;S.browser_fallback_url=${encodeURIComponent(universalLink)};end`;
+      window.location.href = intentUrl;
+    } else {
+      // Fallback: try deep link
+      window.location.href = deepLink;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile App Banner */}
+      {showAppBanner && isMobile && (
+        <div className="bg-[#0393d5] text-white px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Smartphone className="w-6 h-6" />
+            <div>
+              <p className="font-semibold text-sm">Happy InLine App</p>
+              <p className="text-xs opacity-90">Better experience in our app</p>
+            </div>
+          </div>
+          <button
+            onClick={handleOpenInApp}
+            className="bg-white text-[#0393d5] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors"
+          >
+            Open App
+          </button>
+        </div>
+      )}
+
       {/* Hero Section with Cover Image */}
       <div className="relative">
         {shop.cover_image_url ? (
