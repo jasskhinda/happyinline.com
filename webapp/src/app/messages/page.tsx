@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus } from '@/lib/auth';
-import { getMyShop, Shop } from '@/lib/shop';
+import { getCurrentUser, getSubscriptionStatus, SubscriptionStatus, getProfile } from '@/lib/auth';
+import { getMyShop, getProviderShop, Shop } from '@/lib/shop';
 import {
   getShopConversations,
   getConversationMessages,
@@ -96,17 +96,36 @@ export default function MessagesPage() {
 
       setCurrentUserId(user.id);
 
-      const subStatus = await getSubscriptionStatus(user.id);
-      setSubscription(subStatus);
+      // Get profile to check role
+      const profile = await getProfile(user.id);
 
-      if (!subStatus?.isActive) {
-        router.push('/subscribe');
-        return;
+      // For owners, check subscription
+      if (profile?.role === 'owner') {
+        const subStatus = await getSubscriptionStatus(user.id);
+        setSubscription(subStatus);
+
+        if (!subStatus?.isActive) {
+          router.push('/subscribe');
+          return;
+        }
       }
 
-      const shopResult = await getMyShop(user.id);
+      // Try to get shop - first as owner, then as provider
+      let shopResult = await getMyShop(user.id);
+
       if (!shopResult.success || !shopResult.shop) {
-        router.push('/shop/create');
+        // Not an owner, try as provider
+        shopResult = await getProviderShop(user.id);
+      }
+
+      if (!shopResult.success || !shopResult.shop) {
+        // Neither owner nor provider - redirect based on role
+        if (profile?.role === 'owner') {
+          router.push('/shop/create');
+        } else {
+          setError('You are not associated with any shop');
+          setLoading(false);
+        }
         return;
       }
 

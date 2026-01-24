@@ -23,6 +23,7 @@ import {
   User,
   Phone,
   Mail,
+  MessageSquare,
   CheckCircle,
   XCircle,
   Scissors,
@@ -432,7 +433,7 @@ function ProviderDashboardContent() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
@@ -468,6 +469,22 @@ function ProviderDashboardContent() {
               </div>
             </div>
           </div>
+
+          {/* Messages Button */}
+          <button
+            onClick={() => router.push('/messages')}
+            className="bg-white/10 backdrop-blur-lg rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all text-left"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-white/60 text-sm">Messages</p>
+                <p className="text-lg font-bold text-white">Chat</p>
+              </div>
+            </div>
+          </button>
 
           {/* Google Calendar Sync Card */}
           <div className={`backdrop-blur-lg rounded-xl p-6 border ${
