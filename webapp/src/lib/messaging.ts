@@ -341,7 +341,7 @@ export const getUnreadCount = async (userId: string) => {
     }
 
     let totalUnread = 0;
-    (conversations || []).forEach((conv) => {
+    (conversations || []).forEach((conv: Conversation) => {
       if (conv.user1_id === userId) {
         totalUnread += conv.user1_unread_count || 0;
       } else {
