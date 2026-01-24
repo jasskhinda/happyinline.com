@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendCancellationNotifications } from '@/lib/email';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { deleteCalendarEvent, refreshAccessToken } from '@/lib/google-calendar';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +30,8 @@ export async function POST(request: NextRequest) {
         appointment_date,
         appointment_time,
         total_amount,
-        status
+        status,
+        google_calendar_event_id
       `)
       .eq('id', bookingId)
       .single();
@@ -74,21 +76,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch owner details
+    // Fetch owner details with Google Calendar tokens
     const { data: owner } = await supabase
       .from('profiles')
-      .select('id, name, email')
+      .select('id, name, email, google_calendar_connected, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expiry')
       .eq('id', shop.created_by)
       .single();
 
-    // Fetch provider details if assigned
+    // Fetch provider details with Google Calendar tokens if assigned
     // Check both barber_id (legacy) and provider_id (mobile app uses this)
     let provider = null;
     const providerId = booking.barber_id || booking.provider_id;
     if (providerId) {
       const { data: providerData } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, google_calendar_connected, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expiry')
         .eq('id', providerId)
         .single();
       provider = providerData;
@@ -133,9 +135,72 @@ export async function POST(request: NextRequest) {
     const results = await sendCancellationNotifications(emailData);
     console.log('📧 Cancellation email results:', results);
 
+    // Delete Google Calendar event if it exists
+    let calendarDeleted = false;
+    if (booking.google_calendar_event_id) {
+      // Determine who to delete calendar event for: provider first (if assigned and has calendar), then owner
+      const calendarUser = (provider?.google_calendar_connected && provider?.google_calendar_access_token)
+        ? provider
+        : (owner?.google_calendar_connected && owner?.google_calendar_access_token)
+          ? owner
+          : null;
+
+      if (calendarUser) {
+        console.log('📅 Attempting to delete Google Calendar event...');
+
+        let accessToken = calendarUser.google_calendar_access_token;
+        const refreshToken = calendarUser.google_calendar_refresh_token;
+
+        // Check if token is expired and refresh if needed
+        if (calendarUser.google_calendar_token_expiry) {
+          const expiryDate = new Date(calendarUser.google_calendar_token_expiry);
+          if (expiryDate < new Date()) {
+            console.log('📅 Access token expired, refreshing...');
+            if (refreshToken) {
+              const newTokens = await refreshAccessToken(refreshToken);
+              if (newTokens) {
+                accessToken = newTokens.access_token;
+                // Update tokens in database
+                await supabase
+                  .from('profiles')
+                  .update({
+                    google_calendar_access_token: newTokens.access_token,
+                    google_calendar_token_expiry: newTokens.expiry_date
+                      ? new Date(newTokens.expiry_date).toISOString()
+                      : null
+                  })
+                  .eq('id', calendarUser.id);
+              }
+            }
+          }
+        }
+
+        // Delete calendar event
+        const calendarResult = await deleteCalendarEvent(
+          accessToken,
+          refreshToken || undefined,
+          booking.google_calendar_event_id
+        );
+
+        if (calendarResult.success) {
+          calendarDeleted = true;
+          console.log('📅 Calendar event deleted successfully');
+
+          // Clear the event ID from booking record
+          await supabase
+            .from('bookings')
+            .update({ google_calendar_event_id: null })
+            .eq('id', bookingId);
+        } else {
+          console.error('📅 Failed to delete calendar event:', calendarResult.error);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       emailsSent: results,
+      calendarDeleted,
     });
 
   } catch (error: any) {
@@ -146,4 +211,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-// Trigger redeploy Sat Jan 10 12:08:54 EST 2026

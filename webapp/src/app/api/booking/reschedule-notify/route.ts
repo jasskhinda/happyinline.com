@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendRescheduleNotifications } from '@/lib/email';
 import { createAdminClient } from '@/lib/supabase-admin';
+import { updateCalendarEvent, formatBookingForCalendar, refreshAccessToken, DEFAULT_SHOP_TIMEZONE } from '@/lib/google-calendar';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +30,9 @@ export async function POST(request: NextRequest) {
         appointment_date,
         appointment_time,
         total_amount,
-        status
+        status,
+        google_calendar_event_id,
+        customer_notes
       `)
       .eq('id', bookingId)
       .single();
@@ -42,10 +45,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch shop details
+    // Fetch shop details including timezone
     const { data: shop, error: shopError } = await supabase
       .from('shops')
-      .select('id, name, created_by, address, city, state, zip_code')
+      .select('id, name, created_by, address, city, state, zip_code, timezone')
       .eq('id', booking.shop_id)
       .single();
 
@@ -72,21 +75,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch owner details
+    // Fetch owner details with Google Calendar tokens
     const { data: owner } = await supabase
       .from('profiles')
-      .select('id, name, email')
+      .select('id, name, email, google_calendar_connected, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expiry')
       .eq('id', shop.created_by)
       .single();
 
-    // Fetch provider details if assigned
+    // Fetch provider details with Google Calendar tokens if assigned
     // Check both barber_id (legacy) and provider_id (mobile app uses this)
     let provider = null;
     const providerId = booking.barber_id || booking.provider_id;
     if (providerId) {
       const { data: providerData } = await supabase
         .from('profiles')
-        .select('id, name, email')
+        .select('id, name, email, google_calendar_connected, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expiry')
         .eq('id', providerId)
         .single();
       provider = providerData;
@@ -139,9 +142,81 @@ export async function POST(request: NextRequest) {
     const results = await sendRescheduleNotifications(emailData);
     console.log('📧 Reschedule email results:', results);
 
+    // Update Google Calendar if event exists
+    let calendarUpdated = false;
+    if (booking.google_calendar_event_id) {
+      // Determine who to update calendar for: provider first (if assigned and has calendar), then owner
+      const calendarUser = (provider?.google_calendar_connected && provider?.google_calendar_access_token)
+        ? provider
+        : (owner?.google_calendar_connected && owner?.google_calendar_access_token)
+          ? owner
+          : null;
+
+      if (calendarUser) {
+        console.log('📅 Attempting to update Google Calendar event...');
+
+        let accessToken = calendarUser.google_calendar_access_token;
+        const refreshToken = calendarUser.google_calendar_refresh_token;
+
+        // Check if token is expired and refresh if needed
+        if (calendarUser.google_calendar_token_expiry) {
+          const expiryDate = new Date(calendarUser.google_calendar_token_expiry);
+          if (expiryDate < new Date()) {
+            console.log('📅 Access token expired, refreshing...');
+            if (refreshToken) {
+              const newTokens = await refreshAccessToken(refreshToken);
+              if (newTokens) {
+                accessToken = newTokens.access_token;
+                // Update tokens in database
+                await supabase
+                  .from('profiles')
+                  .update({
+                    google_calendar_access_token: newTokens.access_token,
+                    google_calendar_token_expiry: newTokens.expiry_date
+                      ? new Date(newTokens.expiry_date).toISOString()
+                      : null
+                  })
+                  .eq('id', calendarUser.id);
+              }
+            }
+          }
+        }
+
+        // Format booking data for calendar update
+        const shopTimezone = shop.timezone || DEFAULT_SHOP_TIMEZONE;
+        const calendarEventData = formatBookingForCalendar({
+          customerName: customer.name || 'Customer',
+          services: services,
+          appointmentDate: booking.appointment_date,
+          appointmentTime: booking.appointment_time,
+          shopName: shop.name,
+          shopAddress: fullAddress || undefined,
+          customerNotes: booking.customer_notes || undefined,
+          totalAmount: booking.total_amount,
+          timezone: shopTimezone
+        });
+
+        // Update calendar event
+        const calendarResult = await updateCalendarEvent(
+          accessToken,
+          refreshToken || undefined,
+          booking.google_calendar_event_id,
+          calendarEventData
+        );
+
+        if (calendarResult.success) {
+          calendarUpdated = true;
+          console.log('📅 Calendar event updated successfully');
+        } else {
+          console.error('📅 Failed to update calendar event:', calendarResult.error);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       emailsSent: results,
+      calendarUpdated,
     });
 
   } catch (error: any) {

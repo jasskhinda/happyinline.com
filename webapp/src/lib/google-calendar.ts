@@ -166,6 +166,62 @@ export async function deleteCalendarEvent(
 }
 
 /**
+ * Update a calendar event (for rescheduling)
+ */
+export async function updateCalendarEvent(
+  accessToken: string,
+  refreshToken: string | undefined,
+  eventId: string,
+  eventData: BookingEventData
+): Promise<{ success: boolean; eventId?: string; eventLink?: string; error?: string }> {
+  try {
+    const calendar = createCalendarClient(accessToken, refreshToken);
+
+    // Use shop's timezone or fall back to default
+    const eventTimezone = eventData.timezone || DEFAULT_SHOP_TIMEZONE;
+
+    const event = {
+      summary: eventData.summary,
+      description: eventData.description,
+      start: {
+        dateTime: eventData.startDateTime,
+        timeZone: eventTimezone
+      },
+      end: {
+        dateTime: eventData.endDateTime,
+        timeZone: eventTimezone
+      },
+      location: eventData.location,
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: 'email', minutes: 60 }, // 1 hour before
+          { method: 'popup', minutes: 30 }  // 30 min before
+        ]
+      }
+    };
+
+    const response = await calendar.events.update({
+      calendarId: 'primary',
+      eventId: eventId,
+      requestBody: event
+    });
+
+    return {
+      success: true,
+      eventId: response.data.id || undefined,
+      eventLink: response.data.htmlLink || undefined
+    };
+  } catch (error: any) {
+    console.error('Error updating calendar event:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to update calendar event'
+    };
+  }
+}
+
+/**
  * Format booking data into calendar event
  */
 export function formatBookingForCalendar(booking: {
