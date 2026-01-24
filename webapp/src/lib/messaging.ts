@@ -325,31 +325,44 @@ export const getConversationDetails = async (conversationId: string) => {
 
 /**
  * Get unread message count for a user across all conversations
+ * Counts messages where is_read = false and user is not the sender
  */
 export const getUnreadCount = async (userId: string) => {
   try {
     const supabase = getSupabaseClient();
 
-    const { data: conversations, error } = await supabase
+    // First get all conversations the user is part of
+    const { data: conversations, error: convError } = await supabase
       .from('conversations')
-      .select('user1_id, user2_id, user1_unread_count, user2_unread_count')
+      .select('id')
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
 
-    if (error) {
-      console.error('Error fetching unread count:', error);
-      return { success: false, error: error.message, count: 0 };
+    if (convError) {
+      console.error('Error fetching conversations:', convError);
+      return { success: false, error: convError.message, count: 0 };
     }
 
-    let totalUnread = 0;
-    (conversations || []).forEach((conv: Conversation) => {
-      if (conv.user1_id === userId) {
-        totalUnread += conv.user1_unread_count || 0;
-      } else {
-        totalUnread += conv.user2_unread_count || 0;
-      }
-    });
+    if (!conversations || conversations.length === 0) {
+      return { success: true, count: 0 };
+    }
 
-    return { success: true, count: totalUnread };
+    // Get conversation IDs
+    const conversationIds = conversations.map((c: { id: string }) => c.id);
+
+    // Count unread messages where user is NOT the sender
+    const { count, error: countError } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .in('conversation_id', conversationIds)
+      .eq('is_read', false)
+      .neq('sender_id', userId);
+
+    if (countError) {
+      console.error('Error counting unread messages:', countError);
+      return { success: false, error: countError.message, count: 0 };
+    }
+
+    return { success: true, count: count || 0 };
   } catch (err) {
     console.error('Unexpected error in getUnreadCount:', err);
     return { success: false, error: 'An unexpected error occurred', count: 0 };
