@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         shop_id,
         customer_id,
         barber_id,
+        provider_id,
         services,
         appointment_date,
         appointment_time,
@@ -79,12 +80,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     // Fetch provider details if assigned
+    // Check both barber_id (legacy) and provider_id (mobile app uses this)
     let provider = null;
-    if (booking.barber_id) {
+    const providerId = booking.barber_id || booking.provider_id;
+    if (providerId) {
       const { data: providerData } = await supabase
         .from('profiles')
         .select('id, name, email')
-        .eq('id', booking.barber_id)
+        .eq('id', providerId)
         .single();
       provider = providerData;
     }
