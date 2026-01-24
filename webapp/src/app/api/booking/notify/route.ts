@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
         shop_id,
         customer_id,
         barber_id,
+        provider_id,
         services,
         appointment_date,
         appointment_time,
@@ -110,13 +111,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch provider details with Google Calendar tokens if assigned
+    // Check both barber_id (legacy) and provider_id (mobile app uses this)
     let provider = null;
-    if (booking.barber_id) {
-      // barber_id is the user_id of the provider
+    const providerId = booking.barber_id || booking.provider_id;
+    if (providerId) {
       const { data: providerData, error: providerError } = await supabase
         .from('profiles')
         .select('id, name, email, google_calendar_connected, google_calendar_access_token, google_calendar_refresh_token, google_calendar_token_expiry')
-        .eq('id', booking.barber_id)
+        .eq('id', providerId)
         .single();
 
       if (!providerError && providerData) {
