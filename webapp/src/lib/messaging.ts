@@ -74,7 +74,7 @@ export const getShopConversations = async (shopId: string, currentUserId: string
 
     // For each conversation, get the last message
     const conversationsWithLastMessage = await Promise.all(
-      (conversations || []).map(async (conv) => {
+      (conversations || []).map(async (conv: Conversation) => {
         const { data: messages } = await supabase
           .from('messages')
           .select(`
@@ -124,7 +124,7 @@ export const getUserConversations = async (userId: string) => {
 
     // For each conversation, get the last message
     const conversationsWithLastMessage = await Promise.all(
-      (conversations || []).map(async (conv) => {
+      (conversations || []).map(async (conv: Conversation) => {
         const { data: messages } = await supabase
           .from('messages')
           .select(`
