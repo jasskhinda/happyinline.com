@@ -27,7 +27,8 @@ import {
   Gift,
   AlertTriangle,
   QrCode,
-  Eye
+  Eye,
+  MessageSquare
 } from 'lucide-react';
 import ShopQRCodeModal from '@/components/ShopQRCodeModal';
 
@@ -269,7 +270,7 @@ function DashboardContent() {
             <h3 className="text-xl font-semibold text-white mb-4">Business Management</h3>
 
             {shop ? (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
                 <button
                   onClick={() => router.push('/shop/settings')}
                   className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
@@ -311,6 +312,16 @@ function DashboardContent() {
                     <CalendarDays className="w-6 h-6 text-[#0393d5]" />
                   </div>
                   <span className="text-white font-medium text-sm">Bookings</span>
+                </button>
+
+                <button
+                  onClick={() => router.push('/messages')}
+                  className="flex flex-col items-center gap-2 bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10"
+                >
+                  <div className="w-12 h-12 bg-[#0393d5]/20 rounded-full flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-[#0393d5]" />
+                  </div>
+                  <span className="text-white font-medium text-sm">Messages</span>
                 </button>
 
                 <button
