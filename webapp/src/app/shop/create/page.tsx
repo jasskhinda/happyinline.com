@@ -168,6 +168,31 @@ export default function CreateShopPage() {
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleLogoDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const fakeEvent = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleLogoChange(fakeEvent);
+    }
+  };
+
+  const handleCoverDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const fakeEvent = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleCoverChange(fakeEvent);
+    }
+  };
+
   const toggleDay = (day: string) => {
     if (operatingDays.includes(day)) {
       setOperatingDays(operatingDays.filter(d => d !== day));
@@ -393,6 +418,8 @@ export default function CreateShopPage() {
                 />
                 <button
                   onClick={() => logoInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDrop={handleLogoDrop}
                   className={`w-full h-40 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
                     logoPreview ? 'border-green-500 bg-green-500/10' : 'border-white/30 hover:border-[var(--brand)] bg-white/5'
                   }`}
@@ -407,7 +434,7 @@ export default function CreateShopPage() {
                   ) : (
                     <>
                       <Camera className="w-10 h-10 text-white/50 mb-2" />
-                      <span className="text-white/70">Tap to upload logo</span>
+                      <span className="text-white/70">Tap or drag & drop to upload logo</span>
                     </>
                   )}
                 </button>
@@ -430,6 +457,8 @@ export default function CreateShopPage() {
                 />
                 <button
                   onClick={() => coverInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDrop={handleCoverDrop}
                   className={`w-full h-48 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
                     coverPreview ? 'border-green-500 p-0 overflow-hidden' : 'border-white/30 hover:border-[var(--brand)] bg-white/5'
                   }`}
@@ -445,7 +474,7 @@ export default function CreateShopPage() {
                   ) : (
                     <>
                       <Camera className="w-10 h-10 text-white/50 mb-2" />
-                      <span className="text-white/70">Tap to upload cover image</span>
+                      <span className="text-white/70">Tap or drag & drop to upload cover image</span>
                     </>
                   )}
                 </button>
