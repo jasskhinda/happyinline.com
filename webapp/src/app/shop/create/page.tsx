@@ -62,6 +62,7 @@ export default function CreateShopPage() {
   // Images
   const [logoImage, setLogoImage] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
@@ -132,12 +133,26 @@ export default function CreateShopPage() {
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setLogoImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
+      setLogoError(null);
+      const img = new Image();
+      img.onload = () => {
+        if (img.width !== 512 || img.height !== 512) {
+          setLogoError(`Logo must be exactly 512x512 pixels. Your image is ${img.width}x${img.height}. Please crop or resize and try again.`);
+          setLogoImage(null);
+          setLogoPreview(null);
+          if (logoInputRef.current) logoInputRef.current.value = '';
+          URL.revokeObjectURL(img.src);
+          return;
+        }
+        URL.revokeObjectURL(img.src);
+        setLogoImage(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
       };
-      reader.readAsDataURL(file);
+      img.src = URL.createObjectURL(file);
     }
   };
 
@@ -367,7 +382,7 @@ export default function CreateShopPage() {
               {/* Logo Upload */}
               <div>
                 <label className="block text-sm font-medium text-[var(--brand)] mb-2">
-                  Shop Logo * <span className="text-white/50">(Square, 1:1 ratio)</span>
+                  Shop Logo * <span className="text-white/50">(512x512 pixels required)</span>
                 </label>
                 <input
                   ref={logoInputRef}
@@ -396,6 +411,9 @@ export default function CreateShopPage() {
                     </>
                   )}
                 </button>
+                {logoError && (
+                  <p className="mt-2 text-sm text-red-400">{logoError}</p>
+                )}
               </div>
 
               {/* Cover Upload */}
