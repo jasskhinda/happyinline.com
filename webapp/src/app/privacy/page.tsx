@@ -24,7 +24,7 @@ export default function PrivacyPage() {
               <li>Account information (name, email, phone number)</li>
               <li>Business information (business name, address, services offered)</li>
               <li>Booking information (appointment dates, times, services requested)</li>
-              <li>Payment information (processed securely through Stripe)</li>
+              <li>Profile images and photos you upload</li>
               <li>Communications you send to us</li>
             </ul>
           </section>
