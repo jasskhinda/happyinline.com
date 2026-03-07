@@ -17,7 +17,8 @@ import {
   Loader2,
   ArrowRight,
   CheckCircle,
-  Smartphone
+  Smartphone,
+  Download
 } from 'lucide-react';
 
 interface ShopData {
@@ -45,7 +46,7 @@ export default function JoinShopPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
-  const [showAppBanner, setShowAppBanner] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     if (shopId) {
@@ -53,29 +54,16 @@ export default function JoinShopPage() {
     }
   }, [shopId]);
 
-  // Detect mobile and redirect to app store if app not installed
+  // Detect mobile device
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const userAgent = navigator.userAgent || '';
-    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
-    const isAndroid = /android/i.test(userAgent);
-    const mobile = isIOS || isAndroid;
-    setIsMobile(mobile);
-
-    if (mobile && shopId) {
-      setShowAppBanner(true);
-
-      // If we reach this page, the app is NOT installed
-      // (Universal Links / App Links would have intercepted before loading this page)
-      // Redirect to the appropriate app store
-      if (isIOS) {
-        window.location.href = 'https://apps.apple.com/ca/app/happy-inline/id6756240306';
-      } else if (isAndroid) {
-        window.location.href = 'https://play.google.com/store/apps/details?id=com.happyinline.app';
-      }
-    }
-  }, [shopId]);
+    const ios = /iphone|ipad|ipod/i.test(userAgent);
+    const android = /android/i.test(userAgent);
+    setIsMobile(ios || android);
+    setIsIOS(ios);
+  }, []);
 
   const loadShop = async () => {
     try {
@@ -139,38 +127,82 @@ export default function JoinShopPage() {
     );
   }
 
-  const handleOpenInApp = () => {
-    const userAgent = navigator.userAgent || '';
-    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
-
-    if (isIOS) {
-      window.location.href = 'https://apps.apple.com/ca/app/happy-inline/id6756240306';
-    } else {
-      window.location.href = 'https://play.google.com/store/apps/details?id=com.happyinline.app';
-    }
+  const getStoreUrl = () => {
+    return isIOS
+      ? 'https://apps.apple.com/ca/app/happy-inline/id6756240306'
+      : 'https://play.google.com/store/apps/details?id=com.happyinline.app';
   };
 
+  // Mobile: Show "Download Our App" page
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#09264b] via-[#0a3a6b] to-[#09264b] flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+          {/* Shop Logo */}
+          {shop.logo_url ? (
+            <img
+              src={shop.logo_url}
+              alt={shop.name}
+              className="w-28 h-28 rounded-2xl object-cover shadow-2xl mb-6 border-2 border-white/20"
+            />
+          ) : (
+            <div className="w-28 h-28 rounded-2xl bg-[#0393d5]/30 flex items-center justify-center shadow-2xl mb-6 border-2 border-white/20">
+              <Store className="w-14 h-14 text-white" />
+            </div>
+          )}
+
+          {/* Shop Name */}
+          <div className="flex items-center gap-2 mb-2">
+            <h1 className="text-2xl font-bold text-white">{shop.name}</h1>
+            {shop.is_verified && (
+              <CheckCircle className="w-5 h-5 text-green-400" />
+            )}
+          </div>
+
+          {/* Location */}
+          {(shop.city || shop.address) && (
+            <div className="flex items-center gap-1.5 text-white/60 text-sm mb-8">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>{shop.city ? `${shop.city}${shop.state ? `, ${shop.state}` : ''}` : shop.address}</span>
+            </div>
+          )}
+
+          {/* Invite Message */}
+          <p className="text-white/80 text-center text-lg mb-2">
+            <span className="font-semibold text-white">{shop.name}</span> uses Happy InLine
+          </p>
+          <p className="text-white/60 text-center text-sm mb-10">
+            Download the app to book appointments, get reminders, and more.
+          </p>
+
+          {/* Download Button */}
+          <a
+            href={getStoreUrl()}
+            className="w-full max-w-xs flex items-center justify-center gap-3 bg-[#0393d5] hover:bg-[#027bb5] text-white font-semibold py-4 px-8 rounded-2xl transition-all shadow-lg shadow-[#0393d5]/30 text-lg"
+          >
+            <Download className="w-6 h-6" />
+            Download Our App
+          </a>
+
+          {/* Store Badge */}
+          <p className="text-white/40 text-xs mt-4">
+            {isIOS ? 'Available on the App Store' : 'Available on Google Play'}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="py-5 text-center">
+          <p className="text-white/30 text-xs">
+            Powered by <span className="font-semibold text-white/50">Happy InLine</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop: Show full join page
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile App Banner */}
-      {showAppBanner && isMobile && (
-        <div className="bg-[#0393d5] text-white px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Smartphone className="w-6 h-6" />
-            <div>
-              <p className="font-semibold text-sm">Happy InLine App</p>
-              <p className="text-xs opacity-90">Better experience in our app</p>
-            </div>
-          </div>
-          <button
-            onClick={handleOpenInApp}
-            className="bg-white text-[#0393d5] px-4 py-2 rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors"
-          >
-            Open App
-          </button>
-        </div>
-      )}
-
       {/* Hero Section with Cover Image */}
       <div className="relative">
         {shop.cover_image_url ? (
