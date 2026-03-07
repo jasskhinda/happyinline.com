@@ -65,6 +65,11 @@ export default function CreateShopPage() {
   const [logoError, setLogoError] = useState<string | null>(null);
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [coverPositionY, setCoverPositionY] = useState(50);
+  const [isRepositioning, setIsRepositioning] = useState(false);
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+  const [dragStartPos, setDragStartPos] = useState(50);
+  const coverContainerRef = useRef<HTMLDivElement>(null);
 
   // Form fields
   const [name, setName] = useState('');
@@ -193,6 +198,42 @@ export default function CreateShopPage() {
     }
   };
 
+  const handleRepositionStart = (clientY: number) => {
+    setDragStartY(clientY);
+    setDragStartPos(coverPositionY);
+  };
+
+  const handleRepositionMove = (clientY: number) => {
+    if (dragStartY === null || !coverContainerRef.current) return;
+    const containerHeight = coverContainerRef.current.getBoundingClientRect().height;
+    const deltaY = clientY - dragStartY;
+    const deltaPercent = (deltaY / containerHeight) * 100;
+    const newPos = Math.min(100, Math.max(0, dragStartPos - deltaPercent));
+    setCoverPositionY(newPos);
+  };
+
+  const handleRepositionEnd = () => {
+    setDragStartY(null);
+  };
+
+  useEffect(() => {
+    if (!isRepositioning) return;
+    const onMouseMove = (e: MouseEvent) => handleRepositionMove(e.clientY);
+    const onMouseUp = () => handleRepositionEnd();
+    const onTouchMove = (e: TouchEvent) => handleRepositionMove(e.touches[0].clientY);
+    const onTouchEnd = () => handleRepositionEnd();
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('touchmove', onTouchMove);
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isRepositioning, dragStartY, dragStartPos]);
+
   const toggleDay = (day: string) => {
     if (operatingDays.includes(day)) {
       setOperatingDays(operatingDays.filter(d => d !== day));
@@ -313,13 +354,14 @@ export default function CreateShopPage() {
         coverUrl = await uploadImage(coverImage, shopId, 'cover');
       }
 
-      // Update shop with image URLs
+      // Update shop with image URLs and cover position
       if (logoUrl || coverUrl) {
         await supabase
           .from('shops')
           .update({
             logo_url: logoUrl,
-            cover_image_url: coverUrl
+            cover_image_url: coverUrl,
+            cover_position_y: Math.round(coverPositionY)
           })
           .eq('id', shopId);
       }
@@ -455,29 +497,66 @@ export default function CreateShopPage() {
                   onChange={handleCoverChange}
                   className="hidden"
                 />
-                <button
-                  onClick={() => coverInputRef.current?.click()}
-                  onDragOver={handleDragOver}
-                  onDrop={handleCoverDrop}
-                  className={`w-full h-48 rounded-xl border-2 border-dashed transition-all flex flex-col items-center justify-center ${
-                    coverPreview ? 'border-green-500 p-0 overflow-hidden' : 'border-white/30 hover:border-[var(--brand)] bg-white/5'
-                  }`}
-                >
-                  {coverPreview ? (
-                    <div className="relative w-full h-full">
-                      <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
-                        <Camera className="w-8 h-8 text-white" />
-                        <span className="text-white ml-2">Change Cover</span>
+                {coverPreview ? (
+                  <div
+                    ref={coverContainerRef}
+                    className={`relative w-full h-48 rounded-xl border-2 overflow-hidden ${
+                      isRepositioning ? 'border-[var(--brand)] cursor-grab active:cursor-grabbing' : 'border-green-500'
+                    }`}
+                    onMouseDown={(e) => { if (isRepositioning) { e.preventDefault(); handleRepositionStart(e.clientY); }}}
+                    onTouchStart={(e) => { if (isRepositioning) handleRepositionStart(e.touches[0].clientY); }}
+                  >
+                    <img
+                      src={coverPreview}
+                      alt="Cover"
+                      className="w-full h-full object-cover select-none"
+                      style={{ objectPosition: `center ${coverPositionY}%` }}
+                      draggable={false}
+                    />
+                    {isRepositioning ? (
+                      <div className="absolute inset-0 bg-black/30 flex flex-col items-center justify-center pointer-events-none">
+                        <svg className="w-6 h-6 text-white mb-1 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" /></svg>
+                        <span className="text-white text-sm font-medium">Drag up or down to reposition</span>
+                        <svg className="w-6 h-6 text-white mt-1 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" /></svg>
                       </div>
-                    </div>
-                  ) : (
-                    <>
-                      <Camera className="w-10 h-10 text-white/50 mb-2" />
-                      <span className="text-white/70">Tap or drag & drop to upload cover image</span>
-                    </>
-                  )}
-                </button>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => coverInputRef.current?.click()}
+                          className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all mr-2"
+                        >
+                          <Camera className="w-5 h-5" />
+                          Change
+                        </button>
+                        <button
+                          onClick={() => setIsRepositioning(true)}
+                          className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg transition-all"
+                        >
+                          <ArrowLeft className="w-5 h-5 rotate-90" />
+                          Reposition
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => coverInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDrop={handleCoverDrop}
+                    className="w-full h-48 rounded-xl border-2 border-dashed border-white/30 hover:border-[var(--brand)] bg-white/5 transition-all flex flex-col items-center justify-center"
+                  >
+                    <Camera className="w-10 h-10 text-white/50 mb-2" />
+                    <span className="text-white/70">Tap or drag & drop to upload cover image</span>
+                  </button>
+                )}
+                {isRepositioning && (
+                  <button
+                    onClick={() => setIsRepositioning(false)}
+                    className="mt-2 w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold py-2 rounded-lg transition-all text-sm"
+                  >
+                    Save Position
+                  </button>
+                )}
               </div>
             </div>
 
