@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   description: 'Register with this business to book appointments using Happy InLine',
   other: {
     // iOS Smart App Banner - shows native "OPEN" banner in Safari if app is installed
-    'apple-itunes-app': 'app-id=YOUR_APP_STORE_ID, app-argument=https://happyinline.com/join/',
+    'apple-itunes-app': 'app-id=6756240306, app-argument=https://happyinline.com/join/',
   },
 };
 

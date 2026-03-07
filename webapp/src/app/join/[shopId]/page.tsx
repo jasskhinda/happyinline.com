@@ -55,9 +55,11 @@ export default function JoinShopPage() {
 
   // Detect mobile and redirect to app store if app not installed
   useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor;
-    const isIOS = /iphone|ipad|ipod/i.test(userAgent.toLowerCase());
-    const isAndroid = /android/i.test(userAgent.toLowerCase());
+    if (typeof window === 'undefined') return;
+
+    const userAgent = navigator.userAgent || '';
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
+    const isAndroid = /android/i.test(userAgent);
     const mobile = isIOS || isAndroid;
     setIsMobile(mobile);
 
@@ -138,8 +140,8 @@ export default function JoinShopPage() {
   }
 
   const handleOpenInApp = () => {
-    const userAgent = navigator.userAgent || navigator.vendor;
-    const isIOS = /iphone|ipad|ipod/i.test(userAgent.toLowerCase());
+    const userAgent = navigator.userAgent || '';
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent);
 
     if (isIOS) {
       window.location.href = 'https://apps.apple.com/ca/app/happy-inline/id6756240306';
