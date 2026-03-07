@@ -53,19 +53,25 @@ export default function JoinShopPage() {
     }
   }, [shopId]);
 
-  // Detect mobile and try to open the app
+  // Detect mobile and redirect to app store if app not installed
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor;
-    const mobile = /android|iphone|ipad|ipod/i.test(userAgent.toLowerCase());
+    const isIOS = /iphone|ipad|ipod/i.test(userAgent.toLowerCase());
+    const isAndroid = /android/i.test(userAgent.toLowerCase());
+    const mobile = isIOS || isAndroid;
     setIsMobile(mobile);
 
     if (mobile && shopId) {
-      // Show the app banner after a short delay
       setShowAppBanner(true);
 
-      // Try to open the app using Universal Link / App Link
-      // This will automatically open the app if installed (via Universal Links)
-      // If the app is not installed, nothing happens and user stays on web page
+      // If we reach this page, the app is NOT installed
+      // (Universal Links / App Links would have intercepted before loading this page)
+      // Redirect to the appropriate app store
+      if (isIOS) {
+        window.location.href = 'https://apps.apple.com/ca/app/happy-inline/id6756240306';
+      } else if (isAndroid) {
+        window.location.href = 'https://play.google.com/store/apps/details?id=com.happyinline.app';
+      }
     }
   }, [shopId]);
 
@@ -132,26 +138,13 @@ export default function JoinShopPage() {
   }
 
   const handleOpenInApp = () => {
-    // Try to open the app using the deep link scheme
-    const deepLink = `happyinline://signup/shop/${shopId}`;
-    const universalLink = `https://happyinline.com/join/${shopId}`;
-
-    // For iOS, try Universal Link first (it will open app if installed)
-    // For Android, try the intent scheme
     const userAgent = navigator.userAgent || navigator.vendor;
     const isIOS = /iphone|ipad|ipod/i.test(userAgent.toLowerCase());
-    const isAndroid = /android/i.test(userAgent.toLowerCase());
 
     if (isIOS) {
-      // iOS: Use Universal Link - will open app if installed, stay on web if not
-      window.location.href = universalLink;
-    } else if (isAndroid) {
-      // Android: Try intent scheme first, fallback to Play Store
-      const intentUrl = `intent://join/${shopId}#Intent;scheme=https;package=com.happyinline.app;S.browser_fallback_url=${encodeURIComponent(universalLink)};end`;
-      window.location.href = intentUrl;
+      window.location.href = 'https://apps.apple.com/ca/app/happy-inline/id6756240306';
     } else {
-      // Fallback: try deep link
-      window.location.href = deepLink;
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.happyinline.app';
     }
   };
 
