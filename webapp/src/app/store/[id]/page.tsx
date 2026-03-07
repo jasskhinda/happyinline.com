@@ -289,51 +289,6 @@ export default function StorePreviewPage() {
               </div>
             )}
 
-            {/* Team */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-[#0393d5]" />
-                Our Team
-              </h2>
-
-              {providers.length > 0 ? (
-                <div className="space-y-3">
-                  {providers.map((provider) => (
-                    <div
-                      key={provider.id}
-                      className="bg-white/5 rounded-xl p-4 border border-white/10 flex items-center gap-3"
-                    >
-                      {provider.user?.profile_image ? (
-                        <img
-                          src={provider.user.profile_image}
-                          alt={provider.user?.name || 'Provider'}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-[#0393d5]/20 flex items-center justify-center">
-                          <User className="w-6 h-6 text-[#0393d5]" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-white font-medium">{provider.user?.name || 'Provider'}</h3>
-                        {provider.rating !== null && provider.rating > 0 && (
-                          <div className="flex items-center gap-1 text-yellow-400 text-sm">
-                            <Star className="w-3 h-3 fill-current" />
-                            <span>{provider.rating.toFixed(1)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <User className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                  <p className="text-white/50">No team members added yet</p>
-                </div>
-              )}
-            </div>
-
             {/* Operating Hours */}
             {shop.operating_days && shop.operating_days.length > 0 && (
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
