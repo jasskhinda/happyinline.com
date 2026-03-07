@@ -54,7 +54,8 @@ export default function JoinShopPage() {
     }
   }, [shopId]);
 
-  // Detect mobile device
+  // If app is not installed, redirect to app store
+  // (If app IS installed, Universal Links / App Links intercept before this page loads)
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -63,6 +64,12 @@ export default function JoinShopPage() {
     const android = /android/i.test(userAgent);
     setIsMobile(ios || android);
     setIsIOS(ios);
+
+    if (ios) {
+      window.location.href = 'https://apps.apple.com/ca/app/happy-inline/id6756240306';
+    } else if (android) {
+      window.location.href = 'https://play.google.com/store/apps/details?id=com.happyinline.app';
+    }
   }, []);
 
   const loadShop = async () => {
