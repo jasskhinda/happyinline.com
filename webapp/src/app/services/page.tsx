@@ -367,6 +367,11 @@ export default function ServicesPage() {
   const handleSaveAssignments = async () => {
     if (!shop || !assigningService) return;
 
+    if (selectedProviderIds.length === 0) {
+      setError('Please assign at least one provider to this service.');
+      return;
+    }
+
     setSavingAssignments(true);
     setError('');
 

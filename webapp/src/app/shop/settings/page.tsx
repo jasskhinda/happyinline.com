@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getSubscriptionStatus } from '@/lib/auth';
-import { getMyShop, updateShop, toggleShopStatus, submitShopForReview, deleteShop, Shop, OperatingHours, DayHours } from '@/lib/shop';
+import { getMyShop, updateShop, toggleShopStatus, submitShopForReview, deleteShop, getShopServices, getShopServiceProviders, Shop, OperatingHours, DayHours } from '@/lib/shop';
 import { getSupabaseClient } from '@/lib/supabase';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -383,6 +383,25 @@ export default function ShopSettingsPage() {
     if (!shop) return;
 
     try {
+      // Validate that all services have at least one provider assigned
+      const [servicesResult, assignmentsResult] = await Promise.all([
+        getShopServices(shop.id),
+        getShopServiceProviders(shop.id),
+      ]);
+
+      if (servicesResult.success && servicesResult.services && servicesResult.services.length > 0) {
+        const assignments = assignmentsResult.assignments || [];
+        const serviceIdsWithProviders = new Set(assignments.map(a => a.service_id));
+        const servicesWithoutProviders = servicesResult.services.filter(
+          s => !serviceIdsWithProviders.has(s.id)
+        );
+
+        if (servicesWithoutProviders.length > 0) {
+          setError('Please assign at least one provider to all your services before submitting for review.');
+          return;
+        }
+      }
+
       const result = await submitShopForReview(shop.id);
       if (result.success) {
         setShop({ ...shop, status: 'pending_review' });

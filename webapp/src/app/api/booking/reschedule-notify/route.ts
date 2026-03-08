@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendRescheduleNotifications } from '@/lib/email';
 import { createAdminClient } from '@/lib/supabase-admin';
-import { updateCalendarEvent, formatBookingForCalendar, refreshAccessToken, DEFAULT_SHOP_TIMEZONE } from '@/lib/google-calendar';
+import { updateCalendarEvent, createBookingEvent, formatBookingForCalendar, refreshAccessToken, DEFAULT_SHOP_TIMEZONE } from '@/lib/google-calendar';
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,6 +44,15 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    console.log('📅 Reschedule notify - Booking data:', {
+      id: booking.id,
+      appointment_date: booking.appointment_date,
+      appointment_time: booking.appointment_time,
+      google_calendar_event_id: booking.google_calendar_event_id,
+      oldDate,
+      oldTime
+    });
 
     // Fetch shop details including timezone
     const { data: shop, error: shopError } = await supabase
@@ -144,73 +153,141 @@ export async function POST(request: NextRequest) {
 
     // Update Google Calendar if event exists
     let calendarUpdated = false;
-    if (booking.google_calendar_event_id) {
-      // Determine who to update calendar for: provider first (if assigned and has calendar), then owner
-      const calendarUser = (provider?.google_calendar_connected && provider?.google_calendar_access_token)
-        ? provider
-        : (owner?.google_calendar_connected && owner?.google_calendar_access_token)
-          ? owner
-          : null;
+    console.log('📅 Checking Google Calendar sync - Event ID:', booking.google_calendar_event_id || 'NONE');
+    console.log('📅 Owner calendar connected:', owner?.google_calendar_connected || false);
+    console.log('📅 Provider calendar connected:', provider?.google_calendar_connected || false);
 
-      if (calendarUser) {
-        console.log('📅 Attempting to update Google Calendar event...');
+    // Determine who to update calendar for: provider first (if assigned and has calendar), then owner
+    const calendarUser = (provider?.google_calendar_connected && provider?.google_calendar_access_token)
+      ? provider
+      : (owner?.google_calendar_connected && owner?.google_calendar_access_token)
+        ? owner
+        : null;
 
-        let accessToken = calendarUser.google_calendar_access_token;
-        const refreshToken = calendarUser.google_calendar_refresh_token;
+    if (booking.google_calendar_event_id && calendarUser) {
+      console.log('📅 Attempting to update Google Calendar event...');
 
-        // Check if token is expired and refresh if needed
-        if (calendarUser.google_calendar_token_expiry) {
-          const expiryDate = new Date(calendarUser.google_calendar_token_expiry);
-          if (expiryDate < new Date()) {
-            console.log('📅 Access token expired, refreshing...');
-            if (refreshToken) {
-              const newTokens = await refreshAccessToken(refreshToken);
-              if (newTokens) {
-                accessToken = newTokens.access_token;
-                // Update tokens in database
-                await supabase
-                  .from('profiles')
-                  .update({
-                    google_calendar_access_token: newTokens.access_token,
-                    google_calendar_token_expiry: newTokens.expiry_date
-                      ? new Date(newTokens.expiry_date).toISOString()
-                      : null
-                  })
-                  .eq('id', calendarUser.id);
-              }
+      let accessToken = calendarUser.google_calendar_access_token;
+      const refreshToken = calendarUser.google_calendar_refresh_token;
+
+      // Check if token is expired and refresh if needed
+      if (calendarUser.google_calendar_token_expiry) {
+        const expiryDate = new Date(calendarUser.google_calendar_token_expiry);
+        if (expiryDate < new Date()) {
+          console.log('📅 Access token expired, refreshing...');
+          if (refreshToken) {
+            const newTokens = await refreshAccessToken(refreshToken);
+            if (newTokens) {
+              accessToken = newTokens.access_token;
+              // Update tokens in database
+              await supabase
+                .from('profiles')
+                .update({
+                  google_calendar_access_token: newTokens.access_token,
+                  google_calendar_token_expiry: newTokens.expiry_date
+                    ? new Date(newTokens.expiry_date).toISOString()
+                    : null
+                })
+                .eq('id', calendarUser.id);
             }
           }
         }
+      }
 
-        // Format booking data for calendar update
-        const shopTimezone = shop.timezone || DEFAULT_SHOP_TIMEZONE;
-        const calendarEventData = formatBookingForCalendar({
-          customerName: customer.name || 'Customer',
-          services: services,
-          appointmentDate: booking.appointment_date,
-          appointmentTime: booking.appointment_time,
-          shopName: shop.name,
-          shopAddress: fullAddress || undefined,
-          customerNotes: booking.customer_notes || undefined,
-          totalAmount: booking.total_amount,
-          timezone: shopTimezone
-        });
+      // Format booking data for calendar update
+      const shopTimezone = shop.timezone || DEFAULT_SHOP_TIMEZONE;
+      const calendarEventData = formatBookingForCalendar({
+        customerName: customer.name || 'Customer',
+        services: services,
+        appointmentDate: booking.appointment_date,
+        appointmentTime: booking.appointment_time,
+        shopName: shop.name,
+        shopAddress: fullAddress || undefined,
+        customerNotes: booking.customer_notes || undefined,
+        totalAmount: booking.total_amount,
+        timezone: shopTimezone
+      });
 
-        // Update calendar event
-        const calendarResult = await updateCalendarEvent(
-          accessToken,
-          refreshToken || undefined,
-          booking.google_calendar_event_id,
-          calendarEventData
-        );
+      // Update calendar event
+      const calendarResult = await updateCalendarEvent(
+        accessToken,
+        refreshToken || undefined,
+        booking.google_calendar_event_id,
+        calendarEventData
+      );
 
-        if (calendarResult.success) {
-          calendarUpdated = true;
-          console.log('📅 Calendar event updated successfully');
-        } else {
-          console.error('📅 Failed to update calendar event:', calendarResult.error);
+      if (calendarResult.success) {
+        calendarUpdated = true;
+        console.log('📅 Calendar event updated successfully');
+      } else {
+        console.error('📅 Failed to update calendar event:', calendarResult.error);
+      }
+    } else if (!booking.google_calendar_event_id && calendarUser) {
+      // No calendar event exists but user has calendar connected - create one
+      console.log('📅 No existing calendar event. Creating new event for rescheduled booking...');
+
+      let accessToken = calendarUser.google_calendar_access_token;
+      const refreshToken = calendarUser.google_calendar_refresh_token;
+
+      // Check if token is expired and refresh if needed
+      if (calendarUser.google_calendar_token_expiry) {
+        const expiryDate = new Date(calendarUser.google_calendar_token_expiry);
+        if (expiryDate < new Date()) {
+          console.log('📅 Access token expired, refreshing...');
+          if (refreshToken) {
+            const newTokens = await refreshAccessToken(refreshToken);
+            if (newTokens) {
+              accessToken = newTokens.access_token;
+              // Update tokens in database
+              await supabase
+                .from('profiles')
+                .update({
+                  google_calendar_access_token: newTokens.access_token,
+                  google_calendar_token_expiry: newTokens.expiry_date
+                    ? new Date(newTokens.expiry_date).toISOString()
+                    : null
+                })
+                .eq('id', calendarUser.id);
+            }
+          }
         }
       }
+
+      // Format booking data for calendar
+      const shopTimezone = shop.timezone || DEFAULT_SHOP_TIMEZONE;
+      const calendarEventData = formatBookingForCalendar({
+        customerName: customer.name || 'Customer',
+        services: services,
+        appointmentDate: booking.appointment_date,
+        appointmentTime: booking.appointment_time,
+        shopName: shop.name,
+        shopAddress: fullAddress || undefined,
+        customerNotes: booking.customer_notes || undefined,
+        totalAmount: booking.total_amount,
+        timezone: shopTimezone
+      });
+
+      // Create new calendar event
+      const calendarResult = await createBookingEvent(
+        accessToken,
+        refreshToken || undefined,
+        calendarEventData
+      );
+
+      if (calendarResult.success && calendarResult.eventId) {
+        calendarUpdated = true;
+        console.log('📅 New calendar event created for rescheduled booking:', calendarResult.eventId);
+
+        // Store event ID in booking for future reference
+        await supabase
+          .from('bookings')
+          .update({ google_calendar_event_id: calendarResult.eventId })
+          .eq('id', bookingId);
+      } else {
+        console.error('📅 Failed to create calendar event:', calendarResult.error);
+      }
+    } else {
+      console.log('📅 Skipping calendar sync - no calendar user available');
     }
 
     return NextResponse.json({

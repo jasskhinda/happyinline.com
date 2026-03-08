@@ -238,17 +238,23 @@ function ProviderDashboardContent() {
       const result = await rescheduleBooking(rescheduleBookingData.id, newDate, newTime);
 
       if (result.success) {
-        // Send reschedule email notifications (non-blocking)
-        fetch('/api/booking/reschedule-notify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            bookingId: rescheduleBookingData.id,
-            oldDate,
-            oldTime,
-            rescheduledBy: 'business'
-          }),
-        }).catch(err => console.error('Failed to send reschedule notifications:', err));
+        // Send reschedule email notifications and update calendar
+        try {
+          const notifyResponse = await fetch('/api/booking/reschedule-notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: rescheduleBookingData.id,
+              oldDate,
+              oldTime,
+              rescheduledBy: 'business'
+            }),
+          });
+          const notifyResult = await notifyResponse.json();
+          console.log('📧 Reschedule notification result:', notifyResult);
+        } catch (err) {
+          console.error('Failed to send reschedule notifications:', err);
+        }
 
         setSuccess('Appointment rescheduled successfully!');
         setRescheduleModalOpen(false);
