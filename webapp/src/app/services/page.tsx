@@ -86,6 +86,10 @@ export default function ServicesPage() {
   const [editOnlinePassword, setEditOnlinePassword] = useState('');
   const [editOnlineInstructions, setEditOnlineInstructions] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editProviderIds, setEditProviderIds] = useState<string[]>([]);
+
+  // Add service provider selection
+  const [addProviderIds, setAddProviderIds] = useState<string[]>([]);
 
   // Delete state
   const [deletingService, setDeletingService] = useState(false);
@@ -164,6 +168,12 @@ export default function ServicesPage() {
   const handleAddFromCatalog = async (catalogService: any) => {
     if (!shop) return;
 
+    // Validate at least one provider assigned
+    if (providers.length > 0 && addProviderIds.length === 0) {
+      setError('Please assign at least one provider to this service.');
+      return;
+    }
+
     setAddingService(true);
     setError('');
 
@@ -177,7 +187,13 @@ export default function ServicesPage() {
         price: catalogService.default_price || 0
       });
 
-      if (result.success) {
+      if (result.success && result.service?.id) {
+        await updateServiceProviders(shop.id, result.service.id, addProviderIds);
+        setSuccess('Service added successfully!');
+        setShowAddModal(false);
+        resetAddForm();
+        loadData();
+      } else if (result.success) {
         setSuccess('Service added successfully!');
         setShowAddModal(false);
         resetAddForm();
@@ -201,6 +217,12 @@ export default function ServicesPage() {
       return;
     }
 
+    // Validate at least one provider assigned
+    if (providers.length > 0 && addProviderIds.length === 0) {
+      setError('Please assign at least one provider to this service.');
+      return;
+    }
+
     setAddingService(true);
     setError('');
 
@@ -217,7 +239,14 @@ export default function ServicesPage() {
         online_instructions: (customServiceType === 'online' || customServiceType === 'both') ? customOnlineInstructions.trim() || undefined : undefined
       });
 
-      if (result.success) {
+      if (result.success && result.service?.id) {
+        // Save provider assignments for the new service
+        await updateServiceProviders(shop.id, result.service.id, addProviderIds);
+        setSuccess('Service added successfully!');
+        setShowAddModal(false);
+        resetAddForm();
+        loadData();
+      } else if (result.success) {
         setSuccess('Service added successfully!');
         setShowAddModal(false);
         resetAddForm();
@@ -244,6 +273,7 @@ export default function ServicesPage() {
     setCustomOnlineLink('');
     setCustomOnlinePassword('');
     setCustomOnlineInstructions('');
+    setAddProviderIds(providers.map(p => p.user_id));
   };
 
   const handleEditService = (service: ShopService) => {
@@ -257,15 +287,26 @@ export default function ServicesPage() {
     setEditOnlineLink(service.online_meeting_link || '');
     setEditOnlinePassword(service.online_meeting_password || '');
     setEditOnlineInstructions(service.online_instructions || '');
+    // Pre-select assigned providers
+    const currentAssigned = serviceAssignments
+      .filter(a => a.service_id === service.id)
+      .map(a => a.provider_id);
+    setEditProviderIds(currentAssigned);
     setShowEditModal(true);
   };
 
   const handleSaveEdit = async () => {
-    if (!selectedService || !editName.trim() || !editPrice.trim()) return;
+    if (!selectedService || !shop || !editName.trim() || !editPrice.trim()) return;
 
     // Validate meeting link is required for online/both service types
     if ((editServiceType === 'online' || editServiceType === 'both') && !editOnlineLink.trim()) {
       setError('Meeting link is required for online services');
+      return;
+    }
+
+    // Validate at least one provider assigned
+    if (providers.length > 0 && editProviderIds.length === 0) {
+      setError('Please assign at least one provider to this service.');
       return;
     }
 
@@ -286,6 +327,8 @@ export default function ServicesPage() {
       });
 
       if (result.success) {
+        // Save provider assignments
+        await updateServiceProviders(shop.id, selectedService.id, editProviderIds);
         setSuccess('Service updated successfully!');
         setShowEditModal(false);
         setSelectedService(null);
@@ -558,7 +601,7 @@ export default function ServicesPage() {
               </div>
             </div>
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => { setAddProviderIds(providers.map(p => p.user_id)); setShowAddModal(true); }}
               className="flex items-center gap-2 px-4 py-2 bg-[#0393d5] hover:bg-[#027bb5] text-white rounded-lg font-medium transition-all"
             >
               <Plus className="w-5 h-5" />
@@ -577,7 +620,7 @@ export default function ServicesPage() {
                 Add services that your business offers to enable bookings
               </p>
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => { setAddProviderIds(providers.map(p => p.user_id)); setShowAddModal(true); }}
                 className="inline-flex items-center gap-2 bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium px-6 py-3 rounded-lg transition-colors"
               >
                 <Plus className="w-5 h-5" />
@@ -771,6 +814,67 @@ export default function ServicesPage() {
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
+              {/* Provider Selection (shared between catalog and custom tabs) */}
+              {providers.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-white">
+                      Assign Providers <span className="text-red-400">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setAddProviderIds(
+                        addProviderIds.length === providers.length ? [] : providers.map(p => p.user_id)
+                      )}
+                      className="text-xs text-purple-400 hover:text-purple-300"
+                    >
+                      {addProviderIds.length === providers.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div className="space-y-2 max-h-[150px] overflow-y-auto">
+                    {providers.map(provider => {
+                      const isSelected = addProviderIds.includes(provider.user_id);
+                      const user = provider.user as { id: string; name: string; email: string; phone: string | null; profile_image: string | null } | undefined;
+                      return (
+                        <button
+                          key={provider.id}
+                          type="button"
+                          onClick={() => setAddProviderIds(prev =>
+                            prev.includes(provider.user_id)
+                              ? prev.filter(id => id !== provider.user_id)
+                              : [...prev, provider.user_id]
+                          )}
+                          className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all ${
+                            isSelected
+                              ? 'bg-purple-500/20 border-purple-500/50'
+                              : 'bg-white/5 border-white/10 hover:border-white/30'
+                          }`}
+                        >
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                            isSelected ? 'bg-purple-500/30' : 'bg-white/10'
+                          }`}>
+                            <span className={`text-xs font-semibold ${isSelected ? 'text-purple-300' : 'text-white/70'}`}>
+                              {user?.name?.charAt(0) || '?'}
+                            </span>
+                          </div>
+                          <span className={`flex-1 text-left text-sm ${isSelected ? 'text-white' : 'text-white/70'}`}>
+                            {user?.name || 'Unknown'}
+                          </span>
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-purple-500 border-purple-500' : 'border-white/30'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {addProviderIds.length === 0 && (
+                    <p className="text-red-400 text-xs mt-1">At least one provider is required</p>
+                  )}
+                </div>
+              )}
+
               {addMode === 'catalog' ? (
                 <div className="space-y-4">
                   {/* Search */}
@@ -1022,7 +1126,7 @@ export default function ServicesPage() {
 
                   <button
                     onClick={handleAddCustomService}
-                    disabled={!customName.trim() || !customPrice.trim() || addingService || ((customServiceType === 'online' || customServiceType === 'both') && !customOnlineLink.trim())}
+                    disabled={!customName.trim() || !customPrice.trim() || addingService || ((customServiceType === 'online' || customServiceType === 'both') && !customOnlineLink.trim()) || (providers.length > 0 && addProviderIds.length === 0)}
                     className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {addingService ? (
@@ -1234,6 +1338,67 @@ export default function ServicesPage() {
                 </div>
               )}
 
+              {/* Assign Providers */}
+              {providers.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-white">
+                      Assign Providers <span className="text-red-400">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setEditProviderIds(
+                        editProviderIds.length === providers.length ? [] : providers.map(p => p.user_id)
+                      )}
+                      className="text-xs text-purple-400 hover:text-purple-300"
+                    >
+                      {editProviderIds.length === providers.length ? 'Deselect All' : 'Select All'}
+                    </button>
+                  </div>
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {providers.map(provider => {
+                      const isSelected = editProviderIds.includes(provider.user_id);
+                      const user = provider.user as { id: string; name: string; email: string; phone: string | null; profile_image: string | null } | undefined;
+                      return (
+                        <button
+                          key={provider.id}
+                          type="button"
+                          onClick={() => setEditProviderIds(prev =>
+                            prev.includes(provider.user_id)
+                              ? prev.filter(id => id !== provider.user_id)
+                              : [...prev, provider.user_id]
+                          )}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                            isSelected
+                              ? 'bg-purple-500/20 border-purple-500/50'
+                              : 'bg-white/5 border-white/10 hover:border-white/30'
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            isSelected ? 'bg-purple-500/30' : 'bg-white/10'
+                          }`}>
+                            <span className={`text-sm font-semibold ${isSelected ? 'text-purple-300' : 'text-white/70'}`}>
+                              {user?.name?.charAt(0) || '?'}
+                            </span>
+                          </div>
+                          <span className={`flex-1 text-left text-sm ${isSelected ? 'text-white' : 'text-white/70'}`}>
+                            {user?.name || 'Unknown'}
+                          </span>
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                            isSelected ? 'bg-purple-500 border-purple-500' : 'border-white/30'
+                          }`}>
+                            {isSelected && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {editProviderIds.length === 0 && (
+                    <p className="text-red-400 text-xs mt-1">At least one provider is required</p>
+                  )}
+                </div>
+              )}
+
               {/* Active Toggle */}
               <div className="flex items-center justify-between bg-white/5 rounded-lg p-4 border border-white/10">
                 <div>
@@ -1254,7 +1419,7 @@ export default function ServicesPage() {
 
               <button
                 onClick={handleSaveEdit}
-                disabled={!editName.trim() || !editPrice.trim() || savingEdit || ((editServiceType === 'online' || editServiceType === 'both') && !editOnlineLink.trim())}
+                disabled={!editName.trim() || !editPrice.trim() || savingEdit || ((editServiceType === 'online' || editServiceType === 'both') && !editOnlineLink.trim()) || (providers.length > 0 && editProviderIds.length === 0)}
                 className="w-full bg-[#0393d5] hover:bg-[#027bb5] text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {savingEdit ? (
