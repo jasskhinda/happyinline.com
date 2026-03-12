@@ -45,12 +45,18 @@ export default function Footer() {
             >
               Terms of Service
             </Link>
-            <a
-              href="mailto:info@happyinline.com"
+            <Link
+              href="/contact"
               className="text-white/70 hover:text-[var(--brand-light)] text-sm font-medium transition-colors"
             >
               Contact
-            </a>
+            </Link>
+            <Link
+              href="/delete-account"
+              className="text-white/70 hover:text-[var(--brand-light)] text-sm font-medium transition-colors"
+            >
+              Delete Account
+            </Link>
           </nav>
         </div>
 
