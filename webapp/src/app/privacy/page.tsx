@@ -118,8 +118,8 @@ export default function PrivacyPage() {
             <p className="text-white/80">
               If you have questions about this Privacy Policy or our privacy practices,
               please contact us at{' '}
-              <a href="mailto:info@happyinline.com" className="text-[#0393d5] hover:underline">
-                info@happyinline.com
+              <a href="mailto:info@jasskhinda.com" className="text-[#0393d5] hover:underline">
+                info@jasskhinda.com
               </a>
             </p>
           </section>
