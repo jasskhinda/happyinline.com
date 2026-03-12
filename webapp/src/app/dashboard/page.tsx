@@ -135,7 +135,7 @@ function DashboardContent() {
             Welcome back, {subscription?.name || 'Business Owner'}!
           </h2>
           <p className="text-[#0393d5]">
-            Manage your subscription and business settings
+            Manage your business settings
           </p>
         </div>
 
@@ -168,7 +168,7 @@ function DashboardContent() {
         )}
 
         {/* Trial Banner - Show for trial users */}
-        {subscription?.isTrial && subscription.trialDaysRemaining > 0 && (
+        {false && subscription?.isTrial && subscription.trialDaysRemaining > 0 && (
           <div className="bg-gradient-to-r from-purple-500/20 to-[#0393d5]/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 mb-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-[#0393d5] rounded-full flex items-center justify-center flex-shrink-0">
@@ -203,7 +203,7 @@ function DashboardContent() {
         )}
 
         {/* Trial Expired Banner */}
-        {subscription?.subscription_status === 'trial' && subscription.trialDaysRemaining === 0 && (
+        {false && subscription?.subscription_status === 'trial' && subscription.trialDaysRemaining === 0 && (
           <div className="bg-red-500/20 backdrop-blur-lg rounded-2xl p-6 border border-red-500/30 mb-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="w-16 h-16 bg-red-500/30 rounded-full flex items-center justify-center flex-shrink-0">
@@ -227,7 +227,7 @@ function DashboardContent() {
         )}
 
         {/* Unlock Features Banner - Show for non-subscribed users */}
-        {!subscription?.isActive && (
+        {false && !subscription?.isActive && (
           <div className="bg-gradient-to-r from-[#0393d5]/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-6 border border-[#0393d5]/30 mb-6">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="w-20 h-20 bg-gradient-to-br from-[#0393d5] to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
@@ -290,7 +290,7 @@ function DashboardContent() {
                   </div>
                   <span className="text-white font-medium text-sm">Providers</span>
                   <span className="text-[#0393d5] text-xs">
-                    {subscription?.license_count || 0} / {subscription?.max_licenses || 0}
+                    Team
                   </span>
                 </button>
 
@@ -385,146 +385,9 @@ function DashboardContent() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Subscription Card */}
-          <div className="lg:col-span-3 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                <CreditCard className="w-6 h-6 text-[#0393d5]" />
-                Subscription
-              </h3>
-              {subscription?.isActive ? (
-                <span className="flex items-center gap-1 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
-                  <CheckCircle className="w-4 h-4" />
-                  Active
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-sm">
-                  <XCircle className="w-4 h-4" />
-                  Inactive
-                </span>
-              )}
-            </div>
-
-            {subscription?.subscription_plan && subscription.subscription_plan !== 'none' ? (
-              <>
-                {/* Current Plan */}
-                <div
-                  className="rounded-xl p-5 mb-6"
-                  style={{
-                    backgroundColor: `${getPlanColor(subscription.subscription_plan)}20`,
-                    borderColor: getPlanColor(subscription.subscription_plan),
-                    borderWidth: '1px'
-                  }}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <p className="text-[#0393d5] text-sm mb-1">Current Plan</p>
-                      <h4 className="text-2xl font-bold text-white">
-                        {subscription.planDetails?.name || subscription.subscription_plan}
-                      </h4>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[#0393d5] text-sm mb-1">Monthly</p>
-                      <p className="text-2xl font-bold text-white">
-                        {formatCurrency(subscription.monthly_amount)}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-white/80 text-sm">
-                    {subscription.planDetails?.description}
-                  </p>
-                </div>
-
-                {/* Subscription Details */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-[#0393d5] mb-2">
-                      <Users className="w-4 h-4" />
-                      <span className="text-sm">Licenses</span>
-                    </div>
-                    <p className="text-white text-lg font-semibold">
-                      {subscription.license_count || 0} / {subscription.max_licenses || 0}
-                    </p>
-                  </div>
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-[#0393d5] mb-2">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm">Next Billing</span>
-                    </div>
-                    <p className="text-white text-lg font-semibold">
-                      {formatDate(subscription.next_billing_date)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Refund Eligibility */}
-                {subscription.isRefundEligible && (
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
-                    <div className="flex items-center gap-2 text-yellow-400 mb-1">
-                      <Clock className="w-4 h-4" />
-                      <span className="font-medium">Refund Window</span>
-                    </div>
-                    <p className="text-yellow-200 text-sm">
-                      You have {subscription.refundDaysRemaining} days left to request a full refund.
-                    </p>
-                  </div>
-                )}
-
-                {/* Payment Method */}
-                {subscription.payment_method_last4 && (
-                  <div className="bg-white/5 rounded-lg p-4 mb-6">
-                    <p className="text-[#0393d5] text-sm mb-1">Payment Method</p>
-                    <p className="text-white flex items-center gap-2">
-                      <CreditCard className="w-4 h-4" />
-                      {subscription.payment_method_brand?.toUpperCase()} ending in {subscription.payment_method_last4}
-                    </p>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3">
-                  {subscription.canUpgrade && (
-                    <button
-                      onClick={() => router.push('/subscribe')}
-                      className="flex items-center gap-2 bg-gradient-to-r from-[#0393d5] to-[#027bb5] hover:from-purple-700 hover:to-pink-700 text-white px-5 py-2.5 rounded-lg transition-all"
-                    >
-                      <ArrowUpCircle className="w-5 h-5" />
-                      Upgrade Plan
-                    </button>
-                  )}
-                  <button
-                    onClick={() => router.push('/manage')}
-                    className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-lg transition-all border border-white/20"
-                  >
-                    Manage Subscription
-                  </button>
-                </div>
-              </>
-            ) : (
-              /* No Subscription */
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-[#0393d5]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-[#0393d5]" />
-                </div>
-                <h4 className="text-xl font-semibold text-white mb-2">
-                  No Active Subscription
-                </h4>
-                <p className="text-[#0393d5] mb-6">
-                  Subscribe to start using Happy Inline for your business
-                </p>
-                <button
-                  onClick={() => router.push('/subscribe')}
-                  className="bg-gradient-to-r from-[#0393d5] to-[#027bb5] hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-3 rounded-lg transition-all"
-                >
-                  View Plans & Subscribe
-                </button>
-              </div>
-            )}
-          </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Profile Card */}
-          <div className="lg:col-span-2 bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
             <h3 className="text-xl font-semibold text-white flex items-center gap-2 mb-6">
               <User className="w-6 h-6 text-[#0393d5]" />
               Profile
