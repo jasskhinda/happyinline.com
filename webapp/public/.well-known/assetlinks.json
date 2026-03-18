@@ -5,7 +5,18 @@
       "namespace": "android_app",
       "package_name": "com.happyinline.app",
       "sha256_cert_fingerprints": [
-        "1B:AA:9C:6B:20:60:82:05:8C:6F:B0:CF:C3:08:AF:33:1E:1C:BC:BF:E3:83:75:B3:F0:05:0C:36:7D:21:37:01"
+        "1B:AA:9C:6B:20:60:82:05:8C:6F:B0:CF:C3:08:AF:33:1E:1C:BC:BF:E3:83:75:B3:F0:05:0C:36:7D:21:37:01",
+        "86:F0:A7:C7:5A:14:45:C2:BD:E9:77:71:F3:B4:86:9B:7D:77:F6:F6:2A:39:64:A2:3D:8C:46:79:FF:17:08:79"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.happyinline.provider",
+      "sha256_cert_fingerprints": [
+        "60:DC:6F:1E:03:51:9A:5A:5F:15:54:2E:61:AD:E9:CC:A5:DD:07:A5:0F:69:0F:30:39:26:63:31:5C:C0:1A:10"
       ]
     }
   }
