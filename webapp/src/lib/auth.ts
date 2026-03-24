@@ -20,6 +20,9 @@ export interface Profile {
   payment_method_last4: string | null;
   payment_method_brand: string | null;
   business_name: string | null;
+  // Pending plan change (scheduled downgrade)
+  pending_subscription_plan: string | null;
+  pending_plan_effective_date: string | null;
   // Google Calendar integration
   google_calendar_connected: boolean | null;
   google_calendar_access_token: string | null;
@@ -36,6 +39,9 @@ export interface SubscriptionStatus extends Profile {
   refundDaysRemaining: number;
   planDetails: typeof STRIPE_PLANS[keyof typeof STRIPE_PLANS] | Record<string, never>;
   canUpgrade: boolean;
+  canDowngrade: boolean;
+  hasPendingChange: boolean;
+  pendingPlanDetails: typeof STRIPE_PLANS[keyof typeof STRIPE_PLANS] | null;
   accessUntil: string | null;
 }
 
@@ -137,6 +143,9 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
       refundDaysRemaining: 0,
       planDetails: {},
       canUpgrade: true,
+      canDowngrade: false,
+      hasPendingChange: false,
+      pendingPlanDetails: null,
       accessUntil: null
     };
   }
@@ -190,6 +199,15 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
 
   const planDetails = STRIPE_PLANS[data.subscription_plan as keyof typeof STRIPE_PLANS] || {};
 
+  // Pending plan change (scheduled downgrade)
+  const hasPendingChange = !!data.pending_subscription_plan;
+  const pendingPlanDetails = data.pending_subscription_plan
+    ? STRIPE_PLANS[data.pending_subscription_plan as keyof typeof STRIPE_PLANS] || null
+    : null;
+
+  const planOrder: (keyof typeof STRIPE_PLANS)[] = ['basic', 'starter', 'professional', 'enterprise', 'unlimited'];
+  const currentPlanIndex = planOrder.indexOf(data.subscription_plan as keyof typeof STRIPE_PLANS);
+
   return {
     ...data,
     isActive,
@@ -200,6 +218,9 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
     refundDaysRemaining,
     planDetails,
     canUpgrade: (data.subscription_status === 'active' || isTrial) && data.subscription_plan !== 'unlimited',
+    canDowngrade: data.subscription_status === 'active' && currentPlanIndex > 0 && !hasPendingChange,
+    hasPendingChange,
+    pendingPlanDetails,
     accessUntil: isTrial ? trialEndsAt : (data.subscription_end_date || data.next_billing_date)
   };
 };
@@ -429,6 +450,125 @@ export const updatePassword = async (newPassword: string): Promise<{ success: bo
     console.error('Unexpected error:', error);
     return { success: false, error: error.message };
   }
+};
+
+/**
+ * Downgrade subscription (scheduled for next billing date via Stripe)
+ * Changes Stripe price immediately with no proration; DB plan updates on next renewal webhook
+ */
+export const downgradeSubscription = async (userId: string, newPlanName: string) => {
+  const supabase = getSupabaseClient();
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('subscription_plan, stripe_subscription_id, next_billing_date, pending_subscription_plan')
+    .eq('id', userId)
+    .single();
+
+  if (profileError || !profile) {
+    return { success: false, error: 'Profile not found' };
+  }
+
+  if (!profile.stripe_subscription_id) {
+    return { success: false, error: 'No active subscription found' };
+  }
+
+  if (profile.pending_subscription_plan) {
+    return { success: false, error: 'You already have a pending plan change. Cancel it first before scheduling a new one.' };
+  }
+
+  const newPlanDetails = STRIPE_PLANS[newPlanName as keyof typeof STRIPE_PLANS];
+  if (!newPlanDetails) {
+    return { success: false, error: 'Invalid plan selected' };
+  }
+
+  // Call Stripe edge function with isDowngrade flag (no proration)
+  const { data, error } = await supabase.functions.invoke('stripe-upgrade-subscription', {
+    body: {
+      userId,
+      subscriptionId: profile.stripe_subscription_id,
+      newPriceId: newPlanDetails.priceId,
+      newPlanName,
+      isDowngrade: true
+    }
+  });
+
+  if (error) {
+    return { success: false, error: error.message || 'Failed to schedule downgrade' };
+  }
+
+  if (data?.error) {
+    return { success: false, error: data.error };
+  }
+
+  // Store pending plan change — current plan stays until next billing
+  await supabase
+    .from('profiles')
+    .update({
+      pending_subscription_plan: newPlanName,
+      pending_plan_effective_date: profile.next_billing_date,
+      refund_eligible_until: null,
+    })
+    .eq('id', userId);
+
+  return {
+    success: true,
+    pendingPlan: newPlanName,
+    effectiveDate: profile.next_billing_date,
+    message: `Your plan will change to ${newPlanDetails.name} on your next billing date.`
+  };
+};
+
+/**
+ * Cancel a pending downgrade — reverts Stripe subscription back to current plan price
+ */
+export const cancelPendingDowngrade = async (userId: string) => {
+  const supabase = getSupabaseClient();
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('subscription_plan, stripe_subscription_id, pending_subscription_plan')
+    .eq('id', userId)
+    .single();
+
+  if (profileError || !profile) {
+    return { success: false, error: 'Profile not found' };
+  }
+
+  if (!profile.pending_subscription_plan) {
+    return { success: false, error: 'No pending plan change to cancel' };
+  }
+
+  // Revert Stripe subscription back to current plan price
+  const currentPlanDetails = STRIPE_PLANS[profile.subscription_plan as keyof typeof STRIPE_PLANS];
+  if (!currentPlanDetails || !profile.stripe_subscription_id) {
+    return { success: false, error: 'Current plan details not found' };
+  }
+
+  const { data, error } = await supabase.functions.invoke('stripe-upgrade-subscription', {
+    body: {
+      userId,
+      subscriptionId: profile.stripe_subscription_id,
+      newPriceId: currentPlanDetails.priceId,
+      newPlanName: profile.subscription_plan,
+      isDowngrade: true
+    }
+  });
+
+  if (error || data?.error) {
+    return { success: false, error: error?.message || data?.error || 'Failed to cancel pending change' };
+  }
+
+  // Clear pending plan fields
+  await supabase
+    .from('profiles')
+    .update({
+      pending_subscription_plan: null,
+      pending_plan_effective_date: null,
+    })
+    .eq('id', userId);
+
+  return { success: true, message: 'Pending plan change has been cancelled.' };
 };
 
 /**
