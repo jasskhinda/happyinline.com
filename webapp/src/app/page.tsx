@@ -186,7 +186,7 @@ export default function LandingPage() {
             <div>
               <h3 className="text-xl font-semibold mb-2 text-white">Share your QR code</h3>
               <p className="text-[var(--text-muted)] leading-relaxed">
-                Every verified business gets a unique QR code and business ID. Share it however you want — in your shop, on social media, on business cards, on your website. Customers scan it, download the app, and register with your business.
+                Every verified business gets a unique QR code and business ID. Share it however you want — in your shop, on social media, on business cards, on your website. Customers scan it, download the Happy InLine Customer app, and register with your business.
               </p>
             </div>
           </div>
