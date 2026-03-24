@@ -106,7 +106,7 @@ export default function LandingPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-base">Happy InLine</h3>
+                  <h3 className="text-white font-semibold text-base">Happy InLine Customer</h3>
                   <p className="text-white/50 text-xs">For Customers</p>
                 </div>
               </div>
