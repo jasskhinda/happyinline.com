@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -15,21 +14,6 @@ export default function LandingPage() {
         }}
       >
         <div className="relative z-10 max-w-[900px]">
-          <p className="text-[var(--brand-light)] text-sm md:text-base font-medium tracking-wider uppercase mb-4">
-            Introducing
-          </p>
-
-          <div className="w-64 md:w-80 mx-auto mb-12 animate-float">
-            <Image
-              src="/phone-mockup.png"
-              alt="Happy InLine App"
-              width={320}
-              height={640}
-              className="w-full h-auto drop-shadow-2xl"
-              priority
-            />
-          </div>
-
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-4 text-gradient">
             Happy InLine
           </h1>
@@ -42,7 +26,7 @@ export default function LandingPage() {
             Book appointments instantly with local service providers. No more waiting. No more lines. Just show up at your time.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
             <Link
               href="/register"
               className="inline-flex items-center justify-center gap-3 bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-medium px-8 py-4 rounded-full transition-all hover:scale-105 shadow-brand"
@@ -60,19 +44,87 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          <div className="flex flex-wrap gap-4 justify-center mt-8">
-            <span className="inline-flex items-center gap-2 bg-[var(--surface-card)] text-[var(--text-muted)] px-6 py-3 rounded-full text-sm border border-[var(--border-light)]">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-              </svg>
-              App Store - Coming Soon
-            </span>
-            <span className="inline-flex items-center gap-2 bg-[var(--surface-card)] text-[var(--text-muted)] px-6 py-3 rounded-full text-sm border border-[var(--border-light)]">
-              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z"/>
-              </svg>
-              Google Play - Coming Soon
-            </span>
+          {/* App Download Sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[800px] mx-auto">
+            {/* Business App */}
+            <div className="bg-white/[0.07] backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"></path>
+                    <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-base">Happy InLine Business</h3>
+                  <p className="text-white/50 text-xs">For Business Owners &amp; Providers</p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <a
+                  href="https://apps.apple.com/ca/app/happy-inline-business/id6760150083"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-black font-medium px-5 py-3 rounded-xl transition-all hover:bg-white/90 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                  Download on App Store
+                </a>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.happyinline.provider"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-black font-medium px-5 py-3 rounded-xl transition-all hover:bg-white/90 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z"/>
+                  </svg>
+                  Download on Google Play
+                </a>
+              </div>
+            </div>
+
+            {/* Customer App */}
+            <div className="bg-white/[0.07] backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold text-base">Happy InLine</h3>
+                  <p className="text-white/50 text-xs">For Customers</p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <a
+                  href="https://apps.apple.com/ca/app/happy-inline/id6756240306"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-black font-medium px-5 py-3 rounded-xl transition-all hover:bg-white/90 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                  Download on App Store
+                </a>
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.happyinline.app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-white text-black font-medium px-5 py-3 rounded-xl transition-all hover:bg-white/90 text-sm"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.198l2.807 1.626a1 1 0 010 1.73l-2.808 1.626L15.206 12l2.492-2.491zM5.864 2.658L16.802 8.99l-2.303 2.303-8.635-8.635z"/>
+                  </svg>
+                  Download on Google Play
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
