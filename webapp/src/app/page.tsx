@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -62,11 +61,9 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="mb-4 rounded-xl overflow-hidden">
-                <Image
+                <img
                   src="/business.png"
                   alt="Happy InLine Business App"
-                  width={400}
-                  height={300}
                   className="w-full h-auto"
                 />
               </div>
@@ -111,11 +108,9 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className="mb-4 rounded-xl overflow-hidden">
-                <Image
+                <img
                   src="/customer.png"
                   alt="Happy InLine Customer App"
-                  width={400}
-                  height={300}
                   className="w-full h-auto"
                 />
               </div>
