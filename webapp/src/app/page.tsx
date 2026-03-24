@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -60,6 +61,15 @@ export default function LandingPage() {
                   <p className="text-white/50 text-xs">For Business Owners &amp; Providers</p>
                 </div>
               </div>
+              <div className="mb-4 rounded-xl overflow-hidden">
+                <Image
+                  src="/business.png"
+                  alt="Happy InLine Business App"
+                  width={400}
+                  height={300}
+                  className="w-full h-auto"
+                />
+              </div>
               <div className="flex flex-col gap-2.5">
                 <a
                   href="https://apps.apple.com/ca/app/happy-inline-business/id6760150083"
@@ -99,6 +109,15 @@ export default function LandingPage() {
                   <h3 className="text-white font-semibold text-base">Happy InLine</h3>
                   <p className="text-white/50 text-xs">For Customers</p>
                 </div>
+              </div>
+              <div className="mb-4 rounded-xl overflow-hidden">
+                <Image
+                  src="/customer.png"
+                  alt="Happy InLine Customer App"
+                  width={400}
+                  height={300}
+                  className="w-full h-auto"
+                />
               </div>
               <div className="flex flex-col gap-2.5">
                 <a
