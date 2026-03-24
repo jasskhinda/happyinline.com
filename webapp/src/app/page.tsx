@@ -23,7 +23,7 @@ export default function LandingPage() {
           </p>
 
           <p className="text-lg text-[var(--text-muted)] max-w-[650px] mx-auto mb-12">
-            The complete booking platform for service businesses. Owners manage their shops, customers book appointments — all connected through one seamless ecosystem.
+            Connect your business directly with your customers. No distractions. No competitors. Just your business and your customers.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -143,65 +143,123 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works - Business Owner */}
-      <section className="py-32 px-5 bg-[var(--primary)]">
-        <div className="text-center max-w-[800px] mx-auto mb-20">
+      {/* For Business Owners */}
+      <section className="py-28 px-5 bg-[var(--primary)]">
+        <div className="text-center max-w-[800px] mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
-            How It Works
+            For Business Owners
           </h2>
           <p className="text-xl text-[var(--text-muted)]">
-            Three simple steps to get your business up and running.
+            Get your business set up and accepting bookings in minutes.
           </p>
         </div>
 
-        {/* Step-by-step flow */}
-        <div className="max-w-[900px] mx-auto space-y-6">
-          {/* Step 1 */}
+        <div className="max-w-[900px] mx-auto space-y-5">
           <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
             <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
               <span className="text-white font-bold text-xl">1</span>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Register & set up your shop</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">Register & set up your store</h3>
               <p className="text-[var(--text-muted)] leading-relaxed">
-                Sign up at happyinline.com, create your shop, add your services with pricing, set your operating hours, and invite your staff. Your shop gets a unique QR code automatically.
+                Create your account at happyinline.com. Add your business name, location, hours of operation, services with pricing, and your team of providers. Don&apos;t want to set it up yourself? Any account with an active subscription can request our team to set up your business for you.
               </p>
             </div>
           </div>
 
-          {/* Step 2 */}
           <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
             <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
               <span className="text-white font-bold text-xl">2</span>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Share your QR code</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">Submit for review</h3>
               <p className="text-[var(--text-muted)] leading-relaxed">
-                Print your QR code and display it at your shop, or share it on social media. When customers scan it with the Happy InLine Customer app, they instantly connect to your business — no searching required.
+                Once your store is ready, submit it for review. Our team reviews every new listing within 2-3 business days. Once approved, your business is live and ready to accept bookings.
               </p>
             </div>
           </div>
 
-          {/* Step 3 */}
           <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
             <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
               <span className="text-white font-bold text-xl">3</span>
             </div>
             <div>
-              <h3 className="text-xl font-semibold mb-2 text-white">Customers book, you manage</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">Share your QR code</h3>
               <p className="text-[var(--text-muted)] leading-relaxed">
-                Customers pick a service, choose their preferred provider, and select an available time slot. You and your staff get notified instantly. Manage all bookings from the Happy InLine Business app.
+                Every verified business gets a unique QR code and business ID. Share it however you want — in your shop, on social media, on business cards, on your website. Customers scan it, download the app, and register with your business.
+              </p>
+            </div>
+          </div>
+
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">4</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-white">Manage from the Business app</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                Download the Happy InLine Business app. Add or remove providers, view your calendar with all upcoming bookings, message directly with customers, and sync with Google Calendar so you never miss an appointment.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-32 px-5 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-dark)]">
+      {/* For Customers */}
+      <section className="py-28 px-5 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-dark)]">
         <div className="text-center max-w-[800px] mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
-            Everything you need, built in.
+            For Customers
+          </h2>
+          <p className="text-xl text-[var(--text-muted)]">
+            Scan, book, and show up. It&apos;s that simple.
+          </p>
+        </div>
+
+        <div className="max-w-[900px] mx-auto space-y-5">
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">1</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-white">Scan the QR code</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                See a QR code at your favorite shop? Scan it with the Happy InLine Customer app. You&apos;ll instantly connect to that business — no searching, no browsing through listings.
+              </p>
+            </div>
+          </div>
+
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">2</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-white">Your business becomes your home shop</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                Once connected, you only see that business. No distractions from competitors. Browse their services, pick your favorite provider, and book an appointment — all in seconds.
+              </p>
+            </div>
+          </div>
+
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">3</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-white">Book & communicate</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                Choose a service, select a time slot, and you&apos;re booked. Message your provider directly through the app to discuss preferences or get updates. Get push notifications so you never forget an appointment.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What Makes Us Different */}
+      <section className="py-28 px-5 bg-[var(--primary-dark)]">
+        <div className="text-center max-w-[800px] mx-auto mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
+            What makes Happy InLine different?
           </h2>
         </div>
 
@@ -210,55 +268,11 @@ export default function LandingPage() {
             {
               icon: (
                 <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               ),
-              title: 'Real-time booking',
-              desc: 'Customers see live availability and book instantly.'
-            },
-            {
-              icon: (
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>
-                </svg>
-              ),
-              title: 'In-app messaging',
-              desc: 'Customers and providers chat directly in the app.'
-            },
-            {
-              icon: (
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 01-3.46 0"></path>
-                </svg>
-              ),
-              title: 'Push notifications',
-              desc: 'Instant alerts for bookings, messages, and reminders.'
-            },
-            {
-              icon: (
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-              ),
-              title: 'Google Calendar sync',
-              desc: 'Bookings automatically appear on your Google Calendar.'
-            },
-            {
-              icon: (
-                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 010 7.75"></path>
-                </svg>
-              ),
-              title: 'Team management',
-              desc: 'Add staff, assign services, and manage schedules.'
+              title: 'Exclusive connection',
+              desc: 'Your customers see only your business. Not a marketplace full of competitors.'
             },
             {
               icon: (
@@ -269,8 +283,49 @@ export default function LandingPage() {
                   <rect x="14" y="14" width="8" height="8" rx="1"></rect>
                 </svg>
               ),
-              title: 'QR code connect',
-              desc: 'Customers scan your QR code to join your shop instantly.'
+              title: 'QR code sharing',
+              desc: 'The simplest way to onboard customers. Scan and they\u2019re connected to your business.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>
+                </svg>
+              ),
+              title: 'Direct messaging',
+              desc: 'Communication between you and your customers stays in one place.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              ),
+              title: 'Google Calendar sync',
+              desc: 'Never double-book or miss an appointment. Every booking syncs automatically.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 010 7.75"></path>
+                </svg>
+              ),
+              title: 'Works for any industry',
+              desc: 'Barbershops, salons, clinics, consultants, fitness studios, and more.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 01-3.46 0"></path>
+                </svg>
+              ),
+              title: 'Push notifications',
+              desc: 'Instant alerts for new bookings, messages, cancellations, and reminders.'
             },
           ].map((feature) => (
             <div key={feature.title} className="glass-card p-8 hover:scale-[1.02] transition-transform">
@@ -282,21 +337,6 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
-
-        {/* Industries */}
-        <div className="mt-20 text-center max-w-[800px] mx-auto">
-          <p className="text-lg text-[var(--text-muted)] mb-8">Works for any service business</p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            {['Barbershops', 'Hair Salons', 'Nail Salons', 'Spas & Wellness', 'Beauty Services', 'Massage Therapy', 'Fitness Studios', 'Personal Training', 'Pet Grooming', 'Auto Detailing', 'Home Services', 'Healthcare', 'Tutoring', 'And More'].map((industry) => (
-              <span
-                key={industry}
-                className="bg-[var(--surface-card)] border border-[var(--border-light)] rounded-full px-5 py-2.5 text-sm font-medium hover:bg-[var(--brand)] hover:border-[var(--brand)] transition-all cursor-default"
-              >
-                {industry}
-              </span>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* CTA Section */}
@@ -306,10 +346,10 @@ export default function LandingPage() {
         }}
       >
         <h2 className="text-4xl md:text-6xl font-bold mb-6 text-gradient">
-          Ready to grow your business?
+          Your customers. Your business. No distractions.
         </h2>
         <p className="text-xl text-[var(--text-muted)] mb-10">
-          Register your business, add your team, and start accepting bookings today.
+          Get started at happyinline.com today.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
