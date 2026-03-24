@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -60,7 +59,7 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center group">
           <div className="bg-white rounded-2xl p-1 shadow-md group-hover:shadow-lg transition-shadow">
-            <Image
+            <img
               src="/logo.png"
               alt="Happy InLine"
               width={70}

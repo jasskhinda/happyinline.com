@@ -23,7 +23,7 @@ export default function LandingPage() {
           </p>
 
           <p className="text-lg text-[var(--text-muted)] max-w-[650px] mx-auto mb-12">
-            Book appointments instantly with local service providers. No more waiting. No more lines. Just show up at your time.
+            The complete booking platform for service businesses. Owners manage their shops, customers book appointments — all connected through one seamless ecosystem.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -143,42 +143,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* How It Works Section */}
       <section className="py-32 px-5 bg-[var(--primary)]">
         <div className="text-center max-w-[800px] mx-auto mb-20">
           <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
-            Built for modern life.
+            Two apps. One ecosystem.
           </h2>
           <p className="text-xl text-[var(--text-muted)]">
-            Everything you need to book services, all in one place.
+            A complete booking platform that connects business owners with their customers seamlessly.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-[1200px] mx-auto">
-          {/* Large Feature Card */}
+          {/* Large Feature Card - How It Works */}
           <div className="md:col-span-2 glass-card p-12 grid md:grid-cols-2 gap-10 items-center">
             <div>
               <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
                 <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
                 </svg>
               </div>
-              <h3 className="text-2xl font-semibold mb-4 text-white">Book in seconds</h3>
+              <h3 className="text-2xl font-semibold mb-4 text-white">Set up your shop in minutes</h3>
               <p className="text-[var(--text-muted)] text-lg leading-relaxed">
-                Find available slots, pick your time, and confirm your appointment. It&apos;s that simple. No phone calls. No waiting on hold.
+                Register on happyinline.com, add your services and staff, set your operating hours, and share your unique QR code. Customers scan it to instantly connect with your business.
               </p>
             </div>
             <div className="flex justify-center">
               <svg viewBox="0 0 200 200" fill="none" className="w-48 h-48">
-                <circle cx="100" cy="100" r="80" stroke="url(#grad1)" strokeWidth="2" fill="none"/>
-                <circle cx="100" cy="100" r="60" stroke="url(#grad1)" strokeWidth="2" fill="none" opacity="0.5"/>
-                <circle cx="100" cy="100" r="40" stroke="url(#grad1)" strokeWidth="2" fill="none" opacity="0.3"/>
-                <circle cx="100" cy="100" r="8" fill="var(--brand)"/>
-                <line x1="100" y1="100" x2="100" y2="50" stroke="#F5F5F7" strokeWidth="3" strokeLinecap="round"/>
-                <line x1="100" y1="100" x2="140" y2="100" stroke="var(--brand)" strokeWidth="2" strokeLinecap="round"/>
+                {/* QR Code illustration */}
+                <rect x="40" y="40" width="120" height="120" rx="12" stroke="url(#grad1)" strokeWidth="2" fill="none"/>
+                <rect x="55" y="55" width="30" height="30" rx="4" fill="var(--brand)" opacity="0.8"/>
+                <rect x="115" y="55" width="30" height="30" rx="4" fill="var(--brand)" opacity="0.8"/>
+                <rect x="55" y="115" width="30" height="30" rx="4" fill="var(--brand)" opacity="0.8"/>
+                <rect x="95" y="95" width="15" height="15" rx="2" fill="var(--brand)" opacity="0.5"/>
+                <rect x="115" y="115" width="15" height="15" rx="2" fill="var(--brand)" opacity="0.5"/>
+                <rect x="135" y="95" width="10" height="10" rx="2" fill="var(--brand)" opacity="0.3"/>
+                <rect x="95" y="135" width="10" height="10" rx="2" fill="var(--brand)" opacity="0.3"/>
                 <defs>
                   <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stopColor="var(--brand)"/>
@@ -189,7 +191,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Feature Card 1 */}
+          {/* Feature Card 1 - QR Connect */}
           <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
             <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
               <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -197,11 +199,25 @@ export default function LandingPage() {
                 <circle cx="12" cy="10" r="3"></circle>
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Connect instantly</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Scan your shop's QR code and you're connected. Access services, book appointments, and manage everything in one place.</p>
+            <h3 className="text-xl font-semibold mb-3 text-white">Scan & connect</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Customers scan your shop&apos;s QR code to instantly join your business. No searching, no sign-up friction — just scan and book.</p>
           </div>
 
-          {/* Feature Card 2 */}
+          {/* Feature Card 2 - Real-time Booking */}
+          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
+            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-white">Real-time availability</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Customers see live availability for each provider. Pick a service, choose a provider, select a time slot — booked in seconds.</p>
+          </div>
+
+          {/* Feature Card 3 - Google Calendar */}
           <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
             <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
               <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -209,30 +225,45 @@ export default function LandingPage() {
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Skip the wait</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Arrive at your scheduled time and get served immediately. Your time is valuable.</p>
+            <h3 className="text-xl font-semibold mb-3 text-white">Google Calendar sync</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Every booking automatically syncs to your Google Calendar. Stay organized without any extra effort.</p>
           </div>
 
-          {/* Feature Card 3 */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Secure & private</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Your data is encrypted and protected. We never share your information without consent.</p>
-          </div>
-
-          {/* Feature Card 4 */}
+          {/* Feature Card 4 - Messaging */}
           <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
             <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
               <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>
               </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Direct messaging</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Chat directly with service providers. Ask questions, share preferences, get updates.</p>
+            <h3 className="text-xl font-semibold mb-3 text-white">Built-in messaging</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Customers and providers can message each other directly in the app. Discuss preferences, send updates, or reschedule with ease.</p>
+          </div>
+
+          {/* Feature Card 5 - Push Notifications */}
+          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
+            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 01-3.46 0"></path>
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-white">Instant notifications</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Get push notifications for new bookings, cancellations, messages, and reminders. Never miss an appointment again.</p>
+          </div>
+
+          {/* Feature Card 6 - Business Management */}
+          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
+            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 010 7.75"></path>
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-white">Manage your team</h3>
+            <p className="text-[var(--text-muted)] leading-relaxed">Add staff members, assign services to providers, set individual schedules, and track bookings across your entire team.</p>
           </div>
         </div>
       </section>
@@ -241,10 +272,10 @@ export default function LandingPage() {
       <section className="py-32 px-5 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-dark)]">
         <div className="text-center max-w-[800px] mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
-            One app. Every service.
+            Built for every service industry.
           </h2>
           <p className="text-xl text-[var(--text-muted)]">
-            From haircuts to home repairs, we&apos;ve got you covered.
+            Whatever your business, Happy InLine helps you manage bookings and grow your client base.
           </p>
         </div>
 
@@ -267,10 +298,10 @@ export default function LandingPage() {
         }}
       >
         <h2 className="text-4xl md:text-6xl font-bold mb-6 text-gradient">
-          Ready to skip the line?
+          Ready to grow your business?
         </h2>
         <p className="text-xl text-[var(--text-muted)] mb-10">
-          Register your business or sign in to get started.
+          Register your business, add your team, and start accepting bookings today.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link

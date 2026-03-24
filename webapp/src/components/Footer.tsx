@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function Footer() {
   return (
@@ -11,7 +10,7 @@ export default function Footer() {
           <div className="flex flex-col items-center md:items-start gap-3">
             <Link href="/" className="flex items-center group">
               <div className="bg-white rounded-xl p-1 shadow-md group-hover:shadow-lg transition-shadow">
-                <Image
+                <img
                   src="/logo.png"
                   alt="Happy InLine"
                   width={50}
@@ -63,7 +62,7 @@ export default function Footer() {
         {/* Divider */}
         <div className="border-t border-[var(--border-light)] my-6" />
 
-        {/* Copyright & Social */}
+        {/* Copyright & App Links */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-white/50 text-sm">
             &copy; {new Date().getFullYear()} Happy InLine. All rights reserved.
@@ -71,14 +70,14 @@ export default function Footer() {
 
           {/* App Store Links */}
           <div className="flex items-center gap-4">
-            <span className="text-white/50 text-xs">Coming soon to</span>
+            <span className="text-white/50 text-xs">Available on</span>
             <div className="flex gap-2">
-              <span className="text-white/70 text-xs font-medium px-2 py-1 bg-white/10 rounded">
-                iOS
-              </span>
-              <span className="text-white/70 text-xs font-medium px-2 py-1 bg-white/10 rounded">
-                Android
-              </span>
+              <a href="https://apps.apple.com/ca/app/happy-inline/id6756240306" target="_blank" rel="noopener noreferrer" className="text-white/70 text-xs font-medium px-2 py-1 bg-white/10 rounded hover:bg-white/20 transition-colors">
+                App Store
+              </a>
+              <a href="https://play.google.com/store/apps/details?id=com.happyinline.app" target="_blank" rel="noopener noreferrer" className="text-white/70 text-xs font-medium px-2 py-1 bg-white/10 rounded hover:bg-white/20 transition-colors">
+                Google Play
+              </a>
             </div>
           </div>
         </div>
