@@ -143,151 +143,159 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works - Business Owner */}
       <section className="py-32 px-5 bg-[var(--primary)]">
         <div className="text-center max-w-[800px] mx-auto mb-20">
           <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
-            Two apps. One ecosystem.
+            How It Works
           </h2>
           <p className="text-xl text-[var(--text-muted)]">
-            A complete booking platform that connects business owners with their customers seamlessly.
+            Three simple steps to get your business up and running.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-[1200px] mx-auto">
-          {/* Large Feature Card - How It Works */}
-          <div className="md:col-span-2 glass-card p-12 grid md:grid-cols-2 gap-10 items-center">
+        {/* Step-by-step flow */}
+        <div className="max-w-[900px] mx-auto space-y-6">
+          {/* Step 1 */}
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">1</span>
+            </div>
             <div>
-              <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-                <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                  <line x1="8" y1="21" x2="16" y2="21"></line>
-                  <line x1="12" y1="17" x2="12" y2="21"></line>
-                </svg>
-              </div>
-              <h3 className="text-2xl font-semibold mb-4 text-white">Set up your shop in minutes</h3>
-              <p className="text-[var(--text-muted)] text-lg leading-relaxed">
-                Register on happyinline.com, add your services and staff, set your operating hours, and share your unique QR code. Customers scan it to instantly connect with your business.
+              <h3 className="text-xl font-semibold mb-2 text-white">Register & set up your shop</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                Sign up at happyinline.com, create your shop, add your services with pricing, set your operating hours, and invite your staff. Your shop gets a unique QR code automatically.
               </p>
             </div>
-            <div className="flex justify-center">
-              <svg viewBox="0 0 200 200" fill="none" className="w-48 h-48">
-                {/* QR Code illustration */}
-                <rect x="40" y="40" width="120" height="120" rx="12" stroke="url(#grad1)" strokeWidth="2" fill="none"/>
-                <rect x="55" y="55" width="30" height="30" rx="4" fill="var(--brand)" opacity="0.8"/>
-                <rect x="115" y="55" width="30" height="30" rx="4" fill="var(--brand)" opacity="0.8"/>
-                <rect x="55" y="115" width="30" height="30" rx="4" fill="var(--brand)" opacity="0.8"/>
-                <rect x="95" y="95" width="15" height="15" rx="2" fill="var(--brand)" opacity="0.5"/>
-                <rect x="115" y="115" width="15" height="15" rx="2" fill="var(--brand)" opacity="0.5"/>
-                <rect x="135" y="95" width="10" height="10" rx="2" fill="var(--brand)" opacity="0.3"/>
-                <rect x="95" y="135" width="10" height="10" rx="2" fill="var(--brand)" opacity="0.3"/>
-                <defs>
-                  <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="var(--brand)"/>
-                    <stop offset="100%" stopColor="var(--brand-light)"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+          </div>
+
+          {/* Step 2 */}
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">2</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-white">Share your QR code</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                Print your QR code and display it at your shop, or share it on social media. When customers scan it with the Happy InLine Customer app, they instantly connect to your business — no searching required.
+              </p>
             </div>
           </div>
 
-          {/* Feature Card 1 - QR Connect */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
+          {/* Step 3 */}
+          <div className="glass-card p-8 md:p-10 flex gap-6 items-start">
+            <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center shadow-brand">
+              <span className="text-white font-bold text-xl">3</span>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Scan & connect</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Customers scan your shop&apos;s QR code to instantly join your business. No searching, no sign-up friction — just scan and book.</p>
-          </div>
-
-          {/* Feature Card 2 - Real-time Booking */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
+            <div>
+              <h3 className="text-xl font-semibold mb-2 text-white">Customers book, you manage</h3>
+              <p className="text-[var(--text-muted)] leading-relaxed">
+                Customers pick a service, choose their preferred provider, and select an available time slot. You and your staff get notified instantly. Manage all bookings from the Happy InLine Business app.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Real-time availability</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Customers see live availability for each provider. Pick a service, choose a provider, select a time slot — booked in seconds.</p>
-          </div>
-
-          {/* Feature Card 3 - Google Calendar */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Google Calendar sync</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Every booking automatically syncs to your Google Calendar. Stay organized without any extra effort.</p>
-          </div>
-
-          {/* Feature Card 4 - Messaging */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Built-in messaging</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Customers and providers can message each other directly in the app. Discuss preferences, send updates, or reschedule with ease.</p>
-          </div>
-
-          {/* Feature Card 5 - Push Notifications */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 01-3.46 0"></path>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Instant notifications</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Get push notifications for new bookings, cancellations, messages, and reminders. Never miss an appointment again.</p>
-          </div>
-
-          {/* Feature Card 6 - Business Management */}
-          <div className="glass-card p-10 hover:scale-[1.02] transition-transform">
-            <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-2xl flex items-center justify-center mb-6 shadow-brand">
-              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 010 7.75"></path>
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-3 text-white">Manage your team</h3>
-            <p className="text-[var(--text-muted)] leading-relaxed">Add staff members, assign services to providers, set individual schedules, and track bookings across your entire team.</p>
           </div>
         </div>
       </section>
 
-      {/* Industries Section */}
+      {/* Features Grid */}
       <section className="py-32 px-5 bg-gradient-to-b from-[var(--primary)] to-[var(--primary-dark)]">
         <div className="text-center max-w-[800px] mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gradient">
-            Built for every service industry.
+            Everything you need, built in.
           </h2>
-          <p className="text-xl text-[var(--text-muted)]">
-            Whatever your business, Happy InLine helps you manage bookings and grow your client base.
-          </p>
         </div>
 
-        <div className="flex flex-wrap gap-3 justify-center max-w-[1000px] mx-auto">
-          {['Barbershops', 'Hair Salons', 'Nail Salons', 'Spas & Wellness', 'Beauty Services', 'Massage Therapy', 'Fitness Studios', 'Personal Training', 'Pet Grooming', 'Auto Detailing', 'Home Services', 'Professional Services', 'Healthcare', 'Tutoring', 'And More'].map((industry) => (
-            <span
-              key={industry}
-              className="bg-[var(--surface-card)] border border-[var(--border-light)] rounded-full px-6 py-3 text-sm font-medium hover:bg-[var(--brand)] hover:border-[var(--brand)] transition-all cursor-default"
-            >
-              {industry}
-            </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[1100px] mx-auto">
+          {[
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              ),
+              title: 'Real-time booking',
+              desc: 'Customers see live availability and book instantly.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"></path>
+                </svg>
+              ),
+              title: 'In-app messaging',
+              desc: 'Customers and providers chat directly in the app.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 01-3.46 0"></path>
+                </svg>
+              ),
+              title: 'Push notifications',
+              desc: 'Instant alerts for bookings, messages, and reminders.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              ),
+              title: 'Google Calendar sync',
+              desc: 'Bookings automatically appear on your Google Calendar.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 010 7.75"></path>
+                </svg>
+              ),
+              title: 'Team management',
+              desc: 'Add staff, assign services, and manage schedules.'
+            },
+            {
+              icon: (
+                <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="2" width="8" height="8" rx="1"></rect>
+                  <rect x="14" y="2" width="8" height="8" rx="1"></rect>
+                  <rect x="2" y="14" width="8" height="8" rx="1"></rect>
+                  <rect x="14" y="14" width="8" height="8" rx="1"></rect>
+                </svg>
+              ),
+              title: 'QR code connect',
+              desc: 'Customers scan your QR code to join your shop instantly.'
+            },
+          ].map((feature) => (
+            <div key={feature.title} className="glass-card p-8 hover:scale-[1.02] transition-transform">
+              <div className="w-12 h-12 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-light)] rounded-xl flex items-center justify-center mb-4 shadow-brand">
+                {feature.icon}
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
+              <p className="text-[var(--text-muted)] text-sm leading-relaxed">{feature.desc}</p>
+            </div>
           ))}
+        </div>
+
+        {/* Industries */}
+        <div className="mt-20 text-center max-w-[800px] mx-auto">
+          <p className="text-lg text-[var(--text-muted)] mb-8">Works for any service business</p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {['Barbershops', 'Hair Salons', 'Nail Salons', 'Spas & Wellness', 'Beauty Services', 'Massage Therapy', 'Fitness Studios', 'Personal Training', 'Pet Grooming', 'Auto Detailing', 'Home Services', 'Healthcare', 'Tutoring', 'And More'].map((industry) => (
+              <span
+                key={industry}
+                className="bg-[var(--surface-card)] border border-[var(--border-light)] rounded-full px-5 py-2.5 text-sm font-medium hover:bg-[var(--brand)] hover:border-[var(--brand)] transition-all cursor-default"
+              >
+                {industry}
+              </span>
+            ))}
+          </div>
         </div>
       </section>
 
