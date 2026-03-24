@@ -167,7 +167,102 @@ function DashboardContent() {
           </div>
         )}
 
-        {/* Trial Banner, Trial Expired Banner, and Unlock Features Banner temporarily hidden for Apple review */}
+        {/* Trial Banner - Show for trial users */}
+        {false && subscription?.isTrial && subscription.trialDaysRemaining > 0 && (
+          <div className="bg-gradient-to-r from-purple-500/20 to-[#0393d5]/20 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/30 mb-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-[#0393d5] rounded-full flex items-center justify-center flex-shrink-0">
+                <Gift className="w-8 h-8 text-white" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-xl font-bold text-white mb-1">
+                  Free Trial - {subscription.trialDaysRemaining} {subscription.trialDaysRemaining === 1 ? 'Day' : 'Days'} Remaining
+                </h3>
+                <p className="text-purple-200 text-sm mb-3">
+                  You're enjoying full access to Happy Inline during your free trial period.
+                  {subscription.trialEndsAt && (
+                    <span className="block mt-1">
+                      Trial ends on {formatDate(subscription.trialEndsAt)}
+                    </span>
+                  )}
+                </p>
+                <div className="flex items-center gap-2 text-yellow-300 text-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  Subscribe before your trial ends to keep your business running smoothly.
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/subscribe')}
+                className="bg-gradient-to-r from-purple-500 to-[#0393d5] hover:from-purple-600 hover:to-[#027bb5] text-white font-semibold px-6 py-3 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                Subscribe Now
+                <ArrowUpCircle className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Trial Expired Banner */}
+        {false && subscription?.subscription_status === 'trial' && subscription.trialDaysRemaining === 0 && (
+          <div className="bg-red-500/20 backdrop-blur-lg rounded-2xl p-6 border border-red-500/30 mb-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-16 h-16 bg-red-500/30 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-8 h-8 text-red-400" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-xl font-bold text-red-300 mb-1">Trial Expired</h3>
+                <p className="text-red-200 text-sm">
+                  Your free trial has ended. Subscribe now to continue using Happy Inline and access all business management features.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push('/subscribe')}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-3 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                Subscribe Now
+                <ArrowUpCircle className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Unlock Features Banner - Show for non-subscribed users */}
+        {false && !subscription?.isActive && (
+          <div className="bg-gradient-to-r from-[#0393d5]/20 to-purple-500/20 backdrop-blur-lg rounded-2xl p-6 border border-[#0393d5]/30 mb-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#0393d5] to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Store className="w-10 h-10 text-white" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl font-bold text-white mb-2">Unlock All Features</h3>
+                <p className="text-[#0393d5] mb-4">
+                  Subscribe to access Business Management tools including:
+                </p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-4">
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <Store className="w-4 h-4" /> Create Shop
+                  </span>
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <Users className="w-4 h-4" /> Manage Providers
+                  </span>
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <Scissors className="w-4 h-4" /> Add Services
+                  </span>
+                  <span className="flex items-center gap-1 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+                    <CalendarDays className="w-4 h-4" /> Handle Bookings
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/subscribe')}
+                className="bg-gradient-to-r from-[#0393d5] to-purple-500 hover:from-[#027bb5] hover:to-purple-600 text-white font-semibold px-8 py-4 rounded-lg transition-all flex items-center gap-2 flex-shrink-0"
+              >
+                Subscribe Now
+                <ArrowUpCircle className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Business Management Navigation - Only show if subscribed */}
         {subscription?.isActive && (
